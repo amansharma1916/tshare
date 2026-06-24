@@ -1,6 +1,6 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import './p1.css'
-import bannerText from './bannerText';
 
 const P1 = () => {
   const sharePage = () => {
@@ -15,47 +15,170 @@ const P1 = () => {
     window.location.href = '/public-room'
   }
 
+  const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+
   return (
-    <div className="p1">
-      <div className="nameBanner">
-        {bannerText}
+    <div className="home">
+      <div className="home__bg-digits" aria-hidden="true">
+        {digits.map((digit, i) => (
+          <motion.span
+            key={i}
+            className="home__bg-digit"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{
+              opacity: [0, 0.08, 0.03, 0.08, 0],
+              y: [20, -20, -60, -100, -140],
+            }}
+            transition={{
+              duration: 6 + i * 0.5,
+              repeat: Infinity,
+              delay: i * 0.8,
+              ease: 'linear',
+            }}
+            style={{
+              left: `${8 + i * 9}%`,
+              fontSize: `${2 + Math.random() * 3}rem`,
+            }}
+          >
+            {digit}
+          </motion.span>
+        ))}
       </div>
 
-      <div className="appLogo">TShare</div>
+      <div className="home__orb home__orb--1" aria-hidden="true" />
+      <div className="home__orb home__orb--2" aria-hidden="true" />
 
-      <div className="mainBox">
-        <div className="shareBox" onClick={sharePage} title="Share text with others">
-          <button className='Btn' id='shareBtn' onClick={sharePage}>
-            <span className="btn-text">Share</span>
-          </button>
-        </div>
-        <div className="recieve" onClick={receivePage} title="Receive shared text">
-          <button className='Btn' id='recieveBtn' onClick={receivePage}>
-            <span className="btn-text">Receive</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="publicRoomBtn">
-        <button
-          className='Btn publicRoom'
-          onClick={publicRoomPage}
-          title="Join a public chat room"
+      <div className="home__content">
+        <motion.div
+          className="home__brand"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="btn-text">Public Rooms</span>
-        </button>
+          <span className="home__brand-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="url(#brandGrad)" />
+              <path d="M9 16l5 5 9-9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="brandGrad" x1="0" y1="0" x2="32" y2="32">
+                  <stop stopColor="#8b5cf6"/>
+                  <stop offset="1" stopColor="#ec4899"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span className="home__brand-name">TShare</span>
+        </motion.div>
+
+        <motion.div
+          className="home__hero"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h1 className="home__title">
+            Share Anything.
+            <br />
+            <span className="home__title-accent">In Seconds.</span>
+          </h1>
+          <p className="home__subtitle">
+            No sign-up. No accounts. Just a 4-digit code.
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="home__actions"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <button
+            className="action-card action-card--send"
+            onClick={sharePage}
+            title="Share text, images, or files"
+          >
+            <div className="action-card__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+            </div>
+            <div className="action-card__info">
+              <span className="action-card__label">Send</span>
+              <span className="action-card__desc">Share text, images & files</span>
+            </div>
+            <div className="action-card__arrow" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
+          <button
+            className="action-card action-card--receive"
+            onClick={receivePage}
+            title="Receive shared content"
+          >
+            <div className="action-card__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M12 3v12" />
+              </svg>
+            </div>
+            <div className="action-card__info">
+              <span className="action-card__label">Receive</span>
+              <span className="action-card__desc">Enter a code to get content</span>
+            </div>
+            <div className="action-card__arrow" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        </motion.div>
+
+        <motion.div
+          className="home__extra"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
+          <button
+            className="home__public-room-btn"
+            onClick={publicRoomPage}
+            title="Join a public chat room"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
+            Public Rooms
+          </button>
+        </motion.div>
       </div>
 
-      <div className="footer-text">
-        Securely share and receive text with anyone
-      </div>
-
-      <div className="footer-links">
-        <a href="/admin/login" title="Admin Panel" className="admin-link">Admin</a>
-      </div>
+      <motion.div
+        className="home__footer"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.7 }}
+      >
+        <div className="home__footer-inner">
+          <span className="home__footer-text">
+            TShare &copy; 2025 &middot; Instant sharing, no setup needed
+          </span>
+          <a href="/admin/login" className="home__admin-link">
+            Admin
+          </a>
+        </div>
+      </motion.div>
     </div>
   )
 }
 
 export default P1
-

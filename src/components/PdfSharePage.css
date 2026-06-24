@@ -1,276 +1,30 @@
-:root {
-  --primary-color: #8B5CF6;
-  --secondary-color: #4F46E5;
-  --accent-color: #EC4899;
-  --dark-color: #0F172A;
-  --light-color: #FFFFFF;
-  --background-gradient: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-  --card-gradient: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --border-radius: 20px;
+.dropzone__preview--pdf {
+  max-height: 400px;
 }
 
-.shareMain {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.dropzone__preview--pdf iframe {
   width: 100%;
-  min-height: 100vh;
-  background: var(--background-gradient);
-  padding: 2rem 1rem;
-  font-family: 'Poppins', 'Segoe UI', Tahoma, sans-serif;
-  color: var(--light-color);
-  box-sizing: border-box;
-  position: relative;
-}
-
-.shareMain::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 25%),
-    radial-gradient(circle at 80% 70%, rgba(79, 70, 229, 0.15) 0%, transparent 30%);
-  pointer-events: none;
-}
-
-.nameBanner {
-  position: absolute;
-  top: 1.5rem;
-  width: 100%;
-  text-align: center;
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  user-select: none;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.nameBanner::before,
-.nameBanner::after {
-  content: '•';
-  color: var(--accent-color);
-  font-size: 1rem;
-  opacity: 0.7;
-}
-
-.pdfBox {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 740px;
-  align-items: center;
-  background: var(--card-gradient);
-  backdrop-filter: blur(10px);
-  padding: 2.5rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--card-shadow);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-  z-index: 1;
-}
-
-.pdfBox::after {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--border-radius);
-  padding: 2px;
-  background: linear-gradient(225deg, var(--primary-color), rgba(0, 0, 0, 0), var(--accent-color), rgba(0, 0, 0, 0), var(--secondary-color));
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: xor;
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.3;
-}
-
-.code h1 {
-  margin: 0;
-  font-weight: 600;
-  font-size: 1.8rem;
-  background: linear-gradient(45deg, var(--primary-color), var(--accent-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  word-break: break-word;
-  letter-spacing: 1px;
-  text-align: center;
-}
-
-.codeBadge {
-  cursor: pointer;
-  margin-top: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 1.3rem;
-  font-family: 'Source Code Pro', monospace;
-  color: #6C63FF;
-  display: inline-block;
-}
-
-.pdfUploadRow {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.pdfInput {
-  width: 100%;
-  max-width: 440px;
-  padding: 0.9rem 1.2rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--light-color);
-  font-size: 0.95rem;
-}
-
-.pdfError {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.pdfPreview {
-  width: 100%;
-  max-width: 640px;
-  height: 420px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pdfPreview iframe {
-  width: 100%;
-  height: 100%;
+  height: 400px;
   border: none;
-}
-
-.buttons-container {
-  display: flex;
-  gap: 1.2rem;
-  margin-top: 1.2rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-}
-
-.Btn {
-  padding: 0.8rem 2rem;
-  border-radius: 50px;
-  border: 2px solid transparent;
-  background: rgba(92, 246, 131, 0.1);
-  color: var(--light-color);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: var(--transition);
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background-image: linear-gradient(to right,
-      rgba(139, 92, 246, 0.7),
-      rgba(79, 70, 229, 0.7));
-  background-size: 200% 100%;
-  background-position: right bottom;
-}
-
-.Btn::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg,
-      var(--primary-color),
-      var(--accent-color),
-      var(--secondary-color));
-  z-index: -2;
-  border-radius: 50px;
-  opacity: 0;
-  transition: var(--transition);
-}
-
-.Btn:hover {
-  background-position: left bottom;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.Btn:hover::before {
-  opacity: 1;
-}
-
-.Btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.pdf-share-btn {
-  background-image: linear-gradient(to right,
-      rgba(14, 165, 233, 0.8),
-      rgba(56, 189, 248, 0.8)) !important;
-}
-
-.pdf-share-btn::before {
-  background: linear-gradient(45deg,
-      rgba(14, 165, 233, 0.9),
-      rgba(56, 189, 248, 0.9),
-      rgba(59, 130, 246, 0.9));
-}
-
-.secondaryBtn {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.secondaryBtn::before {
-  background: linear-gradient(45deg,
-      rgba(255, 255, 255, 0.2),
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.2));
-}
-
-.secondaryBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  display: block;
 }
 
 @media (max-width: 768px) {
-  .pdfBox {
-    padding: 2rem;
-    max-width: 92%;
+  .dropzone__preview--pdf {
+    max-height: 320px;
   }
 
-  .code h1 {
-    font-size: 1.6rem;
+  .dropzone__preview--pdf iframe {
+    height: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropzone__preview--pdf {
+    max-height: 240px;
   }
 
-  .pdfPreview {
-    height: 340px;
+  .dropzone__preview--pdf iframe {
+    height: 240px;
   }
 }
