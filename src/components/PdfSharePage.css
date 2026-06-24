@@ -1,5 +1,6 @@
 .dropzone__preview--pdf {
   max-height: 400px;
+  overflow: auto;
 }
 
 .dropzone__preview--pdf iframe {

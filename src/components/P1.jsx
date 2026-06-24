@@ -56,16 +56,7 @@ const P1 = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="home__brand-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="32" height="32" rx="8" fill="url(#brandGrad)" />
-              <path d="M9 16l5 5 9-9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <defs>
-                <linearGradient id="brandGrad" x1="0" y1="0" x2="32" y2="32">
-                  <stop stopColor="#8b5cf6"/>
-                  <stop offset="1" stopColor="#ec4899"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/s2.svg" alt="TShare" width="32" height="32" />
           </span>
           <span className="home__brand-name">TShare</span>
         </motion.div>

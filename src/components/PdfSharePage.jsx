@@ -76,7 +76,7 @@ const PdfSharePage = () => {
         if (!data.success) {
           throw new Error(data.message || 'Failed to upload PDF');
         }
-        setPdfCode(data.id);
+        setPdfCode(String(data.id));
         setShowCode(true);
       })
       .catch(error => {
@@ -115,16 +115,7 @@ const PdfSharePage = () => {
             Back
           </button>
           <div className="nav__brand">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="url(#navBrand)" />
-              <path d="M9 16l5 5 9-9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <defs>
-                <linearGradient id="navBrand" x1="0" y1="0" x2="32" y2="32">
-                  <stop stopColor="#8b5cf6"/>
-                  <stop offset="1" stopColor="#ec4899"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/s2.svg" alt="TShare" width="20" height="20" />
             <span>TShare</span>
           </div>
         </div>

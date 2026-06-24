@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
@@ -6,10 +7,13 @@ import { endpoints } from '../api/api';
 const AdminPanel = () => {
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
+    const [publicRooms, setPublicRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imagesLoading, setImagesLoading] = useState(true);
+    const [publicRoomsLoading, setPublicRoomsLoading] = useState(true);
     const [error, setError] = useState('');
     const [imagesError, setImagesError] = useState('');
+    const [publicRoomsError, setPublicRoomsError] = useState('');
     const [editingText, setEditingText] = useState(null);
     const [editedContent, setEditedContent] = useState('');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -26,7 +30,9 @@ const AdminPanel = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [actionMessage, setActionMessage] = useState({ text: '', type: '' });
-
+    const [activeTab, setActiveTab] = useState('texts');
+    const [showPublicRoomModal, setShowPublicRoomModal] = useState(false);
+    const [publicRoomName, setPublicRoomName] = useState('');
 
     useEffect(() => {
         const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
@@ -81,6 +87,27 @@ const AdminPanel = () => {
             setImagesError('Failed to connect to server. Please try again.');
         } finally {
             setImagesLoading(false);
+        }
+    };
+
+    const fetchPublicRooms = async () => {
+        setPublicRoomsLoading(true);
+        setPublicRoomsError('');
+
+        try {
+            const response = await fetch(endpoints.adminPublicRooms);
+            const data = await response.json();
+
+            if (data.success) {
+                setPublicRooms(data.rooms || []);
+            } else {
+                setPublicRoomsError('Failed to fetch public rooms');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setPublicRoomsError('Failed to connect to server. Please try again.');
+        } finally {
+            setPublicRoomsLoading(false);
         }
     };
 
@@ -400,7 +427,7 @@ const AdminPanel = () => {
                 setImages(images.map(image =>
                     image.id === parseInt(data.oldCode) ? { ...image, id: data.newCode } : image
                 ));
-                showActionMessage(`Image code regenerated: ${data.newCode}`, 'success');
+                showActionMessage(`Image code regenerated successfully: ${data.newCode}`, 'success');
             } else {
                 showActionMessage(data.message || 'Failed to regenerate image code', 'error');
             }
@@ -410,39 +437,44 @@ const AdminPanel = () => {
         }
     };
 
-    const handleCancelImageCodeEdit = () => {
-        setShowImageCodeModal(false);
-        setEditingImage(null);
-        setNewImageCode('');
-        setImageCodeError('');
-    };
-
-    const handleChangePassword = async (e) => {
-        e.preventDefault();
+    const handleChangePassword = async () => {
         setPasswordError('');
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setPasswordError('Please fill in all password fields');
+            return;
+        }
 
         if (newPassword !== confirmPassword) {
             setPasswordError('New passwords do not match');
             return;
         }
 
+        if (newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters');
+            return;
+        }
+
         try {
             const response = await fetch(endpoints.adminChangePassword, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ currentPassword, newPassword }),
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                }),
             });
 
             const data = await response.json();
 
             if (data.success) {
+                showActionMessage('Password changed successfully', 'success');
                 setShowPasswordModal(false);
                 setCurrentPassword('');
                 setNewPassword('');
                 setConfirmPassword('');
-                showActionMessage('Password changed successfully', 'success');
             } else {
                 setPasswordError(data.message || 'Failed to change password');
             }
@@ -452,85 +484,8 @@ const AdminPanel = () => {
         }
     };
 
-    const handleLogout = () => {
-        sessionStorage.removeItem('adminAuthenticated');
-        window.location.href = '/';
-    };
-
-    const showActionMessage = (text, type) => {
-        setActionMessage({ text, type });
-        setTimeout(() => {
-            setActionMessage({ text: '', type: '' });
-        }, 3000);
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleString();
-    };
-
-    const formatFileSize = (size) => {
-        if (!size && size !== 0) return 'N/A';
-        if (size < 1024) return `${size} B`;
-        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-        if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-        return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-    };
-
-    const [publicRooms, setPublicRooms] = useState([]);
-    const [publicRoomName, setPublicRoomName] = useState('');
-    const [showPublicRoomModal, setShowPublicRoomModal] = useState(false);
-    const [publicRoomsLoading, setPublicRoomsLoading] = useState(false);
-
-    const fetchPublicRooms = async () => {
-        setPublicRoomsLoading(true);
-        try {
-            const response = await fetch(endpoints.adminPublicRooms);
-            const data = await response.json();
-
-            if (data.success) {
-                setPublicRooms(data.rooms);
-            } else {
-                showActionMessage('Failed to fetch public rooms', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showActionMessage('Failed to connect to server', 'error');
-        } finally {
-            setPublicRoomsLoading(false);
-        }
-    };
-
-    const handleCreatePublicRoom = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(endpoints.adminPublicRooms, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name: publicRoomName }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setPublicRooms([data.room, ...publicRooms]);
-                setShowPublicRoomModal(false);
-                setPublicRoomName('');
-                showActionMessage(`Public room created with code: ${data.room.code}`, 'success');
-            } else {
-                showActionMessage(data.message || 'Failed to create public room', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showActionMessage('Failed to connect to server', 'error');
-        }
-    };
-
     const handleDeletePublicRoom = async (code) => {
-        if (!window.confirm('Are you sure you want to delete this public room? All messages will be permanently deleted.')) {
+        if (!window.confirm(`Are you sure you want to delete public room ${code}?`)) {
             return;
         }
 
@@ -553,7 +508,7 @@ const AdminPanel = () => {
         }
     };
 
-    const handleToggleRoomStatus = async (code) => {
+    const handleTogglePublicRoomStatus = async (code) => {
         try {
             const response = await fetch(endpoints.adminTogglePublicRoomStatus(code), {
                 method: 'PUT',
@@ -563,9 +518,9 @@ const AdminPanel = () => {
 
             if (data.success) {
                 setPublicRooms(publicRooms.map(room =>
-                    room.code === code ? { ...room, active: data.active } : room
+                    room.code === code ? { ...room, active: !room.active } : room
                 ));
-                showActionMessage(`Room ${data.active ? 'activated' : 'deactivated'} successfully`, 'success');
+                showActionMessage('Room status updated successfully', 'success');
             } else {
                 showActionMessage(data.message || 'Failed to update room status', 'error');
             }
@@ -575,262 +530,419 @@ const AdminPanel = () => {
         }
     };
 
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text)
-            .then(() => showActionMessage('Copied to clipboard', 'success'))
-            .catch(err => console.error('Failed to copy:', err));
+    const handleCreatePublicRoom = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(endpoints.adminPublicRooms, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: publicRoomName || undefined }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setPublicRooms([...publicRooms, data.room]);
+                setShowPublicRoomModal(false);
+                setPublicRoomName('');
+                showActionMessage('Public room created successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to create public room', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const showActionMessage = (text, type) => {
+        setActionMessage({ text, type });
+        setTimeout(() => {
+            setActionMessage({ text: '', type: '' });
+        }, 3000);
+    };
+
+    const handleLogout = () => {
+        sessionStorage.removeItem('adminAuthenticated');
+        window.location.href = '/admin/login';
     };
 
     return (
         <div className="admin-panel-container">
-            <div className="nameBanner">
-                {bannerText} <span className="admin-badge">Admin Panel</span>
-            </div>
+            <AnimatePresence>
+                {actionMessage.text && (
+                    <motion.div
+                        className={`action-message ${actionMessage.type}`}
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                    >
+                        {actionMessage.text}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="admin-controls">
-                <button className="Btn refresh" onClick={refreshAll}>
-                    Refresh Data
-                </button>
-                <button className="Btn delete-all" onClick={handleDeleteAllTexts}>
-                    Delete All Texts
-                </button>
-                <button className="Btn delete-all" onClick={handleDeleteAllImages}>
-                    Delete All Images
-                </button>
-                <button className="Btn create-public" onClick={() => setShowPublicRoomModal(true)}>
-                    Create Public Room
-                </button>
-                <button className="Btn change-password" onClick={() => setShowPasswordModal(true)}>
+                <motion.button
+                    className="Btn refresh"
+                    onClick={refreshAll}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    Refresh All
+                </motion.button>
+                <motion.button
+                    className="Btn change-password"
+                    onClick={() => setShowPasswordModal(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
                     Change Password
-                </button>
-                <button className="Btn logout" onClick={handleLogout}>
+                </motion.button>
+                <motion.button
+                    className="Btn logout"
+                    onClick={handleLogout}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
                     Logout
-                </button>
+                </motion.button>
             </div>
 
-            {actionMessage.text && (
-                <div className={`action-message ${actionMessage.type}`}>
-                    {actionMessage.text}
-                </div>
-            )}
-
-            <div className="admin-content">
-                <h1>Shared Texts ({texts.length})</h1>
-
-                {loading ? (
-                    <div className="loading">Loading...</div>
-                ) : error ? (
-                    <div className="error-message">{error}</div>
-                ) : texts.length === 0 ? (
-                    <div className="no-data">No texts found</div>
-                ) : (
-                    <div className="texts-table-container">
-                        <table className="texts-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Text</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {texts.map(text => (
-                                    <tr key={text.id}>
-                                        <td>{text.id}</td>
-                                        <td className="text-content">
-                                            {text.text.length > 100
-                                                ? `${text.text.substring(0, 100)}...`
-                                                : text.text}
-                                        </td>
-                                        <td>{formatDate(text.createdAt)}</td>
-                                        <td className="actions">
-                                            <button className="action-btn edit" onClick={() => handleEditText(text)}>
-                                                Edit Text
-                                            </button>
-                                            <button className="action-btn edit-code" onClick={() => handleEditCode(text)}>
-                                                Edit Code
-                                            </button>
-                                            <button className="action-btn regenerate-code" onClick={() => handleRegenerateCode(text.id)}>
-                                                New Code
-                                            </button>
-                                            <button className="action-btn delete" onClick={() => handleDeleteText(text.id)}>
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-
-                <h1 className="section-header">Shared Images ({images.length})</h1>
-
-                {imagesLoading ? (
-                    <div className="loading">Loading images...</div>
-                ) : imagesError ? (
-                    <div className="error-message">{imagesError}</div>
-                ) : images.length === 0 ? (
-                    <div className="no-data">No images found</div>
-                ) : (
-                    <div className="texts-table-container">
-                        <table className="texts-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Preview</th>
-                                    <th>File</th>
-                                    <th>Size</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {images.map(image => (
-                                    <tr key={image.id}>
-                                        <td>{image.id}</td>
-                                        <td>
-                                            <div className="image-thumb">
-                                                <img src={image.url} alt={image.originalName || 'Shared'} />
-                                            </div>
-                                        </td>
-                                        <td className="text-content">
-                                            {image.originalName || 'Shared image'}
-                                        </td>
-                                        <td>{formatFileSize(image.size)}</td>
-                                        <td>{formatDate(image.createdAt)}</td>
-                                        <td className="actions">
-                                            <button
-                                                className="action-btn copy-code"
-                                                onClick={() => copyToClipboard(image.id.toString())}
-                                            >
-                                                Copy Code
-                                            </button>
-                                            <button
-                                                className="action-btn edit"
-                                                onClick={() => window.open(image.url, '_blank', 'noopener')}
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                className="action-btn edit-code"
-                                                onClick={() => handleEditImageCode(image)}
-                                            >
-                                                Edit Code
-                                            </button>
-                                            <button
-                                                className="action-btn regenerate-code"
-                                                onClick={() => handleRegenerateImageCode(image.id)}
-                                            >
-                                                New Code
-                                            </button>
-                                            <button
-                                                className="action-btn delete"
-                                                onClick={() => handleDeleteImage(image.id)}
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-
-                <h1 className="section-header">Public Rooms ({publicRooms.length})</h1>
-                <button className="Btn create-public-room" onClick={() => setShowPublicRoomModal(true)}>
-                    Create New Public Room
-                </button>
-
-                {publicRoomsLoading ? (
-                    <div className="loading">Loading public rooms...</div>
-                ) : publicRooms.length === 0 ? (
-                    <div className="no-data">No public rooms found</div>
-                ) : (
-                    <div className="public-rooms-container">
-                        <table className="public-rooms-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Name</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {publicRooms.map(room => (
-                                    <tr key={room.code} className={room.active ? 'room-active' : 'room-inactive'}>
-                                        <td>{room.code}</td>
-                                        <td>{room.name}</td>
-                                        <td>
-                                            <span className={`status-badge ${room.active ? 'active' : 'inactive'}`}>
-                                                {room.active ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(room.createdAt)}</td>
-                                        <td className="actions">
-                                            <button
-                                                className="action-btn copy-code"
-                                                onClick={() => copyToClipboard(room.code)}
-                                                title="Copy room code"
-                                            >
-                                                Copy Code
-                                            </button>
-                                            <button
-                                                className={`action-btn ${room.active ? 'deactivate' : 'activate'}`}
-                                                onClick={() => handleToggleRoomStatus(room.code)}
-                                            >
-                                                {room.active ? 'Deactivate' : 'Activate'}
-                                            </button>
-                                            <button
-                                                className="action-btn delete"
-                                                onClick={() => handleDeletePublicRoom(room.code)}
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+            <div className="admin-tabs">
+                {[
+                    { id: 'texts', label: 'Texts' },
+                    { id: 'images', label: 'Images' },
+                    { id: 'public-rooms', label: 'Public Rooms' },
+                ].map((tab) => (
+                    <motion.button
+                        key={tab.id}
+                        className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        {tab.label}
+                    </motion.button>
+                ))}
             </div>
 
-            {}
-            {editingText && (
-                <div className="modal-overlay">
-                    <div className="modal edit-modal">
-                        <h2>Edit Text (Code: {editingText.id})</h2>
-                        <textarea
-                            value={editedContent}
-                            onChange={(e) => setEditedContent(e.target.value)}
-                            rows={10}
-                        />
-                        <div className="modal-buttons">
-                            <button className="Btn save" onClick={handleUpdateText}>Save</button>
-                            <button className="Btn cancel" onClick={handleCancelEdit}>Cancel</button>
+            <motion.div
+                className="admin-content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                {activeTab === 'texts' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1>Text Management</h1>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={handleDeleteAllTexts}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete All Texts
+                            </motion.button>
                         </div>
-                    </div>
-                </div>
-            )}
 
-            {}
-            {showPasswordModal && (
-                <div className="modal-overlay">
-                    <div className="modal password-modal">
-                        <h2>Change Admin Password</h2>
-                        <form onSubmit={handleChangePassword}>
+                        {error && <div className="error-message">{error}</div>}
+
+                        {loading ? (
+                            <div className="loading">Loading texts...</div>
+                        ) : texts.length === 0 ? (
+                            <div className="no-data">No texts found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Content</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {texts.map((text) => (
+                                            <tr key={text.id}>
+                                                <td className="room-code">{text.id}</td>
+                                                <td className="text-content">{text.text}</td>
+                                                <td>{new Date(text.createdAt).toLocaleString()}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn edit"
+                                                        onClick={() => handleEditText(text)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Edit
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn edit-code"
+                                                        onClick={() => handleEditCode(text)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Edit Code
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn regenerate-code"
+                                                        onClick={() => handleRegenerateCode(text.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Regenerate
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeleteText(text.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'images' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1>Image Management</h1>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={handleDeleteAllImages}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete All Images
+                            </motion.button>
+                        </div>
+
+                        {imagesError && <div className="error-message">{imagesError}</div>}
+
+                        {imagesLoading ? (
+                            <div className="loading">Loading images...</div>
+                        ) : images.length === 0 ? (
+                            <div className="no-data">No images found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Preview</th>
+                                            <th>Original Name</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {images.map((image) => (
+                                            <tr key={image.id}>
+                                                <td className="room-code">{image.id}</td>
+                                                <td>
+                                                    <div className="image-thumb">
+                                                        <img src={image.url} alt={image.originalName} />
+                                                    </div>
+                                                </td>
+                                                <td>{image.originalName}</td>
+                                                <td>{new Date(image.createdAt).toLocaleString()}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn edit"
+                                                        onClick={() => window.open(image.url, '_blank')}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        View
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn edit-code"
+                                                        onClick={() => handleEditImageCode(image)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Edit Code
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn regenerate-code"
+                                                        onClick={() => handleRegenerateImageCode(image.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Regenerate
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeleteImage(image.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'public-rooms' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1>Public Rooms</h1>
+                            <motion.button
+                                className="Btn create-public-room"
+                                onClick={() => setShowPublicRoomModal(true)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Create Public Room
+                            </motion.button>
+                        </div>
+
+                        {publicRoomsError && <div className="error-message">{publicRoomsError}</div>}
+
+                        {publicRoomsLoading ? (
+                            <div className="loading">Loading public rooms...</div>
+                        ) : publicRooms.length === 0 ? (
+                            <div className="no-data">No public rooms found</div>
+                        ) : (
+                            <div className="public-rooms-container">
+                                <table className="public-rooms-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Room Code</th>
+                                            <th>Room Name</th>
+                                            <th>Status</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {publicRooms.map((room) => (
+                                            <tr key={room.code} className={room.active ? 'room-active' : 'room-inactive'}>
+                                                <td className="room-code">{room.code}</td>
+                                                <td>{room.name || 'Unnamed Room'}</td>
+                                                <td>
+                                                    <span className={`status-badge ${room.active ? 'active' : 'inactive'}`}>
+                                                        {room.active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td>{new Date(room.createdAt).toLocaleString()}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className={`action-btn ${room.active ? 'deactivate' : 'activate'}`}
+                                                        onClick={() => handleTogglePublicRoomStatus(room.code)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        {room.active ? 'Deactivate' : 'Activate'}
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeletePublicRoom(room.code)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </motion.div>
+
+            <AnimatePresence>
+                {editingText && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Edit Text</h2>
+                            <div className="code-field">
+                                <label>Text Content</label>
+                                <textarea
+                                    value={editedContent}
+                                    onChange={(e) => setEditedContent(e.target.value)}
+                                    placeholder="Enter text content"
+                                    rows={6}
+                                />
+                            </div>
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn save"
+                                    onClick={handleUpdateText}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Save Changes
+                                </motion.button>
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={handleCancelEdit}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Cancel
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showPasswordModal && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Change Admin Password</h2>
+                            {passwordError && <div className="error-message">{passwordError}</div>}
                             <div className="password-field">
                                 <label>Current Password</label>
                                 <input
                                     type="password"
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    required
+                                    placeholder="Enter current password"
                                 />
                             </div>
                             <div className="password-field">
@@ -839,7 +951,7 @@ const AdminPanel = () => {
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    required
+                                    placeholder="Enter new password"
                                 />
                             </div>
                             <div className="password-field">
@@ -848,182 +960,208 @@ const AdminPanel = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
+                                    placeholder="Confirm new password"
                                 />
                             </div>
-
-                            {passwordError && (
-                                <div className="error-message">{passwordError}</div>
-                            )}
-
                             <div className="modal-buttons">
-                                <button type="submit" className="Btn save">Change Password</button>
-                                <button
-                                    type="button"
-                                    className="Btn cancel"
-                                    onClick={() => setShowPasswordModal(false)}
+                                <motion.button
+                                    className="Btn save"
+                                    onClick={handleChangePassword}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {}
-            {showCodeModal && (
-                <div className="modal-overlay">
-                    <div className="modal code-modal">
-                        <h2>Edit Code</h2>
-                        <div className="code-info">
-                            <p>Current text: <span className="highlight">
-                                {editingCode?.text.length > 50
-                                    ? `${editingCode?.text.substring(0, 50)}...`
-                                    : editingCode?.text}
-                            </span></p>
-                            <p>Current code: <span className="highlight">{editingCode?.id}</span></p>
-                        </div>
-
-                        <div className="code-field">
-                            <label>New Code (4 digits)</label>
-                            <input
-                                type="text"
-                                value={newCode}
-                                onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                    setNewCode(value);
-                                }}
-                                onBlur={handleCheckCodeAvailability}
-                                maxLength={4}
-                                pattern="\d{4}"
-                                placeholder="Enter a 4-digit code"
-                                required
-                                className="code-input"
-                            />
-                        </div>
-
-                        {codeError && (
-                            <div className="error-message">{codeError}</div>
-                        )}
-
-                        <div className="modal-buttons">
-                            <button
-                                type="button"
-                                className="Btn save"
-                                onClick={handleUpdateCode}
-                                disabled={!newCode || newCode.length !== 4 || codeError}
-                            >
-                                Update Code
-                            </button>
-                            <button
-                                type="button"
-                                className="Btn cancel"
-                                onClick={handleCancelCodeEdit}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showImageCodeModal && (
-                <div className="modal-overlay">
-                    <div className="modal code-modal">
-                        <h2>Edit Image Code</h2>
-                        <div className="code-info">
-                            <p>Current file: <span className="highlight">
-                                {editingImage?.originalName || 'Shared image'}
-                            </span></p>
-                            <p>Current code: <span className="highlight">{editingImage?.id}</span></p>
-                        </div>
-
-                        <div className="code-field">
-                            <label>New Code (4 digits)</label>
-                            <input
-                                type="text"
-                                value={newImageCode}
-                                onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                    setNewImageCode(value);
-                                }}
-                                onBlur={handleCheckImageCodeAvailability}
-                                maxLength={4}
-                                pattern="\d{4}"
-                                placeholder="Enter a 4-digit code"
-                                required
-                                className="code-input"
-                            />
-                        </div>
-
-                        {imageCodeError && (
-                            <div className="error-message">{imageCodeError}</div>
-                        )}
-
-                        <div className="modal-buttons">
-                            <button
-                                type="button"
-                                className="Btn save"
-                                onClick={handleUpdateImageCode}
-                                disabled={!newImageCode || newImageCode.length !== 4 || imageCodeError}
-                            >
-                                Update Code
-                            </button>
-                            <button
-                                type="button"
-                                className="Btn cancel"
-                                onClick={handleCancelImageCodeEdit}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {}
-            {showPublicRoomModal && (
-                <div className="modal-overlay">
-                    <div className="modal public-room-modal">
-                        <h2>Create New Public Room</h2>
-                        <form onSubmit={handleCreatePublicRoom}>
-                            <div className="room-field">
-                                <label>Room Name (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={publicRoomName}
-                                    onChange={(e) => setPublicRoomName(e.target.value)}
-                                    placeholder="Enter a name for this room"
-                                    className="room-name-input"
-                                    maxLength={50}
-                                />
-                                <p className="room-info">
-                                    A random 4-digit code will be generated automatically.<br />
-                                    If no name is provided, a default name will be used.
-                                </p>
-                            </div>
-
-                            <div className="modal-buttons">
-                                <button type="submit" className="Btn save">Create Room</button>
-                                <button
-                                    type="button"
+                                    Change Password
+                                </motion.button>
+                                <motion.button
                                     className="Btn cancel"
                                     onClick={() => {
-                                        setShowPublicRoomModal(false);
-                                        setPublicRoomName('');
+                                        setShowPasswordModal(false);
+                                        setCurrentPassword('');
+                                        setNewPassword('');
+                                        setConfirmPassword('');
+                                        setPasswordError('');
                                     }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                 >
                                     Cancel
-                                </button>
+                                </motion.button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showCodeModal && editingCode && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Update Text Code</h2>
+                            <div className="code-info">
+                                Current code: <span className="highlight">{editingCode.id}</span>
+                            </div>
+                            <div className="code-field">
+                                <label>New 4-Digit Code</label>
+                                <input
+                                    type="text"
+                                    className="code-input"
+                                    value={newCode}
+                                    onChange={(e) => setNewCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    placeholder="Enter new code"
+                                    maxLength={4}
+                                />
+                            </div>
+                            {codeError && <div className="error-message">{codeError}</div>}
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn save"
+                                    onClick={handleUpdateCode}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Update Code
+                                </motion.button>
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={handleCancelCodeEdit}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Cancel
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showImageCodeModal && editingImage && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Update Image Code</h2>
+                            <div className="code-info">
+                                Current code: <span className="highlight">{editingImage.id}</span>
+                            </div>
+                            <div className="code-field">
+                                <label>New 4-Digit Code</label>
+                                <input
+                                    type="text"
+                                    className="code-input"
+                                    value={newImageCode}
+                                    onChange={(e) => setNewImageCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    placeholder="Enter new code"
+                                    maxLength={4}
+                                />
+                            </div>
+                            {imageCodeError && <div className="error-message">{imageCodeError}</div>}
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn save"
+                                    onClick={handleUpdateImageCode}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Update Code
+                                </motion.button>
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={() => {
+                                        setShowImageCodeModal(false);
+                                        setEditingImage(null);
+                                        setNewImageCode('');
+                                        setImageCodeError('');
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Cancel
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showPublicRoomModal && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Create Public Room</h2>
+                            <div className="room-modal-info">
+                                A random 4-digit code will be generated automatically.
+                                If no name is provided, a default name will be used.
+                            </div>
+                            <form onSubmit={handleCreatePublicRoom}>
+                                <div className="room-field">
+                                    <label>Room Name (Optional)</label>
+                                    <input
+                                        type="text"
+                                        className="room-name-input"
+                                        value={publicRoomName}
+                                        onChange={(e) => setPublicRoomName(e.target.value)}
+                                        placeholder="Enter room name"
+                                    />
+                                </div>
+                                <div className="modal-buttons">
+                                    <motion.button
+                                        type="submit"
+                                        className="Btn save"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Create Room
+                                    </motion.button>
+                                    <motion.button
+                                        type="button"
+                                        className="Btn cancel"
+                                        onClick={() => {
+                                            setShowPublicRoomModal(false);
+                                            setPublicRoomName('');
+                                        }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Cancel
+                                    </motion.button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 export default AdminPanel;
-

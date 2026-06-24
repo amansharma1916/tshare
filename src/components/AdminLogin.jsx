@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './AdminLogin.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
@@ -46,48 +47,67 @@ const AdminLogin = () => {
 
     return (
         <div className="admin-login-container">
-            <div className="nameBanner">
-                {bannerText} <span className="admin-badge">Admin</span>
-            </div>
-
-            <div className="admin-login-box">
-                <h1>Admin Login</h1>
+            <motion.div
+                className="admin-login-box"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <div className="admin-login__header">
+                    <h1 className="admin-login__title">Admin Login</h1>
+                    <p className="admin-login__subtitle">Enter your password to access the admin panel</p>
+                </div>
 
                 <form onSubmit={handleLogin}>
-                    <div className="password-field">
+                    <div className="admin-login__field">
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter admin password"
                             autoFocus
+                            className="admin-login__input"
                         />
                     </div>
 
-                    {error && <div className="error-message">{error}</div>}
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                className="admin-login__error"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                {error}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                    <div className="admin-buttons">
-                        <button
-                            className="Btn"
+                    <div className="admin-login__buttons">
+                        <motion.button
+                            className="btn btn--primary admin-login__btn"
                             type="submit"
                             disabled={loading}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                         >
                             {loading ? 'Logging in...' : 'Login'}
-                        </button>
+                        </motion.button>
 
-                        <button
-                            className="Btn secondary"
+                        <motion.button
+                            className="btn btn--secondary admin-login__btn"
                             type="button"
                             onClick={() => (window.location.href = '/')}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                         >
                             Back to Home
-                        </button>
+                        </motion.button>
                     </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 };
 
 export default AdminLogin;
-
