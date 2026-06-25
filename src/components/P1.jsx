@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import './p1.css'
 
 const P1 = () => {
@@ -163,9 +164,13 @@ const P1 = () => {
           <span className="home__footer-text">
             TShare &copy; 2025 &middot; Instant sharing, no setup needed
           </span>
-          <a href="/admin/login" className="home__admin-link">
-            Admin
-          </a>
+          <div className="home__footer-links">
+            <Link to="/privacy-policy" className="home__footer-link">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="home__footer-link">Terms of Service</Link>
+            <Link to="/about" className="home__footer-link">About</Link>
+            <Link to="/contact" className="home__footer-link">Contact</Link>
+            <Link to="/admin/login" className="home__admin-link">Admin</Link>
+          </div>
         </div>
       </motion.div>
     </div>

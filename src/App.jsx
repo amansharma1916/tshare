@@ -9,6 +9,10 @@ import RecievePage from './components/RecievePage.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import PublicRoom from './components/publicArea/PublicRoom.jsx'
+import PrivacyPolicy from './components/pages/PrivacyPage.jsx'
+import TermsOfService from './components/pages/TermsOfService.jsx'
+import About from './components/pages/About.jsx'
+import Contact from './components/pages/Contact.jsx'
 import { endpoints } from './api/api.js'
 
 function App() {
@@ -47,6 +51,10 @@ function App() {
           <Route path='/admin/login' element={<AdminLogin />}></Route>
           <Route path='/admin/panel' element={<AdminPanel />}></Route>
           <Route path='/public-room' element={<PublicRoom />}></Route>
+          <Route path='/privacy-policy' element={<PrivacyPolicy />}></Route>
+          <Route path='/terms-of-service' element={<TermsOfService />}></Route>
+          <Route path='/about' element={<About />}></Route>
+          <Route path='/contact' element={<Contact />}></Route>
         </Routes>
       </BrowserRouter>
 
