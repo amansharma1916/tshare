@@ -294,11 +294,12 @@
 .home__footer-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   max-width: 560px;
   margin: 0 auto;
   flex-wrap: wrap;
   gap: var(--space-3);
+  text-align: center;
 }
 
 .home__footer-text {
