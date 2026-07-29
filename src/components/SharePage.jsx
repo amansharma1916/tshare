@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './SharePage.css';
 import { endpoints, baseUrl } from '../api/api';
 import io from 'socket.io-client';
+import UsernamePopup from './auth/UsernamePopup';
 
 const SharePage = () => {
   const [code, setCode] = useState('');
@@ -11,6 +12,8 @@ const SharePage = () => {
   const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
   const [showCode, setShowCode] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [pendingText, setPendingText] = useState('');
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -27,23 +30,35 @@ const SharePage = () => {
       return;
     }
 
+    const username = localStorage.getItem('tshare_username');
+    if (!username) {
+      setPendingText(text);
+      setPopupOpen(true);
+      return;
+    }
+
+    doSaveText(text, username);
+  };
+
+  const doSaveText = (textToSave, username) => {
     setLoading(true);
     setShowCode(false);
 
     fetch(endpoints.save, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text: textToSave, username }),
     })
       .then(res => res.json())
       .then(data => {
-        setCode(String(data.id));
-        setText('');
-        setShowCode(true);
+        const newCode = String(data.id)
+        setCode(newCode)
+        setText('')
+        setShowCode(true)
         if (socket) {
           socket.emit('text-update', {
             textId: data.id,
-            text: text
+            text: textToSave
           });
         }
       })
@@ -53,6 +68,11 @@ const SharePage = () => {
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  const handleUsernameSubmit = (username) => {
+    setPopupOpen(false);
+    doSaveText(pendingText, username);
   };
 
   const copyCode = () => {
@@ -74,7 +94,11 @@ const SharePage = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="nav__inner">
-          <button className="nav__back" onClick={() => window.location.href = '/'}>
+          <button className="nav__back" onClick={() => {
+            const params = new URLSearchParams(window.location.search);
+            const from = params.get('from');
+            window.location.href = from || '/';
+          }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5" />
               <path d="M12 19l-7-7 7-7" />
@@ -86,9 +110,15 @@ const SharePage = () => {
             <span>TShare</span>
           </div>
         </div>
-      </motion.nav>
+    </motion.nav>
 
-      <main className="share">
+    <UsernamePopup
+      isOpen={popupOpen}
+      onClose={() => setPopupOpen(false)}
+      onUsernameSubmit={handleUsernameSubmit}
+    />
+
+    <main className="share">
         <div className="share__container">
           <motion.div
             className="share__header"

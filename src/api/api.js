@@ -35,8 +35,16 @@ export const endpoints = {
     adminPublicRooms: `${API_URL}/admin/public-rooms`,
     adminDeletePublicRoom: (code) => `${API_URL}/admin/public-rooms/${code}`,
     adminTogglePublicRoomStatus: (code) => `${API_URL}/admin/public-rooms/${code}/toggle-status`,
+    adminUsers: `${API_URL}/admin/users`,
+    adminDeleteUser: (id) => `${API_URL}/admin/users/${id}`,
+    adminDeleteAllUsers: `${API_URL}/admin/users`,
     validatePublicRoom: (code) => `${API_URL}/public-room/validate/${code}`,
     getPublicRoomMessages: (code) => `${API_URL}/public-room/${code}/messages`,
+    register: `${API_URL}/register`,
+    login: `${API_URL}/login`,
+    userMap: `${API_URL}/user/map`,
+    userItems: (username) => `${API_URL}/user/${username}/items`,
+    userHistory: (username) => `${API_URL}/user/${username}/history`,
 };
 
 export default {

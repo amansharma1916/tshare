@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './ImageSharePage.css';
 import { endpoints } from '../api/api';
+import UsernamePopup from './auth/UsernamePopup';
 
 const ImageSharePage = () => {
   const [imageCode, setImageCode] = useState('');
@@ -12,6 +13,7 @@ const ImageSharePage = () => {
   const [imageError, setImageError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -61,8 +63,19 @@ const ImageSharePage = () => {
       return;
     }
 
+    const username = localStorage.getItem('tshare_username');
+    if (!username) {
+      setPopupOpen(true);
+      return;
+    }
+
+    doUploadImage(username);
+  };
+
+  const doUploadImage = (username) => {
     const formData = new FormData();
     formData.append('image', imageFile);
+    formData.append('username', username);
 
     setImageLoading(true);
     setImageError('');
@@ -76,7 +89,8 @@ const ImageSharePage = () => {
         if (!data.success) {
           throw new Error(data.message || 'Failed to upload image');
         }
-        setImageCode(String(data.id));
+        const newCode = String(data.id);
+        setImageCode(newCode);
         setShowCode(true);
       })
       .catch(error => {
@@ -86,6 +100,11 @@ const ImageSharePage = () => {
       .finally(() => {
         setImageLoading(false);
       });
+  };
+
+  const handleUsernameSubmit = (username) => {
+    setPopupOpen(false);
+    doUploadImage(username);
   };
 
   const copyImageCode = () => {
@@ -107,7 +126,11 @@ const ImageSharePage = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="nav__inner">
-          <button className="nav__back" onClick={() => window.location.href = '/'}>
+          <button className="nav__back" onClick={() => {
+            const params = new URLSearchParams(window.location.search);
+            const from = params.get('from');
+            window.location.href = from || '/';
+          }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5" />
               <path d="M12 19l-7-7 7-7" />
@@ -119,9 +142,15 @@ const ImageSharePage = () => {
             <span>TShare</span>
           </div>
         </div>
-      </motion.nav>
+    </motion.nav>
 
-      <main className="share">
+    <UsernamePopup
+      isOpen={popupOpen}
+      onClose={() => setPopupOpen(false)}
+      onUsernameSubmit={handleUsernameSubmit}
+    />
+
+    <main className="share">
         <div className="share__container">
           <motion.div
             className="share__header"

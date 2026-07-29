@@ -13,6 +13,9 @@ import PrivacyPolicy from './components/pages/PrivacyPage.jsx'
 import TermsOfService from './components/pages/TermsOfService.jsx'
 import About from './components/pages/About.jsx'
 import Contact from './components/pages/Contact.jsx'
+import Login from './components/auth/Login.jsx'
+import Register from './components/auth/Register.jsx'
+import Dashboard from './components/dashboard/Dashboard.jsx'
 import { endpoints } from './api/api.js'
 
 function App() {
@@ -55,6 +58,9 @@ function App() {
           <Route path='/terms-of-service' element={<TermsOfService />}></Route>
           <Route path='/about' element={<About />}></Route>
           <Route path='/contact' element={<Contact />}></Route>
+          <Route path='/login' element={<Login />}></Route>
+          <Route path='/register' element={<Register />}></Route>
+          <Route path='/dashboard' element={<Dashboard />}></Route>
         </Routes>
       </BrowserRouter>
 

@@ -27,6 +27,43 @@
   animation: orbFloat 20s ease-in-out infinite alternate;
 }
 
+.home__profile-icon {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: var(--z-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.home__profile-icon:hover {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  background: var(--bg-glass-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow-subtle);
+}
+
+.home__profile-icon:active {
+  transform: translateY(0);
+}
+
+.home__profile-avatar {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
 .home__orb--2 {
   width: 500px;
   height: 500px;

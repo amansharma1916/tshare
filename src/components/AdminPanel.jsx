@@ -8,9 +8,12 @@ const AdminPanel = () => {
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imagesLoading, setImagesLoading] = useState(true);
     const [publicRoomsLoading, setPublicRoomsLoading] = useState(true);
+    const [usersLoading, setUsersLoading] = useState(true);
+    const [usersError, setUsersError] = useState('');
     const [error, setError] = useState('');
     const [imagesError, setImagesError] = useState('');
     const [publicRoomsError, setPublicRoomsError] = useState('');
@@ -46,6 +49,28 @@ const AdminPanel = () => {
         fetchTexts();
         fetchImages();
         fetchPublicRooms();
+        fetchUsers();
+    };
+
+    const fetchUsers = async () => {
+        setUsersLoading(true);
+        setUsersError('');
+
+        try {
+            const response = await fetch(endpoints.adminUsers);
+            const data = await response.json();
+
+            if (data.success) {
+                setUsers(data.users || []);
+            } else {
+                setUsersError('Failed to fetch users');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setUsersError('Failed to connect to server. Please try again.');
+        } finally {
+            setUsersLoading(false);
+        }
     };
 
     const fetchTexts = async () => {
@@ -558,6 +583,54 @@ const AdminPanel = () => {
         }
     };
 
+    const handleDeleteUser = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this user? This will also delete all their mapped items.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteUser(id), {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setUsers(users.filter(user => user.id !== id));
+                showActionMessage('User deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete user', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleDeleteAllUsers = async () => {
+        if (!window.confirm('Are you sure you want to delete ALL users? This will also delete all mapped items. This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteAllUsers, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setUsers([]);
+                showActionMessage(`All users deleted successfully (${data.deletedCount} users)`, 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete users', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
     const showActionMessage = (text, type) => {
         setActionMessage({ text, type });
         setTimeout(() => {
@@ -617,6 +690,7 @@ const AdminPanel = () => {
                     { id: 'texts', label: 'Texts' },
                     { id: 'images', label: 'Images' },
                     { id: 'public-rooms', label: 'Public Rooms' },
+                    { id: 'users', label: 'Users' },
                 ].map((tab) => (
                     <motion.button
                         key={tab.id}
@@ -857,6 +931,64 @@ const AdminPanel = () => {
                                                     <motion.button
                                                         className="action-btn delete"
                                                         onClick={() => handleDeletePublicRoom(room.code)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'users' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1>Registered Users</h1>
+                            {users.length > 0 && (
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={handleDeleteAllUsers}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete All Users
+                                </motion.button>
+                            )}
+                        </div>
+
+                        {usersError && <div className="error-message">{usersError}</div>}
+
+                        {usersLoading ? (
+                            <div className="loading">Loading users...</div>
+                        ) : users.length === 0 ? (
+                            <div className="no-data">No users found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Items</th>
+                                            <th>Joined At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.map((user) => (
+                                            <tr key={user.id || user.username}>
+                                                <td>{user.username}</td>
+                                                <td>{user.itemCount || 0}</td>
+                                                <td>{user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeleteUser(user.id)}
                                                         whileHover={{ scale: 1.05 }}
                                                         whileTap={{ scale: 0.95 }}
                                                     >

@@ -18,8 +18,21 @@ const P1 = () => {
 
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
+  const username = localStorage.getItem('tshare_username') || ''
+
   return (
     <div className="home">
+      <Link to={username ? '/dashboard' : '/login'} className="home__profile-icon" title={username ? `Dashboard - ${username}` : 'Login'}>
+        {username ? (
+          <span className="home__profile-avatar">{username.charAt(0).toUpperCase()}</span>
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        )}
+      </Link>
+
       <div className="home__bg-digits" aria-hidden="true">
         {digits.map((digit, i) => (
           <motion.span

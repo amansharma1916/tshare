@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
+import UsernamePopup from './auth/UsernamePopup';
 
 const SEGMENT_COUNT = 4;
 
@@ -22,6 +23,9 @@ const RecievePage = () => {
   const segmentRefs = useRef([]);
   const [contentType, setContentType] = useState('text');
   const [showContent, setShowContent] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [pendingCode, setPendingCode] = useState('');
+  const [pendingContentType, setPendingContentType] = useState('text');
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -115,12 +119,29 @@ const RecievePage = () => {
       return;
     }
 
-    if (contentType === 'text') receiveData(code);
-    else if (contentType === 'image') receiveImage(code);
-    else if (contentType === 'pdf') receivePdf(code);
+    const username = localStorage.getItem('tshare_username');
+    if (!username) {
+      setPendingCode(code);
+      setPendingContentType(contentType);
+      setPopupOpen(true);
+      return;
+    }
+
+    doReceive(code, contentType, username);
   };
 
-  const receiveData = (code) => {
+  const doReceive = (code, type, username) => {
+    if (type === 'text') receiveData(code, username);
+    else if (type === 'image') receiveImage(code, username);
+    else if (type === 'pdf') receivePdf(code, username);
+  };
+
+  const handleUsernameSubmit = (username) => {
+    setPopupOpen(false);
+    doReceive(pendingCode, pendingContentType, username);
+  };
+
+  const receiveData = (code, username) => {
     setLoading(true);
     setError('');
     setSuccessMessage('');
@@ -128,7 +149,7 @@ const RecievePage = () => {
     setImageData(null);
     setPdfData(null);
 
-    fetch(endpoints.get(code))
+    fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
         if (!res.ok) throw new Error('Invalid code or content not found');
         return res.json();
@@ -152,7 +173,7 @@ const RecievePage = () => {
       .finally(() => setLoading(false));
   };
 
-  const receiveImage = (code) => {
+  const receiveImage = (code, username) => {
     setImageLoading(true);
     setError('');
     setSuccessMessage('');
@@ -160,7 +181,7 @@ const RecievePage = () => {
     setReceivedData('');
     setPdfData(null);
 
-    fetch(endpoints.getImage(code))
+    fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
         if (!res.ok) throw new Error('Invalid code or image not found');
         return res.json();
@@ -181,7 +202,7 @@ const RecievePage = () => {
       .finally(() => setImageLoading(false));
   };
 
-  const receivePdf = (code) => {
+  const receivePdf = (code, username) => {
     setPdfLoading(true);
     setError('');
     setSuccessMessage('');
@@ -189,7 +210,7 @@ const RecievePage = () => {
     setReceivedData('');
     setImageData(null);
 
-    fetch(endpoints.getPdf(code))
+    fetch(endpoints.getPdf(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
         if (!res.ok) throw new Error('Invalid code or PDF not found');
         return res.json();
@@ -262,9 +283,15 @@ const RecievePage = () => {
             <span>TShare</span>
           </div>
         </div>
-      </motion.nav>
+    </motion.nav>
 
-      <main className="receive">
+    <UsernamePopup
+      isOpen={popupOpen}
+      onClose={() => setPopupOpen(false)}
+      onUsernameSubmit={handleUsernameSubmit}
+    />
+
+    <main className="receive">
         <div className="receive__container">
           <motion.div
             className="share__header"
