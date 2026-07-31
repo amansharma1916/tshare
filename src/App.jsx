@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
 import './App.css'
-import P1 from './components/P1.jsx'
-import { Link, Routes, Route, NavLink, BrowserRouter } from 'react-router-dom'
+import { Routes, Route, BrowserRouter, Navigate } from 'react-router-dom'
 import SharePage from './components/SharePage.jsx'
 import ImageSharePage from './components/ImageSharePage.jsx'
-import PdfSharePage from './components/PdfSharePage.jsx'
 import FileSharePage from './components/FileSharePage.jsx'
 import RecievePage from './components/RecievePage.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
@@ -18,6 +16,12 @@ import Login from './components/auth/Login.jsx'
 import Register from './components/auth/Register.jsx'
 import Dashboard from './components/dashboard/Dashboard.jsx'
 import { endpoints } from './api/api.js'
+import AppLayout from './components/layout/AppLayout.jsx'
+
+// Layout wrapper for routes that need the sidebar/topbar
+const LayoutRoute = ({ children }) => {
+  return <AppLayout>{children}</AppLayout>
+}
 
 function App() {
   useEffect(() => {
@@ -44,29 +48,37 @@ function App() {
   }, [])
 
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element={<P1 />}></Route>
-          <Route path='/sharePage' element={<SharePage />}></Route>
-          <Route path='/share-image' element={<ImageSharePage />}></Route>
-          <Route path='/share-pdf' element={<PdfSharePage />}></Route>
-          <Route path='/share-file' element={<FileSharePage />}></Route>
-          <Route path='/recievePage' element={<RecievePage />}></Route>
-          <Route path='/admin/login' element={<AdminLogin />}></Route>
-          <Route path='/admin/panel' element={<AdminPanel />}></Route>
-          <Route path='/public-room' element={<PublicRoom />}></Route>
-          <Route path='/privacy-policy' element={<PrivacyPolicy />}></Route>
-          <Route path='/terms-of-service' element={<TermsOfService />}></Route>
-          <Route path='/about' element={<About />}></Route>
-          <Route path='/contact' element={<Contact />}></Route>
-          <Route path='/login' element={<Login />}></Route>
-          <Route path='/register' element={<Register />}></Route>
-          <Route path='/dashboard' element={<Dashboard />}></Route>
-        </Routes>
-      </BrowserRouter>
+    <BrowserRouter>
+      <Routes>
+        {/* Landing page redirects to dashboard (which shows hero if not logged in) */}
+        <Route path='/' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
 
-    </>
+        {/* Auth pages (standalone, no layout) */}
+        <Route path='/login' element={<Login />} />
+        <Route path='/register' element={<Register />} />
+        <Route path='/admin/login' element={<AdminLogin />} />
+
+        {/* App pages (inside layout) */}
+        <Route path='/dashboard' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
+        <Route path='/share' element={<LayoutRoute><SharePage /></LayoutRoute>} />
+        <Route path='/share-image' element={<LayoutRoute><ImageSharePage /></LayoutRoute>} />
+        <Route path='/share-file' element={<LayoutRoute><FileSharePage /></LayoutRoute>} />
+        <Route path='/receive' element={<LayoutRoute><RecievePage /></LayoutRoute>} />
+        <Route path='/receive-text' element={<LayoutRoute><RecievePage fixedType="text" /></LayoutRoute>} />
+        <Route path='/receive-image' element={<LayoutRoute><RecievePage fixedType="image" /></LayoutRoute>} />
+        <Route path='/receive-file' element={<LayoutRoute><RecievePage fixedType="file" /></LayoutRoute>} />
+        <Route path='/public-room' element={<LayoutRoute><PublicRoom /></LayoutRoute>} />
+        <Route path='/admin/panel' element={<LayoutRoute><AdminPanel /></LayoutRoute>} />
+        <Route path='/privacy-policy' element={<LayoutRoute><PrivacyPolicy /></LayoutRoute>} />
+        <Route path='/terms-of-service' element={<LayoutRoute><TermsOfService /></LayoutRoute>} />
+        <Route path='/about' element={<LayoutRoute><About /></LayoutRoute>} />
+        <Route path='/contact' element={<LayoutRoute><Contact /></LayoutRoute>} />
+
+        {/* Redirect old routes to new ones */}
+        <Route path='/sharePage' element={<Navigate to="/share" replace />} />
+        <Route path='/recievePage' element={<Navigate to="/receive" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

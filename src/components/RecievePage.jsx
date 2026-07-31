@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
 import UsernamePopup from './auth/UsernamePopup';
+import { useLayout } from './layout/LayoutContext';
 
 const SEGMENT_COUNT = 4;
 
-const RecievePage = () => {
+const RecievePage = ({ fixedType = null }) => {
   const navigate = useNavigate();
+  const { insideLayout } = useLayout();
   const [receivedData, setReceivedData] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -26,7 +28,7 @@ const RecievePage = () => {
   const [segments, setSegments] = useState(Array(SEGMENT_COUNT).fill(''));
   const [activeSegment, setActiveSegment] = useState(0);
   const segmentRefs = useRef([]);
-  const [contentType, setContentType] = useState('text');
+  const [contentType, setContentType] = useState(fixedType || 'text');
   const [showContent, setShowContent] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [pendingCode, setPendingCode] = useState('');
@@ -141,7 +143,6 @@ const RecievePage = () => {
   const doReceive = (code, type, username) => {
     if (type === 'text') return receiveData(code, username);
     else if (type === 'image') return receiveImage(code, username);
-    else if (type === 'pdf') return receivePdf(code, username);
     else if (type === 'file') return receiveFile(code, username);
   };
 
@@ -175,8 +176,8 @@ const RecievePage = () => {
 
     return fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
-          if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
-          return res.json();
+        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
+        return res.json();
       })
       .then(data => {
         if (data && data.text) {
@@ -228,36 +229,6 @@ const RecievePage = () => {
       .finally(() => setImageLoading(false));
   };
 
-  const receivePdf = (code, username) => {
-    setPdfLoading(true);
-    setError('');
-    setSuccessMessage('');
-    setShowContent(false);
-    setReceivedData('');
-    setImageData(null);
-
-    return fetch(endpoints.getPdf(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
-      .then(res => {
-        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or PDF not found') });
-        return res.json();
-      })
-      .then(data => {
-        if (data?.pdf?.url) {
-          setPdfData(data.pdf);
-          setPdfCode(code);
-          setSuccessMessage('PDF received');
-          setShowContent(true);
-        } else {
-          throw new Error('No PDF found for this code');
-        }
-      })
-      .catch(error => {
-        setError(error.message || 'Failed to retrieve PDF');
-        throw error;
-      })
-      .finally(() => setPdfLoading(false));
-  };
-
   const receiveFile = (code, username) => {
     setFileLoading(true);
     setError('');
@@ -304,17 +275,12 @@ const RecievePage = () => {
     window.location.href = endpoints.downloadImage(imageCode);
   };
 
-  const downloadPdf = () => {
-    if (!pdfCode) return;
-    window.location.href = endpoints.downloadPdf(pdfCode);
-  };
-
   const downloadFile = () => {
     if (!fileCode) return;
     window.location.href = endpoints.downloadFile(fileCode);
   };
 
-  const isReceiving = loading || imageLoading || pdfLoading || fileLoading;
+  const isReceiving = loading || imageLoading || fileLoading;
 
   const contentVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -325,40 +291,56 @@ const RecievePage = () => {
     }
   };
 
+  const getTitle = () => {
+    if (fixedType === 'text') return 'Receive Text';
+    if (fixedType === 'image') return 'Receive Image';
+    if (fixedType === 'file') return 'Receive File';
+    return 'Receive Content';
+  };
+
+  const getDesc = () => {
+    if (fixedType === 'text') return 'Enter a 4-digit code to retrieve shared text.';
+    if (fixedType === 'image') return 'Enter a 4-digit code to retrieve a shared image.';
+    if (fixedType === 'file') return 'Enter a 4-digit code to retrieve a shared file.';
+    return 'Enter the 4-digit code shared with you.';
+  };
+
   return (
-    <div className="page">
-      <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="nav__inner">
-          <button className="nav__back" onClick={() => navigate('/')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-          <div className="nav__brand">
-            <img src="/s2.svg" alt="TShare" width="20" height="20" />
-            <span>TShare</span>
+    <div className={insideLayout ? '' : 'page'}>
+      {!insideLayout && (
+        <motion.nav
+          className="nav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="nav__inner">
+            <button className="nav__back" onClick={() => navigate('/')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <div className="nav__brand">
+              <img src="/s2.svg" alt="TShare" width="20" height="20" />
+              <span>TShare</span>
+            </div>
           </div>
-        </div>
-    </motion.nav>
+        </motion.nav>
+      )}
 
-    <UsernamePopup
-      isOpen={popupOpen}
-      onClose={() => { setPopupOpen(false); setPopupError(''); }}
-      onUsernameSubmit={handleUsernameSubmit}
-      onAnonymous={handleAnonymous}
-      submitError={popupError}
-      onClearSubmitError={() => setPopupError('')}
-      submitting={popupSubmitting}
-    />
+      <UsernamePopup
+        isOpen={popupOpen}
+        onClose={() => { setPopupOpen(false); setPopupError(''); }}
+        onUsernameSubmit={handleUsernameSubmit}
+        onAnonymous={handleAnonymous}
+        submitError={popupError}
+        onClearSubmitError={() => setPopupError('')}
+        submitting={popupSubmitting}
+      />
 
-    <main className="receive">
+      <main className="receive">
         <div className="receive__container">
           <motion.div
             className="share__header"
@@ -366,37 +348,8 @@ const RecievePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="share__title">Receive Content</h1>
-            <p className="share__desc">Enter the 4-digit code shared with you.</p>
-          </motion.div>
-
-          <motion.div
-            className="receive__tabs"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 }}
-          >
-            {[
-              { id: 'text', label: 'Text', icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
-              { id: 'image', label: 'Image', icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' },
-              { id: 'file', label: 'File', icon: 'M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                className={`receive__tab ${contentType === tab.id ? 'receive__tab--active' : ''}`}
-                onClick={() => {
-                  setContentType(tab.id);
-                  setError('');
-                  setSuccessMessage('');
-                  setShowContent(false);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={tab.icon} />
-                </svg>
-                {tab.label}
-              </button>
-            ))}
+            <h1 className="share__title">{getTitle()}</h1>
+            <p className="share__desc">{getDesc()}</p>
           </motion.div>
 
           <motion.div
@@ -554,31 +507,6 @@ const RecievePage = () => {
                         <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
                       Download
-                    </button>
-                  </div>
-                )}
-
-                {contentType === 'pdf' && pdfData && (
-                  <div className="receive__pdf-content">
-                    <div className="receive__pdf-wrapper">
-                      <iframe
-                        src={endpoints.previewPdf(pdfCode)}
-                        title="Shared PDF"
-                      />
-                    </div>
-                    <div className="receive__file-meta">
-                      <span>{pdfData.originalName || 'Shared PDF'}</span>
-                    </div>
-                    <button
-                      className="btn btn--secondary receive__action-btn"
-                      onClick={downloadPdf}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Download PDF
                     </button>
                   </div>
                 )}

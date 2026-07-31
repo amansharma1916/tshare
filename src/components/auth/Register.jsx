@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { endpoints } from '../../api/api'
 import './Login.css'
 
@@ -39,61 +40,124 @@ const Register = () => {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-back">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--layout-bg)',
+      padding: '20px',
+    }}>
+      <motion.div
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          background: 'var(--sidebar-bg)',
+          border: '1px solid var(--sidebar-border)',
+          borderRadius: '12px',
+          padding: '32px',
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            background: 'var(--theme-primary)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
             </svg>
-            Back
-          </Link>
-          <div className="auth-brand">
-            <img src="/s2.svg" alt="TShare" width="28" height="28" />
-            <span>TShare</span>
           </div>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Create Account
+          </h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Choose a username to get started
+          </p>
         </div>
 
-        <h1 className="auth-title">Create account</h1>
-        <p className="auth-subtitle">Choose a username to get started</p>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label htmlFor="username" className="auth-label">Username</label>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+              Username
+            </label>
             <input
-              id="username"
               type="text"
-              className="auth-input"
-              placeholder="Choose a username"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError('') }}
+              placeholder="Choose a username"
               autoFocus
               required
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                background: 'var(--layout-bg)',
+                border: '1px solid var(--border-default)',
+                borderRadius: '6px',
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                outline: 'none',
+              }}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--theme-primary)' }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--border-default)' }}
             />
           </div>
 
           {error && (
-            <div className="auth-error">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
+            <motion.div
+              style={{
+                padding: '8px 12px',
+                background: 'var(--theme-danger-bg)',
+                color: 'var(--theme-danger-text)',
+                borderRadius: '6px',
+                fontSize: '13px',
+                textAlign: 'center',
+              }}
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <button type="submit" className="auth-btn" disabled={loading || !username.trim()}>
-            {loading ? 'Creating account...' : 'Create account'}
+          <button
+            type="submit"
+            disabled={loading || !username.trim()}
+            className="btn btn-primary"
+            style={{
+              width: '100%',
+              padding: '10px',
+              fontSize: '14px',
+              justifyContent: 'center',
+              opacity: (loading || !username.trim()) ? 0.7 : 1,
+            }}
+          >
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="auth-footer-text">
-          Already have an account?{' '}
-          <Link to="/login" className="auth-link">Login</Link>
-        </p>
-      </div>
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--theme-primary-light)', textDecoration: 'none' }}>
+              Login
+            </Link>
+          </p>
+          <Link to="/" style={{ display: 'inline-block', marginTop: '8px', fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>
+            Back to Home
+          </Link>
+        </div>
+      </motion.div>
     </div>
   )
 }

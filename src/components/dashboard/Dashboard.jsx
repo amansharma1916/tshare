@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { endpoints, baseUrl } from '../../api/api'
 import io from 'socket.io-client'
+import { useLayout } from '../layout/LayoutContext'
 import './Dashboard.css'
 
 const SEGMENT_COUNT = 4
 
 const Dashboard = () => {
   const navigate = useNavigate()
+  const { insideLayout } = useLayout()
   const username = localStorage.getItem('tshare_username') || ''
 
   // Share state
@@ -357,18 +359,80 @@ const Dashboard = () => {
 
   if (!username) {
     return (
-      <div className="page">
-        <div className="dashboard">
-          <div className="dashboard__empty">
-            <div className="dashboard__empty-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
+      <div className="module-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100%', padding: '40px 20px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '480px' }}>
+          <div style={{ width: '64px', height: '64px', background: 'var(--theme-primary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+          </div>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+            Share Anything. <span style={{ color: 'var(--theme-primary-light)' }}>In Seconds.</span>
+          </h1>
+          <p style={{ fontSize: '15px', color: 'var(--text-muted)', marginBottom: '32px', lineHeight: 1.6 }}>
+            No sign-up. No accounts. Just a 4-digit code. Share text, images, and files instantly.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '12px 20px', fontSize: '14px', justifyContent: 'center' }}
+              onClick={() => navigate('/share')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
               </svg>
-            </div>
-            <h2 className="dashboard__empty-title">Not logged in</h2>
-            <p className="dashboard__empty-desc">Login or create an account to access your dashboard.</p>
-            <Link to="/login" className="btn btn--primary">Go to Login</Link>
+              Share Something
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%', padding: '12px 20px', fontSize: '14px', justifyContent: 'center' }}
+              onClick={() => navigate('/receive')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M12 3v12" />
+              </svg>
+              Receive Content
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-ghost btn-xs" onClick={() => navigate('/public-room')}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                <path d="M16 3.13a4 4 0 010 7.75" />
+              </svg>
+              Public Rooms
+            </button>
+            <button className="btn btn-ghost btn-xs" onClick={() => navigate('/login')}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 01 2 2v14a2 2 0 01-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              Login
+            </button>
+            <button className="btn btn-ghost btn-xs" onClick={() => navigate('/register')}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" x2="19" y1="8" y2="14" />
+                <line x1="22" x2="16" y1="11" y2="11" />
+              </svg>
+              Register
+            </button>
+          </div>
+          <div style={{ marginTop: '40px', display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/about" style={{ fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>About</Link>
+            <Link to="/contact" style={{ fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>Contact</Link>
+            <Link to="/privacy-policy" style={{ fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>Privacy</Link>
+            <Link to="/terms-of-service" style={{ fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>Terms</Link>
+            <Link to="/admin/panel" style={{ fontSize: '12px', color: 'var(--text-subtle)', textDecoration: 'none' }}>Admin</Link>
           </div>
         </div>
       </div>
@@ -376,38 +440,40 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="page">
-      <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="nav__inner">
-          <button className="nav__back" onClick={() => navigate('/')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Home
-          </button>
-          <div className="nav__brand">
-            <img src="/s2.svg" alt="TShare" width="20" height="20" />
-            <span>Dashboard</span>
-          </div>
-          <div className="nav__user">
-            <span className="nav__username">{username}</span>
-            <button className="nav__logout" onClick={handleLogout} title="Logout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
+    <div className={insideLayout ? '' : 'page'}>
+      {!insideLayout && (
+        <motion.nav
+          className="nav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="nav__inner">
+            <button className="nav__back" onClick={() => navigate('/')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
               </svg>
-              Logout
+              Home
             </button>
+            <div className="nav__brand">
+              <img src="/s2.svg" alt="TShare" width="20" height="20" />
+              <span>Dashboard</span>
+            </div>
+            <div className="nav__user">
+              <span className="nav__username">{username}</span>
+              <button className="nav__logout" onClick={handleLogout} title="Logout">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
-        </div>
-      </motion.nav>
+        </motion.nav>
+      )}
 
       <main className="dashboard">
         <div className="dashboard__container">
@@ -565,12 +631,12 @@ const Dashboard = () => {
                       </svg>
                       Image
                     </button>
-                    <button className="dashboard__quick-btn" onClick={() => navigate('/share-pdf?from=/dashboard')}>
+                    <button className="dashboard__quick-btn" onClick={() => navigate('/share-file?from=/dashboard')}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
+                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                        <polyline points="13 2 13 9 20 9" />
                       </svg>
-                      PDF
+                      File
                     </button>
                   </div>
                 </div>

@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './PdfSharePage.css';
 import { endpoints } from '../api/api';
 import UsernamePopup from './auth/UsernamePopup';
+import { useLayout } from './layout/LayoutContext';
 
 const PdfSharePage = () => {
   const navigate = useNavigate();
+  const { insideLayout } = useLayout();
   const [pdfCode, setPdfCode] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState('');
@@ -125,31 +127,33 @@ const PdfSharePage = () => {
   };
 
   return (
-    <div className="page">
-      <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="nav__inner">
-          <button className="nav__back" onClick={() => {
-            const params = new URLSearchParams(window.location.search);
-            const from = params.get('from');
-            navigate(from || '/');
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-          <div className="nav__brand">
-            <img src="/s2.svg" alt="TShare" width="20" height="20" />
-            <span>TShare</span>
+    <div className={insideLayout ? '' : 'page'}>
+      {!insideLayout && (
+        <motion.nav
+          className="nav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="nav__inner">
+            <button className="nav__back" onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              const from = params.get('from');
+              navigate(from || '/');
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <div className="nav__brand">
+              <img src="/s2.svg" alt="TShare" width="20" height="20" />
+              <span>TShare</span>
+            </div>
           </div>
-        </div>
-    </motion.nav>
+        </motion.nav>
+      )}
 
     <UsernamePopup
       isOpen={popupOpen}
@@ -333,7 +337,7 @@ const PdfSharePage = () => {
             <div className="media-tabs__list">
               <button
                 className="media-tab"
-                onClick={() => navigate('/sharePage')}
+                onClick={() => navigate('/share')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
