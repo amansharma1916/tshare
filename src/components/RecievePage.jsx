@@ -15,6 +15,9 @@ const RecievePage = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfData, setPdfData] = useState(null);
   const [pdfCode, setPdfCode] = useState('');
+  const [fileLoading, setFileLoading] = useState(false);
+  const [fileData, setFileData] = useState(null);
+  const [fileCode, setFileCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -26,6 +29,8 @@ const RecievePage = () => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [pendingCode, setPendingCode] = useState('');
   const [pendingContentType, setPendingContentType] = useState('text');
+  const [popupError, setPopupError] = useState('');
+  const [popupSubmitting, setPopupSubmitting] = useState(false);
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -123,6 +128,7 @@ const RecievePage = () => {
     if (!username) {
       setPendingCode(code);
       setPendingContentType(contentType);
+      setPopupError('');
       setPopupOpen(true);
       return;
     }
@@ -131,14 +137,30 @@ const RecievePage = () => {
   };
 
   const doReceive = (code, type, username) => {
-    if (type === 'text') receiveData(code, username);
-    else if (type === 'image') receiveImage(code, username);
-    else if (type === 'pdf') receivePdf(code, username);
+    if (type === 'text') return receiveData(code, username);
+    else if (type === 'image') return receiveImage(code, username);
+    else if (type === 'pdf') return receivePdf(code, username);
+    else if (type === 'file') return receiveFile(code, username);
   };
 
   const handleUsernameSubmit = (username) => {
+    setPopupError('');
+    setPopupSubmitting(true);
+    doReceive(pendingCode, pendingContentType, username)
+      .then(() => {
+        setPopupOpen(false);
+      })
+      .catch(error => {
+        setPopupError(error.message || 'Something went wrong');
+      })
+      .finally(() => {
+        setPopupSubmitting(false);
+      });
+  };
+
+  const handleAnonymous = () => {
     setPopupOpen(false);
-    doReceive(pendingCode, pendingContentType, username);
+    doReceive(pendingCode, pendingContentType, '');
   };
 
   const receiveData = (code, username) => {
@@ -149,10 +171,10 @@ const RecievePage = () => {
     setImageData(null);
     setPdfData(null);
 
-    fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
+    return fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
-        if (!res.ok) throw new Error('Invalid code or content not found');
-        return res.json();
+          if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
+          return res.json();
       })
       .then(data => {
         if (data && data.text) {
@@ -164,11 +186,12 @@ const RecievePage = () => {
           setSuccessMessage('Text received successfully');
           setShowContent(true);
         } else {
-          setError('No data found for this code');
+          throw new Error('No data found for this code');
         }
       })
       .catch(error => {
         setError(error.message || 'Failed to retrieve data');
+        throw error;
       })
       .finally(() => setLoading(false));
   };
@@ -181,9 +204,9 @@ const RecievePage = () => {
     setReceivedData('');
     setPdfData(null);
 
-    fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
+    return fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
-        if (!res.ok) throw new Error('Invalid code or image not found');
+        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or image not found') });
         return res.json();
       })
       .then(data => {
@@ -193,11 +216,12 @@ const RecievePage = () => {
           setSuccessMessage('Image received');
           setShowContent(true);
         } else {
-          setError('No image found for this code');
+          throw new Error('No image found for this code');
         }
       })
       .catch(error => {
         setError(error.message || 'Failed to retrieve image');
+        throw error;
       })
       .finally(() => setImageLoading(false));
   };
@@ -210,9 +234,9 @@ const RecievePage = () => {
     setReceivedData('');
     setImageData(null);
 
-    fetch(endpoints.getPdf(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
+    return fetch(endpoints.getPdf(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
-        if (!res.ok) throw new Error('Invalid code or PDF not found');
+        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or PDF not found') });
         return res.json();
       })
       .then(data => {
@@ -222,13 +246,45 @@ const RecievePage = () => {
           setSuccessMessage('PDF received');
           setShowContent(true);
         } else {
-          setError('No PDF found for this code');
+          throw new Error('No PDF found for this code');
         }
       })
       .catch(error => {
         setError(error.message || 'Failed to retrieve PDF');
+        throw error;
       })
       .finally(() => setPdfLoading(false));
+  };
+
+  const receiveFile = (code, username) => {
+    setFileLoading(true);
+    setError('');
+    setSuccessMessage('');
+    setShowContent(false);
+    setReceivedData('');
+    setImageData(null);
+    setPdfData(null);
+
+    return fetch(endpoints.getFile(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
+      .then(res => {
+        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or file not found') });
+        return res.json();
+      })
+      .then(data => {
+        if (data?.file?.url) {
+          setFileData(data.file);
+          setFileCode(code);
+          setSuccessMessage('File received');
+          setShowContent(true);
+        } else {
+          throw new Error('No file found for this code');
+        }
+      })
+      .catch(error => {
+        setError(error.message || 'Failed to retrieve file');
+        throw error;
+      })
+      .finally(() => setFileLoading(false));
   };
 
   const copyToClipboard = () => {
@@ -251,7 +307,12 @@ const RecievePage = () => {
     window.location.href = endpoints.downloadPdf(pdfCode);
   };
 
-  const isReceiving = loading || imageLoading || pdfLoading;
+  const downloadFile = () => {
+    if (!fileCode) return;
+    window.location.href = endpoints.downloadFile(fileCode);
+  };
+
+  const isReceiving = loading || imageLoading || pdfLoading || fileLoading;
 
   const contentVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -287,8 +348,12 @@ const RecievePage = () => {
 
     <UsernamePopup
       isOpen={popupOpen}
-      onClose={() => setPopupOpen(false)}
+      onClose={() => { setPopupOpen(false); setPopupError(''); }}
       onUsernameSubmit={handleUsernameSubmit}
+      onAnonymous={handleAnonymous}
+      submitError={popupError}
+      onClearSubmitError={() => setPopupError('')}
+      submitting={popupSubmitting}
     />
 
     <main className="receive">
@@ -312,7 +377,7 @@ const RecievePage = () => {
             {[
               { id: 'text', label: 'Text', icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
               { id: 'image', label: 'Image', icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' },
-              { id: 'pdf', label: 'PDF', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z' },
+              { id: 'file', label: 'File', icon: 'M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -512,6 +577,48 @@ const RecievePage = () => {
                         <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
                       Download PDF
+                    </button>
+                  </div>
+                )}
+
+                {contentType === 'file' && fileData && (
+                  <div className="receive__file-content">
+                    <div className="receive__file-preview">
+                      <iframe
+                        src={endpoints.previewFile(fileCode)}
+                        title="File preview"
+                      />
+                    </div>
+                    <div className="receive__file-info">
+                      <div className="receive__file-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                          <polyline points="13 2 13 9 20 9" />
+                        </svg>
+                      </div>
+                      <div className="receive__file-details">
+                        <span className="receive__file-name">{fileData.originalName || 'Shared file'}</span>
+                        {fileData.size && (
+                          <span className="receive__file-size">
+                            {fileData.size >= 1024 * 1024
+                              ? (fileData.size / (1024 * 1024)).toFixed(1) + ' MB'
+                              : fileData.size >= 1024
+                                ? (fileData.size / 1024).toFixed(1) + ' KB'
+                                : fileData.size + ' B'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn--secondary receive__action-btn"
+                      onClick={downloadFile}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download File
                     </button>
                   </div>
                 )}

@@ -14,6 +14,8 @@ const ImageSharePage = () => {
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [popupError, setPopupError] = useState('');
+  const [popupSubmitting, setPopupSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -65,6 +67,7 @@ const ImageSharePage = () => {
 
     const username = localStorage.getItem('tshare_username');
     if (!username) {
+      setPopupError('');
       setPopupOpen(true);
       return;
     }
@@ -80,11 +83,16 @@ const ImageSharePage = () => {
     setImageLoading(true);
     setImageError('');
 
-    fetch(endpoints.uploadImage, {
+    return fetch(endpoints.uploadImage, {
       method: 'POST',
       body: formData
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => { throw new Error(err.message || 'Failed to upload image') });
+        }
+        return res.json();
+      })
       .then(data => {
         if (!data.success) {
           throw new Error(data.message || 'Failed to upload image');
@@ -96,6 +104,7 @@ const ImageSharePage = () => {
       .catch(error => {
         console.error('Error:', error);
         setImageError(error.message || 'Failed to upload image');
+        throw error;
       })
       .finally(() => {
         setImageLoading(false);
@@ -103,8 +112,23 @@ const ImageSharePage = () => {
   };
 
   const handleUsernameSubmit = (username) => {
+    setPopupError('');
+    setPopupSubmitting(true);
+    doUploadImage(username)
+      .then(() => {
+        setPopupOpen(false);
+      })
+      .catch(error => {
+        setPopupError(error.message || 'Something went wrong');
+      })
+      .finally(() => {
+        setPopupSubmitting(false);
+      });
+  };
+
+  const handleAnonymous = () => {
     setPopupOpen(false);
-    doUploadImage(username);
+    doUploadImage('');
   };
 
   const copyImageCode = () => {
@@ -146,8 +170,12 @@ const ImageSharePage = () => {
 
     <UsernamePopup
       isOpen={popupOpen}
-      onClose={() => setPopupOpen(false)}
+      onClose={() => { setPopupOpen(false); setPopupError(''); }}
       onUsernameSubmit={handleUsernameSubmit}
+      onAnonymous={handleAnonymous}
+      submitError={popupError}
+      onClearSubmitError={() => setPopupError('')}
+      submitting={popupSubmitting}
     />
 
     <main className="share">
@@ -332,16 +360,13 @@ const ImageSharePage = () => {
               </button>
               <button
                 className="media-tab"
-                onClick={() => window.location.href = '/share-pdf'}
+                onClick={() => window.location.href = '/share-file'}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
+                  <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                  <polyline points="13 2 13 9 20 9" />
                 </svg>
-                PDF
+                File
               </button>
             </div>
           </motion.div>

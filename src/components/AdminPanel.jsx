@@ -28,6 +28,13 @@ const AdminPanel = () => {
     const [editingImage, setEditingImage] = useState(null);
     const [newImageCode, setNewImageCode] = useState('');
     const [imageCodeError, setImageCodeError] = useState('');
+    const [files, setFiles] = useState([]);
+    const [filesLoading, setFilesLoading] = useState(true);
+    const [filesError, setFilesError] = useState('');
+    const [showFileCodeModal, setShowFileCodeModal] = useState(false);
+    const [editingFile, setEditingFile] = useState(null);
+    const [newFileCode, setNewFileCode] = useState('');
+    const [fileCodeError, setFileCodeError] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -48,6 +55,7 @@ const AdminPanel = () => {
     const refreshAll = () => {
         fetchTexts();
         fetchImages();
+        fetchFiles();
         fetchPublicRooms();
         fetchUsers();
     };
@@ -112,6 +120,27 @@ const AdminPanel = () => {
             setImagesError('Failed to connect to server. Please try again.');
         } finally {
             setImagesLoading(false);
+        }
+    };
+
+    const fetchFiles = async () => {
+        setFilesLoading(true);
+        setFilesError('');
+
+        try {
+            const response = await fetch(endpoints.adminFiles);
+            const data = await response.json();
+
+            if (data.success) {
+                setFiles(data.files || []);
+            } else {
+                setFilesError('Failed to fetch files');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setFilesError('Failed to connect to server. Please try again.');
+        } finally {
+            setFilesLoading(false);
         }
     };
 
@@ -631,6 +660,146 @@ const AdminPanel = () => {
         }
     };
 
+    const handleDeleteFile = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this file?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteFile(id), {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setFiles(files.filter(file => file.id !== id));
+                showActionMessage('File deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete file', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleDeleteAllFiles = async () => {
+        if (!window.confirm('Are you sure you want to delete ALL files? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteAllFiles, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setFiles([]);
+                showActionMessage('All files deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete files', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleEditFileCode = (file) => {
+        setEditingFile(file);
+        setNewFileCode(file.id.toString());
+        setFileCodeError('');
+        setShowFileCodeModal(true);
+    };
+
+    const handleUpdateFileCode = async () => {
+        if (!editingFile) return;
+        setFileCodeError('');
+
+        if (!newFileCode || isNaN(newFileCode) || newFileCode.length !== 4 || parseInt(newFileCode) < 1000 || parseInt(newFileCode) > 9999) {
+            setFileCodeError('Code must be a 4-digit number between 1000 and 9999');
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminUpdateFileCode(editingFile.id), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ newCode: parseInt(newFileCode) }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setFiles(files.map(file =>
+                    file.id === editingFile.id ? { ...file, id: parseInt(newFileCode) } : file
+                ));
+                setShowFileCodeModal(false);
+                setEditingFile(null);
+                setNewFileCode('');
+                showActionMessage('File code updated successfully', 'success');
+            } else {
+                setFileCodeError(data.message || 'Failed to update code');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setFileCodeError('Failed to connect to server');
+        }
+    };
+
+    const handleCheckFileCodeAvailability = async () => {
+        if (!newFileCode || newFileCode.length !== 4) return;
+
+        try {
+            const response = await fetch(endpoints.adminCheckFileCode(newFileCode));
+            const data = await response.json();
+
+            if (data.success) {
+                if (!data.isAvailable && parseInt(newFileCode) !== editingFile.id) {
+                    setFileCodeError('This code is already in use. Please choose a different code.');
+                } else {
+                    setFileCodeError('');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking file code availability:', error);
+        }
+    };
+
+    const handleRegenerateFileCode = async (id) => {
+        if (!window.confirm('Are you sure you want to generate a new random code for this file?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminRegenerateFileCode(id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setFiles(files.map(file =>
+                    file.id === parseInt(data.oldCode) ? { ...file, id: data.newCode } : file
+                ));
+                showActionMessage(`File code regenerated successfully: ${data.newCode}`, 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to regenerate file code', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
     const showActionMessage = (text, type) => {
         setActionMessage({ text, type });
         setTimeout(() => {
@@ -689,6 +858,7 @@ const AdminPanel = () => {
                 {[
                     { id: 'texts', label: 'Texts' },
                     { id: 'images', label: 'Images' },
+                    { id: 'files', label: 'Files' },
                     { id: 'public-rooms', label: 'Public Rooms' },
                     { id: 'users', label: 'Users' },
                 ].map((tab) => (
@@ -861,6 +1031,103 @@ const AdminPanel = () => {
                                                     <motion.button
                                                         className="action-btn delete"
                                                         onClick={() => handleDeleteImage(image.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'files' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1>File Management</h1>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={handleDeleteAllFiles}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete All Files
+                            </motion.button>
+                        </div>
+
+                        {filesError && <div className="error-message">{filesError}</div>}
+
+                        {filesLoading ? (
+                            <div className="loading">Loading files...</div>
+                        ) : files.length === 0 ? (
+                            <div className="no-data">No files found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Preview</th>
+                                            <th>Original Name</th>
+                                            <th>Size</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {files.map((file) => (
+                                            <tr key={file.id}>
+                                                <td className="room-code">{file.id}</td>
+                                                <td>
+                                                    <div className="file-thumb" onClick={() => window.open(endpoints.previewFile(file.id), '_blank')} style={{ cursor: 'pointer' }}>
+                                                        <div className="file-icon">
+                                                            {/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(file.originalName) ? '🖼️' :
+                                                             /\.(mp4|webm|ogg|mov|avi)$/i.test(file.originalName) ? '🎬' :
+                                                             /\.(pdf)$/i.test(file.originalName) ? '📄' :
+                                                             /\.(doc|docx)$/i.test(file.originalName) ? '📝' :
+                                                             /\.(xls|xlsx|csv)$/i.test(file.originalName) ? '📊' :
+                                                             /\.(zip|rar|7z|tar|gz)$/i.test(file.originalName) ? '📦' :
+                                                             /\.(mp3|wav|flac|aac)$/i.test(file.originalName) ? '🎵' :
+                                                             '📁'}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{file.originalName}</td>
+                                                <td>{file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}</td>
+                                                <td>{new Date(file.createdAt).toLocaleString()}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn edit"
+                                                        onClick={() => window.open(endpoints.previewFile(file.id), '_blank')}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        View
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn edit-code"
+                                                        onClick={() => handleEditFileCode(file)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Edit Code
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn regenerate-code"
+                                                        onClick={() => handleRegenerateFileCode(file.id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Regenerate
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeleteFile(file.id)}
                                                         whileHover={{ scale: 1.05 }}
                                                         whileTap={{ scale: 0.95 }}
                                                     >
@@ -1223,6 +1490,64 @@ const AdminPanel = () => {
                                         setEditingImage(null);
                                         setNewImageCode('');
                                         setImageCodeError('');
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Cancel
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showFileCodeModal && editingFile && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Update File Code</h2>
+                            <div className="code-info">
+                                Current code: <span className="highlight">{editingFile.id}</span>
+                            </div>
+                            <div className="code-field">
+                                <label>New 4-Digit Code</label>
+                                <input
+                                    type="text"
+                                    className="code-input"
+                                    value={newFileCode}
+                                    onChange={(e) => setNewFileCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    placeholder="Enter new code"
+                                    maxLength={4}
+                                />
+                            </div>
+                            {fileCodeError && <div className="error-message">{fileCodeError}</div>}
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn save"
+                                    onClick={handleUpdateFileCode}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Update Code
+                                </motion.button>
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={() => {
+                                        setShowFileCodeModal(false);
+                                        setEditingFile(null);
+                                        setNewFileCode('');
+                                        setFileCodeError('');
                                     }}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}

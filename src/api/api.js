@@ -16,6 +16,10 @@ export const endpoints = {
     getPdf: (id) => `${API_URL}/pdf/${id}`,
     previewPdf: (id) => `${API_URL}/pdf/preview/${id}`,
     downloadPdf: (id) => `${API_URL}/pdf/download/${id}`,
+    uploadFile: `${API_URL}/file/upload`,
+    getFile: (id) => `${API_URL}/file/${id}`,
+    previewFile: (id) => `${API_URL}/file/preview/${id}`,
+    downloadFile: (id) => `${API_URL}/file/download/${id}`,
     adminLogin: `${API_URL}/admin/login`,
     adminTexts: `${API_URL}/admin/texts`,
     adminImages: `${API_URL}/admin/images`,
@@ -31,6 +35,14 @@ export const endpoints = {
     adminUpdateImageCode: (id) => `${API_URL}/admin/images/${id}/code`,
     adminRegenerateImageCode: (id) => `${API_URL}/admin/images/${id}/regenerate-code`,
     adminCheckImageCode: (code) => `${API_URL}/admin/check-image-code/${code}`,
+
+    // File Management
+    adminFiles: `${API_URL}/admin/files`,
+    adminDeleteFile: (id) => `${API_URL}/admin/files/${id}`,
+    adminDeleteAllFiles: `${API_URL}/admin/files`,
+    adminUpdateFileCode: (id) => `${API_URL}/admin/files/${id}/code`,
+    adminRegenerateFileCode: (id) => `${API_URL}/admin/files/${id}/regenerate-code`,
+    adminCheckFileCode: (code) => `${API_URL}/admin/files/check-code/${code}`,
 
     adminPublicRooms: `${API_URL}/admin/public-rooms`,
     adminDeletePublicRoom: (code) => `${API_URL}/admin/public-rooms/${code}`,
@@ -52,4 +64,3 @@ export default {
     baseUrl,
     endpoints,
 };
-

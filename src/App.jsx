@@ -5,6 +5,7 @@ import { Link, Routes, Route, NavLink, BrowserRouter } from 'react-router-dom'
 import SharePage from './components/SharePage.jsx'
 import ImageSharePage from './components/ImageSharePage.jsx'
 import PdfSharePage from './components/PdfSharePage.jsx'
+import FileSharePage from './components/FileSharePage.jsx'
 import RecievePage from './components/RecievePage.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
@@ -50,6 +51,7 @@ function App() {
           <Route path='/sharePage' element={<SharePage />}></Route>
           <Route path='/share-image' element={<ImageSharePage />}></Route>
           <Route path='/share-pdf' element={<PdfSharePage />}></Route>
+          <Route path='/share-file' element={<FileSharePage />}></Route>
           <Route path='/recievePage' element={<RecievePage />}></Route>
           <Route path='/admin/login' element={<AdminLogin />}></Route>
           <Route path='/admin/panel' element={<AdminPanel />}></Route>

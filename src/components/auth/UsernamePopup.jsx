@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './UsernamePopup.css'
 
-const UsernamePopup = ({ isOpen, onClose, onUsernameSubmit }) => {
+const UsernamePopup = ({ isOpen, onClose, onUsernameSubmit, onAnonymous, submitError, onClearSubmitError, submitting }) => {
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
 
@@ -33,18 +33,20 @@ const UsernamePopup = ({ isOpen, onClose, onUsernameSubmit }) => {
               className="popup__input"
               placeholder="Enter username"
               value={username}
-              onChange={(e) => { setUsername(e.target.value); setError('') }}
+              onChange={(e) => { setUsername(e.target.value); setError(''); if (onClearSubmitError) onClearSubmitError() }}
               autoFocus
               required
+              disabled={submitting}
             />
           </div>
 
           {error && <div className="popup__error">{error}</div>}
+          {submitError && <div className="popup__error">{submitError}</div>}
 
-          <button type="submit" className="popup__btn popup__btn--primary">
-            Continue
+          <button type="submit" className="popup__btn popup__btn--primary" disabled={submitting}>
+            {submitting ? 'Submitting...' : 'Continue'}
           </button>
-          <button type="button" className="popup__btn popup__btn--secondary" onClick={onClose}>
+          <button type="button" className="popup__btn popup__btn--secondary" onClick={onAnonymous || onClose} disabled={submitting}>
             Continue as anonymous
           </button>
         </form>
