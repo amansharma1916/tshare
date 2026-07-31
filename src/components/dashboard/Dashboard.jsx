@@ -317,7 +317,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('tshare_username')
-    window.location.href = '/'
+    navigate('/')
   }
 
   const formatTime = (ts) => {
@@ -384,7 +384,7 @@ const Dashboard = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="nav__inner">
-          <button className="nav__back" onClick={() => window.location.href = '/'}>
+          <button className="nav__back" onClick={() => navigate('/')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5" />
               <path d="M12 19l-7-7 7-7" />
@@ -557,7 +557,7 @@ const Dashboard = () => {
                 <div className="dashboard__quick-links">
                   <span className="dashboard__quick-label">Share other types</span>
                   <div className="dashboard__quick-list">
-                    <button className="dashboard__quick-btn" onClick={() => window.location.href = '/share-image?from=/dashboard'}>
+                    <button className="dashboard__quick-btn" onClick={() => navigate('/share-image?from=/dashboard')}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
@@ -565,7 +565,7 @@ const Dashboard = () => {
                       </svg>
                       Image
                     </button>
-                    <button className="dashboard__quick-btn" onClick={() => window.location.href = '/share-pdf?from=/dashboard'}>
+                    <button className="dashboard__quick-btn" onClick={() => navigate('/share-pdf?from=/dashboard')}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                         <polyline points="14 2 14 8 20 8" />

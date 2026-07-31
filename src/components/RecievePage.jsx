@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
@@ -7,6 +8,7 @@ import UsernamePopup from './auth/UsernamePopup';
 const SEGMENT_COUNT = 4;
 
 const RecievePage = () => {
+  const navigate = useNavigate();
   const [receivedData, setReceivedData] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -332,7 +334,7 @@ const RecievePage = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="nav__inner">
-          <button className="nav__back" onClick={() => window.location.href = '/'}>
+          <button className="nav__back" onClick={() => navigate('/')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5" />
               <path d="M12 19l-7-7 7-7" />

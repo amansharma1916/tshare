@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './PdfSharePage.css';
 import { endpoints } from '../api/api';
 import UsernamePopup from './auth/UsernamePopup';
 
 const PdfSharePage = () => {
+  const navigate = useNavigate();
   const [pdfCode, setPdfCode] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfPreview, setPdfPreview] = useState('');
@@ -134,7 +136,7 @@ const PdfSharePage = () => {
           <button className="nav__back" onClick={() => {
             const params = new URLSearchParams(window.location.search);
             const from = params.get('from');
-            window.location.href = from || '/';
+            navigate(from || '/');
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5" />
@@ -331,7 +333,7 @@ const PdfSharePage = () => {
             <div className="media-tabs__list">
               <button
                 className="media-tab"
-                onClick={() => window.location.href = '/sharePage'}
+                onClick={() => navigate('/sharePage')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -340,7 +342,7 @@ const PdfSharePage = () => {
               </button>
               <button
                 className="media-tab"
-                onClick={() => window.location.href = '/share-image'}
+                onClick={() => navigate('/share-image')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -351,7 +353,7 @@ const PdfSharePage = () => {
               </button>
               <button
                 className="media-tab"
-                onClick={() => window.location.href = '/share-file'}
+                onClick={() => navigate('/share-file')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 
 const AdminPanel = () => {
+    const navigate = useNavigate();
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
@@ -47,7 +49,7 @@ const AdminPanel = () => {
     useEffect(() => {
         const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
         if (!isAuthenticated) {
-            window.location.href = '/admin/login';
+            navigate('/admin/login');
         }
         refreshAll();
     }, []);
@@ -809,7 +811,7 @@ const AdminPanel = () => {
 
     const handleLogout = () => {
         sessionStorage.removeItem('adminAuthenticated');
-        window.location.href = '/admin/login';
+        navigate('/admin/login');
     };
 
     return (

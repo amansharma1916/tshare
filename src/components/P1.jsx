@@ -1,19 +1,21 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import './p1.css'
 
 const P1 = () => {
+  const navigate = useNavigate();
+
   const sharePage = () => {
-    window.location.href = '/sharePage'
+    navigate('/sharePage')
   }
 
   const receivePage = () => {
-    window.location.href = '/recievePage'
+    navigate('/recievePage')
   }
 
   const publicRoomPage = () => {
-    window.location.href = '/public-room'
+    navigate('/public-room')
   }
 
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']

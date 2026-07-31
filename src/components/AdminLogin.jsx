@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminLogin.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 
 const AdminLogin = () => {
+    const navigate = useNavigate();
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -33,7 +35,7 @@ const AdminLogin = () => {
 
             if (data.success) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
-                window.location.href = '/admin/panel';
+                navigate('/admin/panel');
             } else {
                 setError(data.message || 'Invalid password');
             }
@@ -97,7 +99,7 @@ const AdminLogin = () => {
                         <motion.button
                             className="btn btn--secondary admin-login__btn"
                             type="button"
-                            onClick={() => (window.location.href = '/')}
+                            onClick={() => navigate('/')}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                         >

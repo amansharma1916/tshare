@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import './pages.css'
 
 const About = () => {
@@ -56,7 +57,7 @@ const About = () => {
             <h2>Contact Us</h2>
             <p>
               Have questions, suggestions, or feedback? We'd love to hear from you! 
-              Please visit our <a href="/contact" className="page__link">Contact page</a> to get in touch.
+              Please visit our <Link to="/contact" className="page__link">Contact page</Link> to get in touch.
             </p>
           </section>
         </div>
