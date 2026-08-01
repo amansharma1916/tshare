@@ -16,9 +16,6 @@ const RecievePage = ({ fixedType = null }) => {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageData, setImageData] = useState(null);
   const [imageCode, setImageCode] = useState('');
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfData, setPdfData] = useState(null);
-  const [pdfCode, setPdfCode] = useState('');
   const [fileLoading, setFileLoading] = useState(false);
   const [fileData, setFileData] = useState(null);
   const [fileCode, setFileCode] = useState('');
@@ -35,6 +32,11 @@ const RecievePage = ({ fixedType = null }) => {
   const [pendingContentType, setPendingContentType] = useState('text');
   const [popupError, setPopupError] = useState('');
   const [popupSubmitting, setPopupSubmitting] = useState(false);
+
+  useEffect(() => {
+    setContentType(fixedType || 'text');
+    setPendingContentType(fixedType || 'text');
+  }, [fixedType]);
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -115,7 +117,7 @@ const RecievePage = ({ fixedType = null }) => {
     segmentRefs.current[0]?.focus();
     setReceivedData('');
     setImageData(null);
-    setPdfData(null);
+    setFileData(null);
     setError('');
     setSuccessMessage('');
     setShowContent(false);
@@ -172,7 +174,7 @@ const RecievePage = ({ fixedType = null }) => {
     setSuccessMessage('');
     setShowContent(false);
     setImageData(null);
-    setPdfData(null);
+    setFileData(null);
 
     return fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
@@ -205,7 +207,7 @@ const RecievePage = ({ fixedType = null }) => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedData('');
-    setPdfData(null);
+    setFileData(null);
 
     return fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
@@ -236,7 +238,6 @@ const RecievePage = ({ fixedType = null }) => {
     setShowContent(false);
     setReceivedData('');
     setImageData(null);
-    setPdfData(null);
 
     return fetch(endpoints.getFile(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
@@ -305,8 +306,49 @@ const RecievePage = ({ fixedType = null }) => {
     return 'Enter the 4-digit code shared with you.';
   };
 
+  const getHeaderIcon = () => {
+    if (fixedType === 'text') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+      );
+    }
+    if (fixedType === 'image') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      );
+    }
+    if (fixedType === 'file') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      );
+    }
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+        <path d="M7 10l5 5 5-5" />
+        <path d="M12 3v12" />
+      </svg>
+    );
+  };
+
+  const getHeaderIconClass = () => {
+    if (fixedType === 'text') return 'share__header-icon';
+    if (fixedType === 'image') return 'share__header-icon share__header-icon--image';
+    if (fixedType === 'file') return 'share__header-icon share__header-icon--file';
+    return 'share__header-icon';
+  };
+
   return (
-    <div className={insideLayout ? '' : 'page'}>
+    <div className={insideLayout ? 'share-page' : 'page'}>
       {!insideLayout && (
         <motion.nav
           className="nav"
@@ -348,6 +390,9 @@ const RecievePage = ({ fixedType = null }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className={getHeaderIconClass()}>
+              {getHeaderIcon()}
+            </div>
             <h1 className="share__title">{getTitle()}</h1>
             <p className="share__desc">{getDesc()}</p>
           </motion.div>
@@ -360,27 +405,30 @@ const RecievePage = ({ fixedType = null }) => {
           >
             <div className="segmented-input" onPaste={handlePaste}>
               {segments.map((digit, i) => (
-                <React.Fragment key={i}>
-                  <input
-                    ref={(el) => { segmentRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleSegmentChange(i, e.target.value)}
-                    onKeyDown={(e) => handleSegmentKeyDown(i, e)}
-                    onFocus={() => setActiveSegment(i)}
-                    className={`segment-input ${digit ? 'segment-input--filled' : ''} ${activeSegment === i ? 'segment-input--active' : ''}`}
-                    aria-label={`Digit ${i + 1} of 4`}
-                    autoComplete="off"
-                  />
-                </React.Fragment>
+                <input
+                  key={i}
+                  ref={(el) => { segmentRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleSegmentChange(i, e.target.value)}
+                  onKeyDown={(e) => handleSegmentKeyDown(i, e)}
+                  onFocus={() => setActiveSegment(i)}
+                  className={`segment-input ${digit ? 'segment-input--filled' : ''} ${activeSegment === i ? 'segment-input--active' : ''}`}
+                  aria-label={`Digit ${i + 1} of 4`}
+                  autoComplete="off"
+                />
               ))}
             </div>
 
             <div className="receive__actions-row">
-              <button className="receive__clear-btn" onClick={clearAll} type="button">
+              <button className="editor-clear-btn" onClick={clearAll} type="button" disabled={isReceiving}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                </svg>
                 Clear
               </button>
               <button
@@ -458,7 +506,9 @@ const RecievePage = ({ fixedType = null }) => {
               >
                 {contentType === 'text' && receivedData && (
                   <div className="receive__text-content">
-                    <pre className="receive__text">{receivedData}</pre>
+                    <div className="receive__text-wrapper">
+                      <pre className="receive__text">{receivedData}</pre>
+                    </div>
                     <button
                       className="btn btn--secondary receive__action-btn"
                       onClick={copyToClipboard}
@@ -476,7 +526,7 @@ const RecievePage = ({ fixedType = null }) => {
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                           </svg>
-                          Copy
+                          Copy Text
                         </>
                       )}
                     </button>
@@ -494,8 +544,17 @@ const RecievePage = ({ fixedType = null }) => {
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                       />
                     </div>
-                    <div className="receive__file-meta">
-                      <span>{imageData.originalName || 'Shared image'}</span>
+                    <div className="receive__file-info">
+                      <div className="receive__file-icon receive__file-icon--image">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                      <div className="receive__file-details">
+                        <span className="receive__file-name">{imageData.originalName || 'Shared image'}</span>
+                      </div>
                     </div>
                     <button
                       className="btn btn--secondary receive__action-btn"
@@ -520,8 +579,8 @@ const RecievePage = ({ fixedType = null }) => {
                       />
                     </div>
                     <div className="receive__file-info">
-                      <div className="receive__file-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="receive__file-icon receive__file-icon--file">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
                           <polyline points="13 2 13 9 20 9" />
                         </svg>

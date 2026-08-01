@@ -51,7 +51,6 @@ const FileSharePage = () => {
       setFilePreview('');
       return;
     }
-    // Clean up preview on unmount / file change
     return () => {
       if (filePreview) URL.revokeObjectURL(filePreview);
     };
@@ -176,10 +175,24 @@ const FileSharePage = () => {
       .catch(err => console.error('Failed to copy: ', err));
   };
 
+  const handleShareAnother = () => {
+    setShowCode(false);
+    setFileCode('');
+    setFile(null);
+    setFilePreview('');
+    setTimeout(() => fileInputRef.current?.click(), 100);
+  };
+
+  const handleClear = () => {
+    setFile(null);
+    setFilePreview('');
+    setFileError('');
+  };
+
   const fileIcon = getFileIcon(file);
 
   return (
-    <div className={insideLayout ? '' : 'page'}>
+    <div className={insideLayout ? 'share-page' : 'page'}>
       {!insideLayout && (
         <motion.nav
           className="nav"
@@ -225,8 +238,14 @@ const FileSharePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className="share__header-icon share__header-icon--file">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
             <h1 className="share__title">Share a File</h1>
-            <p className="share__desc">Upload any file and get a code to share instantly. Supports documents, code, archives, and more.</p>
+            <p className="share__desc">Upload any file and get a 4-digit code to share instantly. Supports documents, code, archives, and more.</p>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -239,7 +258,12 @@ const FileSharePage = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="code-reveal__badge">File Code Generated</div>
+                <div className="code-reveal__badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  File Code Generated
+                </div>
                 <button
                   className="code-reveal__value"
                   onClick={copyFileCode}
@@ -280,7 +304,16 @@ const FileSharePage = () => {
                     )}
                   </span>
                 </button>
-                <p className="code-reveal__hint">Share this code with the recipient</p>
+                <p className="code-reveal__hint">
+                  {fileCopied ? 'Copied to clipboard!' : 'Click the code to copy it'}
+                </p>
+                <button className="code-reveal__share-another" onClick={handleShareAnother}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                  Share Another
+                </button>
               </motion.div>
             ) : (
               <motion.div
@@ -291,157 +324,170 @@ const FileSharePage = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div
-                  className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${file ? 'dropzone--has-file' : ''}`}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onClick={() => fileInputRef.current?.click()}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
-                  aria-label="Upload file"
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={onFileChange}
-                    className="dropzone__input"
-                    hidden
-                  />
-
-                  {file ? (
-                    <div className="dropzone__preview dropzone__preview--file">
-                      <div className="file-preview__info">
-                        <div className="file-preview__icon">
-                          {fileIcon === 'image' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                              <circle cx="8.5" cy="8.5" r="1.5" />
-                              <polyline points="21 15 16 10 5 21" />
-                            </svg>
-                          )}
-                          {fileIcon === 'pdf' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                              <polyline points="10 9 9 9 8 9" />
-                            </svg>
-                          )}
-                          {fileIcon === 'document' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                              <polyline points="10 9 9 9 8 9" />
-                            </svg>
-                          )}
-                          {fileIcon === 'spreadsheet' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                            </svg>
-                          )}
-                          {fileIcon === 'archive' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 8v13H3V8" />
-                              <path d="M1 3h22v5H1z" />
-                              <line x1="10" y1="12" x2="14" y2="12" />
-                            </svg>
-                          )}
-                          {fileIcon === 'code' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="16 18 22 12 16 6" />
-                              <polyline points="8 6 2 12 8 18" />
-                            </svg>
-                          )}
-                          {fileIcon === 'text' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                              <line x1="16" y1="13" x2="8" y2="13" />
-                              <line x1="16" y1="17" x2="8" y2="17" />
-                            </svg>
-                          )}
-                          {fileIcon === 'generic' && (
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                              <polyline points="13 2 13 9 20 9" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="file-preview__details">
-                          <span className="file-preview__name">{file.name}</span>
-                          <span className="file-preview__size">{formatFileSize(file.size)}</span>
-                        </div>
-                      </div>
-                      <div className="dropzone__overlay">
-                        <span>Click to change</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="dropzone__placeholder">
-                      <div className="dropzone__icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                          <polyline points="13 2 13 9 20 9" />
-                          <path d="M12 12v6" />
-                          <path d="M9 15l3 3 3-3" />
-                        </svg>
-                      </div>
-                      <div className="dropzone__text">
-                        <span className="dropzone__title">Drop a file here</span>
-                        <span className="dropzone__hint">or click to browse — up to 50MB</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {fileError && (
-                  <motion.p
-                    className="share__error"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div className="editor-wrapper">
+                  <div
+                    className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${file ? 'dropzone--has-file' : ''}`}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onClick={() => fileInputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                    aria-label="Upload file"
                   >
-                    {fileError}
-                  </motion.p>
-                )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={onFileChange}
+                      className="dropzone__input"
+                      hidden
+                    />
 
-                <div className="editor-actions">
-                  <button
-                    className="btn btn--primary"
-                    onClick={uploadFile}
-                    disabled={fileLoading || !file}
-                  >
-                    {fileLoading ? (
-                      <span className="btn__loading">
-                        <motion.span
-                          className="btn__spinner"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                            <path d="M21 12a9 9 0 11-6.219-8.56" />
-                          </svg>
-                        </motion.span>
-                        Sharing...
-                      </span>
+                    {file ? (
+                      <div className="dropzone__preview dropzone__preview--file">
+                        <div className="file-preview__info">
+                          <div className="file-preview__icon">
+                            {fileIcon === 'image' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                              </svg>
+                            )}
+                            {fileIcon === 'pdf' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                              </svg>
+                            )}
+                            {fileIcon === 'document' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                              </svg>
+                            )}
+                            {fileIcon === 'spreadsheet' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                              </svg>
+                            )}
+                            {fileIcon === 'archive' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 8v13H3V8" />
+                                <path d="M1 3h22v5H1z" />
+                                <line x1="10" y1="12" x2="14" y2="12" />
+                              </svg>
+                            )}
+                            {fileIcon === 'code' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                              </svg>
+                            )}
+                            {fileIcon === 'text' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                              </svg>
+                            )}
+                            {fileIcon === 'generic' && (
+                              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                                <polyline points="13 2 13 9 20 9" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="file-preview__details">
+                            <span className="file-preview__name">{file.name}</span>
+                            <span className="file-preview__size">{formatFileSize(file.size)}</span>
+                          </div>
+                        </div>
+                        <div className="dropzone__overlay">
+                          <span>Click to change</span>
+                        </div>
+                      </div>
                     ) : (
-                      <>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        Share File
-                      </>
+                      <div className="dropzone__placeholder">
+                        <div className="dropzone__icon">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                            <polyline points="13 2 13 9 20 9" />
+                            <path d="M12 12v6" />
+                            <path d="M9 15l3 3 3-3" />
+                          </svg>
+                        </div>
+                        <div className="dropzone__text">
+                          <span className="dropzone__title">Drop a file here</span>
+                          <span className="dropzone__hint">or click to browse — up to 50MB</span>
+                        </div>
+                      </div>
                     )}
-                  </button>
+                  </div>
+
+                  {fileError && (
+                    <motion.p
+                      className="share__error"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      {fileError}
+                    </motion.p>
+                  )}
+
+                  <div className="editor-actions">
+                    <button
+                      className="editor-clear-btn"
+                      onClick={handleClear}
+                      disabled={!file || fileLoading}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg>
+                      Clear
+                    </button>
+                    <button
+                      className="btn btn--primary editor-share-btn"
+                      onClick={uploadFile}
+                      disabled={fileLoading || !file}
+                    >
+                      {fileLoading ? (
+                        <span className="btn__loading">
+                          <motion.span
+                            className="btn__spinner"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <path d="M21 12a9 9 0 11-6.219-8.56" />
+                            </svg>
+                          </motion.span>
+                          Uploading...
+                        </span>
+                      ) : (
+                        <>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          Share File
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import './App.css'
-import { Routes, Route, BrowserRouter, Navigate } from 'react-router-dom'
+import { Routes, Route, BrowserRouter, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import SharePage from './components/SharePage.jsx'
 import ImageSharePage from './components/ImageSharePage.jsx'
 import FileSharePage from './components/FileSharePage.jsx'
@@ -15,12 +15,31 @@ import Contact from './components/pages/Contact.jsx'
 import Login from './components/auth/Login.jsx'
 import Register from './components/auth/Register.jsx'
 import Dashboard from './components/dashboard/Dashboard.jsx'
+import LandingPage from './components/landing/LandingPage.jsx'
 import { endpoints } from './api/api.js'
 import AppLayout from './components/layout/AppLayout.jsx'
 
 // Layout wrapper for routes that need the sidebar/topbar
 const LayoutRoute = ({ children }) => {
   return <AppLayout>{children}</AppLayout>
+}
+
+// Component to handle refresh redirect - only runs once on initial load
+const RefreshRedirect = () => {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check if the page was refreshed (reloaded) - only on initial mount
+    const navigationEntries = performance.getEntriesByType('navigation')
+    const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload'
+
+    if (isRefresh && window.location.pathname !== '/') {
+      navigate('/', { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return null
 }
 
 function App() {
@@ -49,14 +68,15 @@ function App() {
 
   return (
     <BrowserRouter>
+      <RefreshRedirect />
       <Routes>
-        {/* Landing page redirects to dashboard (which shows hero if not logged in) */}
-        <Route path='/' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
+        {/* Landing page */}
+        <Route path='/' element={<LayoutRoute><LandingPage /></LayoutRoute>} />
 
-        {/* Auth pages (standalone, no layout) */}
-        <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        <Route path='/admin/login' element={<AdminLogin />} />
+        {/* Auth pages (inside layout) */}
+        <Route path='/login' element={<LayoutRoute><Login /></LayoutRoute>} />
+        <Route path='/register' element={<LayoutRoute><Register /></LayoutRoute>} />
+        <Route path='/admin/login' element={<LayoutRoute><AdminLogin /></LayoutRoute>} />
 
         {/* App pages (inside layout) */}
         <Route path='/dashboard' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
@@ -77,6 +97,9 @@ function App() {
         {/* Redirect old routes to new ones */}
         <Route path='/sharePage' element={<Navigate to="/share" replace />} />
         <Route path='/recievePage' element={<Navigate to="/receive" replace />} />
+
+        {/* Catch-all: redirect to landing page */}
+        <Route path='*' element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

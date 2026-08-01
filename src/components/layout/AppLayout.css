@@ -104,17 +104,25 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.sidebar-header-brand:hover {
+  background: var(--sidebar-item-hover);
 }
 
 .sidebar-header-logo {
   width: 24px;
   height: 24px;
-  background: var(--theme-primary);
-  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
 }
 
 .sidebar-header-title {
