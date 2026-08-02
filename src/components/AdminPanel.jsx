@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
 import bannerText from './bannerText';
@@ -7,6 +7,16 @@ import { endpoints } from '../api/api';
 
 const AdminPanel = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const getAuthHeaders = (extraHeaders = {}) => {
+        const token = sessionStorage.getItem('adminToken');
+        return {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...extraHeaders,
+        };
+    };
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
@@ -51,15 +61,58 @@ const AdminPanel = () => {
         if (!isAuthenticated) {
             navigate('/admin/login');
         }
-        refreshAll();
-    }, []);
+        // Read tab from query params
+        const params = new URLSearchParams(location.search);
+        const tab = params.get('tab');
+        if (tab && ['texts', 'images', 'files', 'public-rooms', 'users', 'settings'].includes(tab)) {
+            setActiveTab(tab);
+        }
+    }, [location.search]);
+
+    // Only fetch data for the active tab
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        switch (activeTab) {
+            case 'texts':
+                fetchTexts();
+                break;
+            case 'images':
+                fetchImages();
+                break;
+            case 'files':
+                fetchFiles();
+                break;
+            case 'public-rooms':
+                fetchPublicRooms();
+                break;
+            case 'users':
+                fetchUsers();
+                break;
+            default:
+                break;
+        }
+    }, [activeTab]);
 
     const refreshAll = () => {
-        fetchTexts();
-        fetchImages();
-        fetchFiles();
-        fetchPublicRooms();
-        fetchUsers();
+        switch (activeTab) {
+            case 'texts':
+                fetchTexts();
+                break;
+            case 'images':
+                fetchImages();
+                break;
+            case 'files':
+                fetchFiles();
+                break;
+            case 'public-rooms':
+                fetchPublicRooms();
+                break;
+            case 'users':
+                fetchUsers();
+                break;
+            default:
+                break;
+        }
     };
 
     const fetchUsers = async () => {
@@ -67,7 +120,9 @@ const AdminPanel = () => {
         setUsersError('');
 
         try {
-            const response = await fetch(endpoints.adminUsers);
+            const response = await fetch(endpoints.adminUsers, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -88,7 +143,9 @@ const AdminPanel = () => {
         setError('');
 
         try {
-            const response = await fetch(endpoints.adminTexts);
+            const response = await fetch(endpoints.adminTexts, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -109,7 +166,9 @@ const AdminPanel = () => {
         setImagesError('');
 
         try {
-            const response = await fetch(endpoints.adminImages);
+            const response = await fetch(endpoints.adminImages, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -130,7 +189,9 @@ const AdminPanel = () => {
         setFilesError('');
 
         try {
-            const response = await fetch(endpoints.adminFiles);
+            const response = await fetch(endpoints.adminFiles, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -151,7 +212,9 @@ const AdminPanel = () => {
         setPublicRoomsError('');
 
         try {
-            const response = await fetch(endpoints.adminPublicRooms);
+            const response = await fetch(endpoints.adminPublicRooms, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -175,6 +238,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteText(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -199,6 +263,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllTexts, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -223,6 +288,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteImage(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -247,6 +313,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllImages, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -274,9 +341,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateText(editingText.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ text: editedContent }),
             });
 
@@ -321,9 +386,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateCode(editingCode.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newCode) }),
             });
 
@@ -354,9 +417,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -379,7 +440,9 @@ const AdminPanel = () => {
         if (!newCode || newCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckCode(newCode));
+            const response = await fetch(endpoints.adminCheckCode(newCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -420,9 +483,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateImageCode(editingImage.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newImageCode) }),
             });
 
@@ -449,7 +510,9 @@ const AdminPanel = () => {
         if (!newImageCode || newImageCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckImageCode(newImageCode));
+            const response = await fetch(endpoints.adminCheckImageCode(newImageCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -472,9 +535,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateImageCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -514,9 +575,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminChangePassword, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                     currentPassword,
                     newPassword,
@@ -548,6 +607,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeletePublicRoom(code), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -568,6 +628,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminTogglePublicRoomStatus(code), {
                 method: 'PUT',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -592,9 +653,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminPublicRooms, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ name: publicRoomName || undefined }),
             });
 
@@ -622,6 +681,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteUser(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -646,6 +706,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllUsers, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -670,6 +731,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteFile(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -694,6 +756,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllFiles, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -729,9 +792,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateFileCode(editingFile.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newFileCode) }),
             });
 
@@ -758,7 +819,9 @@ const AdminPanel = () => {
         if (!newFileCode || newFileCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckFileCode(newFileCode));
+            const response = await fetch(endpoints.adminCheckFileCode(newFileCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -781,9 +844,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateFileCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -811,6 +872,7 @@ const AdminPanel = () => {
 
     const handleLogout = () => {
         sessionStorage.removeItem('adminAuthenticated');
+        sessionStorage.removeItem('adminToken');
         navigate('/admin/login');
     };
 
@@ -829,51 +891,25 @@ const AdminPanel = () => {
                 )}
             </AnimatePresence>
 
-            <div className="admin-controls">
+            <div className="admin-header">
+                <div className="admin-header-left">
+                    <h1 className="admin-title">Admin Panel</h1>
+                    <p className="admin-subtitle">Manage all shared content and users</p>
+                </div>
                 <motion.button
-                    className="Btn refresh"
+                    className="admin-refresh-btn"
                     onClick={refreshAll}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    title="Refresh All Data"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                 >
-                    Refresh All
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                        <path d="M21 3v5h-5" />
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                        <path d="M8 16H3v5" />
+                    </svg>
                 </motion.button>
-                <motion.button
-                    className="Btn change-password"
-                    onClick={() => setShowPasswordModal(true)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    Change Password
-                </motion.button>
-                <motion.button
-                    className="Btn logout"
-                    onClick={handleLogout}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    Logout
-                </motion.button>
-            </div>
-
-            <div className="admin-tabs">
-                {[
-                    { id: 'texts', label: 'Texts' },
-                    { id: 'images', label: 'Images' },
-                    { id: 'files', label: 'Files' },
-                    { id: 'public-rooms', label: 'Public Rooms' },
-                    { id: 'users', label: 'Users' },
-                ].map((tab) => (
-                    <motion.button
-                        key={tab.id}
-                        className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        {tab.label}
-                    </motion.button>
-                ))}
             </div>
 
             <motion.div
@@ -1270,6 +1306,42 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {activeTab === 'settings' && (
+                    <div>
+                        <h1>Admin Settings</h1>
+                        <div className="settings-section">
+                            <div className="settings-field">
+                                <div>
+                                    <div className="field-label">Change Password</div>
+                                    <div className="field-value">Update the admin panel password</div>
+                                </div>
+                                <motion.button
+                                    className="Btn change-password"
+                                    onClick={() => setShowPasswordModal(true)}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Change Password
+                                </motion.button>
+                            </div>
+                            <div className="settings-field">
+                                <div>
+                                    <div className="field-label">Logout</div>
+                                    <div className="field-value">Sign out of the admin panel</div>
+                                </div>
+                                <motion.button
+                                    className="Btn logout"
+                                    onClick={handleLogout}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Logout
+                                </motion.button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </motion.div>

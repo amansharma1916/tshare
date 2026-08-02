@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import './p1.css'
@@ -6,12 +6,19 @@ import './p1.css'
 const P1 = () => {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const username = localStorage.getItem('tshare_username') || '';
+    if (username) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   const sharePage = () => {
-    navigate('/sharePage')
+    navigate('/share')
   }
 
   const receivePage = () => {
-    navigate('/recievePage')
+    navigate('/receive')
   }
 
   const publicRoomPage = () => {

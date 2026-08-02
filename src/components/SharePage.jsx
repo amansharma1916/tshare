@@ -5,9 +5,11 @@ import './SharePage.css';
 import { endpoints, baseUrl } from '../api/api';
 import io from 'socket.io-client';
 import UsernamePopup from './auth/UsernamePopup';
+import { useLayout } from './layout/LayoutContext';
 
 const SharePage = () => {
   const navigate = useNavigate();
+  const { insideLayout } = useLayout();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -27,6 +29,9 @@ const SharePage = () => {
       if (newSocket) newSocket.disconnect();
     };
   }, []);
+
+  const charCount = text.length;
+  const maxChars = 10000;
 
   const saveTextDb = () => {
     if (!text.trim()) {
@@ -114,32 +119,40 @@ const SharePage = () => {
       .catch(err => console.error('Failed to copy: ', err));
   };
 
+  const handleShareAnother = () => {
+    setShowCode(false);
+    setCode('');
+    setTimeout(() => textareaRef.current?.focus(), 100);
+  };
+
   return (
-    <div className="page">
-      <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="nav__inner">
-          <button className="nav__back" onClick={() => {
-            const params = new URLSearchParams(window.location.search);
-            const from = params.get('from');
-            navigate(from || '/');
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-          <div className="nav__brand">
-            <img src="/s2.svg" alt="TShare" width="20" height="20" />
-            <span>TShare</span>
+    <div className={insideLayout ? 'share-page' : 'page'}>
+      {!insideLayout && (
+        <motion.nav
+          className="nav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="nav__inner">
+            <button className="nav__back" onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              const from = params.get('from');
+              navigate(from || '/');
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <div className="nav__brand">
+              <img src="/s2.svg" alt="TShare" width="20" height="20" />
+              <span>TShare</span>
+            </div>
           </div>
-        </div>
-    </motion.nav>
+        </motion.nav>
+      )}
 
     <UsernamePopup
       isOpen={popupOpen}
@@ -159,8 +172,13 @@ const SharePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className="share__header-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+            </div>
             <h1 className="share__title">Share Text</h1>
-            <p className="share__desc">Paste or type the text you want to share instantly.</p>
+            <p className="share__desc">Paste or type the text you want to share instantly with a 4-digit code.</p>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -173,7 +191,12 @@ const SharePage = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="code-reveal__badge">Code Generated</div>
+                <div className="code-reveal__badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Code Generated
+                </div>
                 <button
                   className="code-reveal__value"
                   onClick={copyCode}
@@ -214,7 +237,16 @@ const SharePage = () => {
                     )}
                   </span>
                 </button>
-                <p className="code-reveal__hint">Share this code with the recipient</p>
+                <p className="code-reveal__hint">
+                  {copied ? 'Copied to clipboard!' : 'Click the code to copy it'}
+                </p>
+                <button className="code-reveal__share-another" onClick={handleShareAnother}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                  Share Another
+                </button>
               </motion.div>
             ) : (
               <motion.div
@@ -226,17 +258,36 @@ const SharePage = () => {
                 transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
                 <div className="editor-wrapper">
-                  <textarea
-                    ref={textareaRef}
-                    className="editor-textarea"
-                    placeholder="Paste your text here..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    rows={8}
-                  />
+                  <div className="editor-textarea-wrapper">
+                    <textarea
+                      ref={textareaRef}
+                      className="editor-textarea"
+                      placeholder="Paste your text here..."
+                      value={text}
+                      onChange={(e) => setText(e.target.value.slice(0, maxChars))}
+                      rows={10}
+                      maxLength={maxChars}
+                    />
+                    <div className="editor-char-count">
+                      <span className={charCount > maxChars * 0.9 ? 'editor-char-count--warning' : ''}>
+                        {charCount.toLocaleString()} / {maxChars.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
                   <div className="editor-actions">
                     <button
-                      className="btn btn--primary"
+                      className="editor-clear-btn"
+                      onClick={() => { setText(''); textareaRef.current?.focus() }}
+                      disabled={!text.trim() || loading}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg>
+                      Clear
+                    </button>
+                    <button
+                      className="btn btn--primary editor-share-btn"
                       onClick={saveTextDb}
                       disabled={loading || !text.trim()}
                     >

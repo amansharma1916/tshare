@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
 import './App.css'
-import P1 from './components/P1.jsx'
-import { Link, Routes, Route, NavLink, BrowserRouter } from 'react-router-dom'
+import { Routes, Route, BrowserRouter, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import SharePage from './components/SharePage.jsx'
 import ImageSharePage from './components/ImageSharePage.jsx'
-import PdfSharePage from './components/PdfSharePage.jsx'
 import FileSharePage from './components/FileSharePage.jsx'
 import RecievePage from './components/RecievePage.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
@@ -17,7 +15,32 @@ import Contact from './components/pages/Contact.jsx'
 import Login from './components/auth/Login.jsx'
 import Register from './components/auth/Register.jsx'
 import Dashboard from './components/dashboard/Dashboard.jsx'
+import LandingPage from './components/landing/LandingPage.jsx'
 import { endpoints } from './api/api.js'
+import AppLayout from './components/layout/AppLayout.jsx'
+
+// Layout wrapper for routes that need the sidebar/topbar
+const LayoutRoute = ({ children }) => {
+  return <AppLayout>{children}</AppLayout>
+}
+
+// Component to handle refresh redirect - only runs once on initial load
+const RefreshRedirect = () => {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check if the page was refreshed (reloaded) - only on initial mount
+    const navigationEntries = performance.getEntriesByType('navigation')
+    const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload'
+
+    if (isRefresh && window.location.pathname !== '/') {
+      navigate('/', { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return null
+}
 
 function App() {
   useEffect(() => {
@@ -44,29 +67,41 @@ function App() {
   }, [])
 
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element={<P1 />}></Route>
-          <Route path='/sharePage' element={<SharePage />}></Route>
-          <Route path='/share-image' element={<ImageSharePage />}></Route>
-          <Route path='/share-pdf' element={<PdfSharePage />}></Route>
-          <Route path='/share-file' element={<FileSharePage />}></Route>
-          <Route path='/recievePage' element={<RecievePage />}></Route>
-          <Route path='/admin/login' element={<AdminLogin />}></Route>
-          <Route path='/admin/panel' element={<AdminPanel />}></Route>
-          <Route path='/public-room' element={<PublicRoom />}></Route>
-          <Route path='/privacy-policy' element={<PrivacyPolicy />}></Route>
-          <Route path='/terms-of-service' element={<TermsOfService />}></Route>
-          <Route path='/about' element={<About />}></Route>
-          <Route path='/contact' element={<Contact />}></Route>
-          <Route path='/login' element={<Login />}></Route>
-          <Route path='/register' element={<Register />}></Route>
-          <Route path='/dashboard' element={<Dashboard />}></Route>
-        </Routes>
-      </BrowserRouter>
+    <BrowserRouter>
+      <RefreshRedirect />
+      <Routes>
+        {/* Landing page */}
+        <Route path='/' element={<LayoutRoute><LandingPage /></LayoutRoute>} />
 
-    </>
+        {/* Auth pages (inside layout) */}
+        <Route path='/login' element={<LayoutRoute><Login /></LayoutRoute>} />
+        <Route path='/register' element={<LayoutRoute><Register /></LayoutRoute>} />
+        <Route path='/admin/login' element={<LayoutRoute><AdminLogin /></LayoutRoute>} />
+
+        {/* App pages (inside layout) */}
+        <Route path='/dashboard' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
+        <Route path='/share' element={<LayoutRoute><SharePage /></LayoutRoute>} />
+        <Route path='/share-image' element={<LayoutRoute><ImageSharePage /></LayoutRoute>} />
+        <Route path='/share-file' element={<LayoutRoute><FileSharePage /></LayoutRoute>} />
+        <Route path='/receive' element={<LayoutRoute><RecievePage /></LayoutRoute>} />
+        <Route path='/receive-text' element={<LayoutRoute><RecievePage fixedType="text" /></LayoutRoute>} />
+        <Route path='/receive-image' element={<LayoutRoute><RecievePage fixedType="image" /></LayoutRoute>} />
+        <Route path='/receive-file' element={<LayoutRoute><RecievePage fixedType="file" /></LayoutRoute>} />
+        <Route path='/public-room' element={<LayoutRoute><PublicRoom /></LayoutRoute>} />
+        <Route path='/admin/panel' element={<LayoutRoute><AdminPanel /></LayoutRoute>} />
+        <Route path='/privacy-policy' element={<LayoutRoute><PrivacyPolicy /></LayoutRoute>} />
+        <Route path='/terms-of-service' element={<LayoutRoute><TermsOfService /></LayoutRoute>} />
+        <Route path='/about' element={<LayoutRoute><About /></LayoutRoute>} />
+        <Route path='/contact' element={<LayoutRoute><Contact /></LayoutRoute>} />
+
+        {/* Redirect old routes to new ones */}
+        <Route path='/sharePage' element={<Navigate to="/share" replace />} />
+        <Route path='/recievePage' element={<Navigate to="/receive" replace />} />
+
+        {/* Catch-all: redirect to landing page */}
+        <Route path='*' element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

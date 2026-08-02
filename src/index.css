@@ -1,37 +1,92 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --purple-500: #8b5cf6;
-  --purple-600: #7c3aed;
-  --pink-500: #ec4899;
-  --green-500: #22c55e;
-  --red-500: #ef4444;
-  --blue-500: #3b82f6;
+  /* === THEME COLORS (Change these to customize the entire app theme) === */
+  --theme-primary: #7c3aed;
+  --theme-primary-hover: #6d28d9;
+  --theme-primary-light: #a78bfa;
+  --theme-primary-subtle: rgba(139, 92, 246, 0.12);
+  --theme-primary-glow: rgba(139, 92, 246, 0.4);
+  --theme-accent: #ec4899;
+  --theme-success: #22c55e;
+  --theme-warning: #f97316;
+  --theme-danger: #ef4444;
+  --theme-info: #3b82f6;
+  --theme-success-bg: #166534;
+  --theme-success-text: #86efac;
+  --theme-danger-bg: #7f1d1d;
+  --theme-danger-text: #fca5a5;
+  --theme-warning-bg: #713f12;
+  --theme-warning-text: #fde68a;
+  --theme-info-bg: #1e3a5f;
+  --theme-info-text: #93c5fd;
 
-  --color-primary: var(--purple-500);
-  --color-primary-hover: var(--purple-600);
-  --color-primary-subtle: rgba(139, 92, 246, 0.12);
-  --color-primary-glow: rgba(139, 92, 246, 0.4);
-  --color-accent: var(--pink-500);
-  --color-success: var(--green-500);
-  --color-error: var(--red-500);
+  /* Layout Colors */
+  --layout-bg: #0e0e10;
+  --sidebar-bg: #18181b;
+  --sidebar-border: #27272a;
+  --sidebar-text: #a1a1aa;
+  --sidebar-text-active: #fafafa;
+  --sidebar-accent: #a78bfa;
+  --sidebar-item-hover: #27272a;
+  --sidebar-item-active-bg: #27272a;
+  --topbar-bg: #18181b;
+  --topbar-border: #27272a;
+  --activity-bar-bg: #0e0e10;
+  --activity-bar-border: #27272a;
+  --activity-icon-color: #71717a;
+  --activity-icon-hover: #a1a1aa;
+  --activity-icon-active: #fafafa;
+  --tab-bar-bg: #0e0e10;
+  --tab-bar-border: #27272a;
+  --tab-color: #71717a;
+  --tab-hover-color: #a1a1aa;
+  --tab-active-color: #e4e4e7;
+  --tab-active-bg: #18181b;
+  --tab-active-indicator: #a78bfa;
+  --content-bg: #0e0e10;
+  --card-bg: #18181b;
+  --card-border: #27272a;
+  --card-hover-border: #3f3f46;
+  --text-primary: #fafafa;
+  --text-secondary: #e4e4e7;
+  --text-tertiary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-subtle: #52525b;
+  --border-default: #27272a;
+  --border-subtle: #1e1e21;
+  --border-strong: #3f3f46;
+  --bg-elevated: #1c1c1f;
+  --bg-overlay: #27272a;
+  --bg-glass: rgba(26, 26, 38, 0.6);
+  --bg-glass-strong: rgba(26, 26, 38, 0.85);
 
+  /* Legacy CSS variables (kept for backward compatibility) */
+  --purple-500: var(--theme-primary);
+  --purple-600: var(--theme-primary-hover);
+  --pink-500: var(--theme-accent);
+  --green-500: var(--theme-success);
+  --red-500: var(--theme-danger);
+  --blue-500: var(--theme-info);
+  --color-primary: var(--theme-primary);
+  --color-primary-hover: var(--theme-primary-hover);
+  --color-primary-subtle: var(--theme-primary-subtle);
+  --color-primary-glow: var(--theme-primary-glow);
+  --color-accent: var(--theme-accent);
+  --color-success: var(--theme-success);
+  --color-error: var(--theme-danger);
   --bg-base: #0a0a0f;
   --bg-surface: #12121a;
   --bg-elevated: #1a1a26;
   --bg-overlay: rgba(10, 10, 15, 0.8);
-  --bg-glass: rgba(26, 26, 38, 0.6);
-  --bg-glass-strong: rgba(26, 26, 38, 0.85);
-
   --text-primary: #f1f1f7;
   --text-secondary: #a1a1b2;
   --text-tertiary: #6b6b80;
   --text-on-primary: #ffffff;
-
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --border-accent: var(--purple-500);
+  --border-accent: var(--theme-primary);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -82,6 +137,9 @@
   --duration-normal: 250ms;
 
   --z-elevated: 10;
+  --z-dropdown: 50;
+  --z-modal: 100;
+  --z-context-menu: 100;
 }
 
 *,
@@ -100,17 +158,19 @@ html {
 }
 
 body {
-  background: var(--bg-base);
-  color: var(--text-primary);
+  background: var(--layout-bg);
+  color: var(--text-secondary);
   font-family: var(--font-sans);
   line-height: var(--leading-normal);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100vh;
   margin: 0;
 }
 
 #root {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -122,7 +182,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 p {
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   line-height: var(--leading-relaxed);
 }
 
@@ -152,18 +212,18 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-strong);
   border-radius: var(--radius-full);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--theme-primary);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
 ::selection {
-  background: var(--color-primary-subtle);
+  background: var(--theme-primary-subtle);
   color: var(--text-primary);
 }
 

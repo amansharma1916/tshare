@@ -4,19 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
 import UsernamePopup from './auth/UsernamePopup';
+import { useLayout } from './layout/LayoutContext';
 
 const SEGMENT_COUNT = 4;
 
-const RecievePage = () => {
+const RecievePage = ({ fixedType = null }) => {
   const navigate = useNavigate();
+  const { insideLayout } = useLayout();
   const [receivedData, setReceivedData] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageData, setImageData] = useState(null);
   const [imageCode, setImageCode] = useState('');
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfData, setPdfData] = useState(null);
-  const [pdfCode, setPdfCode] = useState('');
   const [fileLoading, setFileLoading] = useState(false);
   const [fileData, setFileData] = useState(null);
   const [fileCode, setFileCode] = useState('');
@@ -26,13 +25,18 @@ const RecievePage = () => {
   const [segments, setSegments] = useState(Array(SEGMENT_COUNT).fill(''));
   const [activeSegment, setActiveSegment] = useState(0);
   const segmentRefs = useRef([]);
-  const [contentType, setContentType] = useState('text');
+  const [contentType, setContentType] = useState(fixedType || 'text');
   const [showContent, setShowContent] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [pendingCode, setPendingCode] = useState('');
   const [pendingContentType, setPendingContentType] = useState('text');
   const [popupError, setPopupError] = useState('');
   const [popupSubmitting, setPopupSubmitting] = useState(false);
+
+  useEffect(() => {
+    setContentType(fixedType || 'text');
+    setPendingContentType(fixedType || 'text');
+  }, [fixedType]);
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -113,7 +117,7 @@ const RecievePage = () => {
     segmentRefs.current[0]?.focus();
     setReceivedData('');
     setImageData(null);
-    setPdfData(null);
+    setFileData(null);
     setError('');
     setSuccessMessage('');
     setShowContent(false);
@@ -141,7 +145,6 @@ const RecievePage = () => {
   const doReceive = (code, type, username) => {
     if (type === 'text') return receiveData(code, username);
     else if (type === 'image') return receiveImage(code, username);
-    else if (type === 'pdf') return receivePdf(code, username);
     else if (type === 'file') return receiveFile(code, username);
   };
 
@@ -171,12 +174,12 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setImageData(null);
-    setPdfData(null);
+    setFileData(null);
 
     return fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
-          if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
-          return res.json();
+        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
+        return res.json();
       })
       .then(data => {
         if (data && data.text) {
@@ -204,7 +207,7 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedData('');
-    setPdfData(null);
+    setFileData(null);
 
     return fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
@@ -228,36 +231,6 @@ const RecievePage = () => {
       .finally(() => setImageLoading(false));
   };
 
-  const receivePdf = (code, username) => {
-    setPdfLoading(true);
-    setError('');
-    setSuccessMessage('');
-    setShowContent(false);
-    setReceivedData('');
-    setImageData(null);
-
-    return fetch(endpoints.getPdf(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
-      .then(res => {
-        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or PDF not found') });
-        return res.json();
-      })
-      .then(data => {
-        if (data?.pdf?.url) {
-          setPdfData(data.pdf);
-          setPdfCode(code);
-          setSuccessMessage('PDF received');
-          setShowContent(true);
-        } else {
-          throw new Error('No PDF found for this code');
-        }
-      })
-      .catch(error => {
-        setError(error.message || 'Failed to retrieve PDF');
-        throw error;
-      })
-      .finally(() => setPdfLoading(false));
-  };
-
   const receiveFile = (code, username) => {
     setFileLoading(true);
     setError('');
@@ -265,7 +238,6 @@ const RecievePage = () => {
     setShowContent(false);
     setReceivedData('');
     setImageData(null);
-    setPdfData(null);
 
     return fetch(endpoints.getFile(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
       .then(res => {
@@ -304,17 +276,12 @@ const RecievePage = () => {
     window.location.href = endpoints.downloadImage(imageCode);
   };
 
-  const downloadPdf = () => {
-    if (!pdfCode) return;
-    window.location.href = endpoints.downloadPdf(pdfCode);
-  };
-
   const downloadFile = () => {
     if (!fileCode) return;
     window.location.href = endpoints.downloadFile(fileCode);
   };
 
-  const isReceiving = loading || imageLoading || pdfLoading || fileLoading;
+  const isReceiving = loading || imageLoading || fileLoading;
 
   const contentVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -325,40 +292,97 @@ const RecievePage = () => {
     }
   };
 
+  const getTitle = () => {
+    if (fixedType === 'text') return 'Receive Text';
+    if (fixedType === 'image') return 'Receive Image';
+    if (fixedType === 'file') return 'Receive File';
+    return 'Receive Content';
+  };
+
+  const getDesc = () => {
+    if (fixedType === 'text') return 'Enter a 4-digit code to retrieve shared text.';
+    if (fixedType === 'image') return 'Enter a 4-digit code to retrieve a shared image.';
+    if (fixedType === 'file') return 'Enter a 4-digit code to retrieve a shared file.';
+    return 'Enter the 4-digit code shared with you.';
+  };
+
+  const getHeaderIcon = () => {
+    if (fixedType === 'text') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+      );
+    }
+    if (fixedType === 'image') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      );
+    }
+    if (fixedType === 'file') {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      );
+    }
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+        <path d="M7 10l5 5 5-5" />
+        <path d="M12 3v12" />
+      </svg>
+    );
+  };
+
+  const getHeaderIconClass = () => {
+    if (fixedType === 'text') return 'share__header-icon';
+    if (fixedType === 'image') return 'share__header-icon share__header-icon--image';
+    if (fixedType === 'file') return 'share__header-icon share__header-icon--file';
+    return 'share__header-icon';
+  };
+
   return (
-    <div className="page">
-      <motion.nav
-        className="nav"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="nav__inner">
-          <button className="nav__back" onClick={() => navigate('/')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-          <div className="nav__brand">
-            <img src="/s2.svg" alt="TShare" width="20" height="20" />
-            <span>TShare</span>
+    <div className={insideLayout ? 'share-page' : 'page'}>
+      {!insideLayout && (
+        <motion.nav
+          className="nav"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="nav__inner">
+            <button className="nav__back" onClick={() => navigate('/')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <div className="nav__brand">
+              <img src="/s2.svg" alt="TShare" width="20" height="20" />
+              <span>TShare</span>
+            </div>
           </div>
-        </div>
-    </motion.nav>
+        </motion.nav>
+      )}
 
-    <UsernamePopup
-      isOpen={popupOpen}
-      onClose={() => { setPopupOpen(false); setPopupError(''); }}
-      onUsernameSubmit={handleUsernameSubmit}
-      onAnonymous={handleAnonymous}
-      submitError={popupError}
-      onClearSubmitError={() => setPopupError('')}
-      submitting={popupSubmitting}
-    />
+      <UsernamePopup
+        isOpen={popupOpen}
+        onClose={() => { setPopupOpen(false); setPopupError(''); }}
+        onUsernameSubmit={handleUsernameSubmit}
+        onAnonymous={handleAnonymous}
+        submitError={popupError}
+        onClearSubmitError={() => setPopupError('')}
+        submitting={popupSubmitting}
+      />
 
-    <main className="receive">
+      <main className="receive">
         <div className="receive__container">
           <motion.div
             className="share__header"
@@ -366,37 +390,11 @@ const RecievePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="share__title">Receive Content</h1>
-            <p className="share__desc">Enter the 4-digit code shared with you.</p>
-          </motion.div>
-
-          <motion.div
-            className="receive__tabs"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 }}
-          >
-            {[
-              { id: 'text', label: 'Text', icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
-              { id: 'image', label: 'Image', icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' },
-              { id: 'file', label: 'File', icon: 'M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                className={`receive__tab ${contentType === tab.id ? 'receive__tab--active' : ''}`}
-                onClick={() => {
-                  setContentType(tab.id);
-                  setError('');
-                  setSuccessMessage('');
-                  setShowContent(false);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={tab.icon} />
-                </svg>
-                {tab.label}
-              </button>
-            ))}
+            <div className={getHeaderIconClass()}>
+              {getHeaderIcon()}
+            </div>
+            <h1 className="share__title">{getTitle()}</h1>
+            <p className="share__desc">{getDesc()}</p>
           </motion.div>
 
           <motion.div
@@ -407,27 +405,30 @@ const RecievePage = () => {
           >
             <div className="segmented-input" onPaste={handlePaste}>
               {segments.map((digit, i) => (
-                <React.Fragment key={i}>
-                  <input
-                    ref={(el) => { segmentRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleSegmentChange(i, e.target.value)}
-                    onKeyDown={(e) => handleSegmentKeyDown(i, e)}
-                    onFocus={() => setActiveSegment(i)}
-                    className={`segment-input ${digit ? 'segment-input--filled' : ''} ${activeSegment === i ? 'segment-input--active' : ''}`}
-                    aria-label={`Digit ${i + 1} of 4`}
-                    autoComplete="off"
-                  />
-                </React.Fragment>
+                <input
+                  key={i}
+                  ref={(el) => { segmentRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleSegmentChange(i, e.target.value)}
+                  onKeyDown={(e) => handleSegmentKeyDown(i, e)}
+                  onFocus={() => setActiveSegment(i)}
+                  className={`segment-input ${digit ? 'segment-input--filled' : ''} ${activeSegment === i ? 'segment-input--active' : ''}`}
+                  aria-label={`Digit ${i + 1} of 4`}
+                  autoComplete="off"
+                />
               ))}
             </div>
 
             <div className="receive__actions-row">
-              <button className="receive__clear-btn" onClick={clearAll} type="button">
+              <button className="editor-clear-btn" onClick={clearAll} type="button" disabled={isReceiving}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                </svg>
                 Clear
               </button>
               <button
@@ -505,7 +506,9 @@ const RecievePage = () => {
               >
                 {contentType === 'text' && receivedData && (
                   <div className="receive__text-content">
-                    <pre className="receive__text">{receivedData}</pre>
+                    <div className="receive__text-wrapper">
+                      <pre className="receive__text">{receivedData}</pre>
+                    </div>
                     <button
                       className="btn btn--secondary receive__action-btn"
                       onClick={copyToClipboard}
@@ -523,7 +526,7 @@ const RecievePage = () => {
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                           </svg>
-                          Copy
+                          Copy Text
                         </>
                       )}
                     </button>
@@ -541,8 +544,17 @@ const RecievePage = () => {
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                       />
                     </div>
-                    <div className="receive__file-meta">
-                      <span>{imageData.originalName || 'Shared image'}</span>
+                    <div className="receive__file-info">
+                      <div className="receive__file-icon receive__file-icon--image">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                      <div className="receive__file-details">
+                        <span className="receive__file-name">{imageData.originalName || 'Shared image'}</span>
+                      </div>
                     </div>
                     <button
                       className="btn btn--secondary receive__action-btn"
@@ -558,31 +570,6 @@ const RecievePage = () => {
                   </div>
                 )}
 
-                {contentType === 'pdf' && pdfData && (
-                  <div className="receive__pdf-content">
-                    <div className="receive__pdf-wrapper">
-                      <iframe
-                        src={endpoints.previewPdf(pdfCode)}
-                        title="Shared PDF"
-                      />
-                    </div>
-                    <div className="receive__file-meta">
-                      <span>{pdfData.originalName || 'Shared PDF'}</span>
-                    </div>
-                    <button
-                      className="btn btn--secondary receive__action-btn"
-                      onClick={downloadPdf}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Download PDF
-                    </button>
-                  </div>
-                )}
-
                 {contentType === 'file' && fileData && (
                   <div className="receive__file-content">
                     <div className="receive__file-preview">
@@ -592,8 +579,8 @@ const RecievePage = () => {
                       />
                     </div>
                     <div className="receive__file-info">
-                      <div className="receive__file-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="receive__file-icon receive__file-icon--file">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
                           <polyline points="13 2 13 9 20 9" />
                         </svg>

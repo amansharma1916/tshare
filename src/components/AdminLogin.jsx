@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminLogin.css';
-import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 
 const AdminLogin = () => {
@@ -35,6 +34,7 @@ const AdminLogin = () => {
 
             if (data.success) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
+                sessionStorage.setItem('adminToken', data.token);
                 navigate('/admin/panel');
             } else {
                 setError(data.message || 'Invalid password');
@@ -56,6 +56,9 @@ const AdminLogin = () => {
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
                 <div className="admin-login__header">
+                    <div className="admin-login__logo">
+                        <img src="/s2.svg" alt="TShare" width="36" height="36" />
+                    </div>
                     <h1 className="admin-login__title">Admin Login</h1>
                     <p className="admin-login__subtitle">Enter your password to access the admin panel</p>
                 </div>
@@ -94,16 +97,6 @@ const AdminLogin = () => {
                             whileTap={{ scale: 0.98 }}
                         >
                             {loading ? 'Logging in...' : 'Login'}
-                        </motion.button>
-
-                        <motion.button
-                            className="btn btn--secondary admin-login__btn"
-                            type="button"
-                            onClick={() => navigate('/')}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            Back to Home
                         </motion.button>
                     </div>
                 </form>

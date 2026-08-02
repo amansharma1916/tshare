@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { endpoints } from '../../api/api'
 import './Login.css'
 
@@ -39,61 +40,63 @@ const Register = () => {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
-          <Link to="/" className="auth-back">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5" />
-              <path d="M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </Link>
-          <div className="auth-brand">
-            <img src="/s2.svg" alt="TShare" width="28" height="28" />
-            <span>TShare</span>
+    <div className="login-page">
+      <motion.div
+        className="login-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="login-header">
+          <div className="login-logo">
+            <img src="/s2.svg" alt="TShare" width="32" height="32" />
           </div>
+          <h1 className="login-title">Create Account</h1>
+          <p className="login-subtitle">Choose a username to get started</p>
         </div>
 
-        <h1 className="auth-title">Create account</h1>
-        <p className="auth-subtitle">Choose a username to get started</p>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label htmlFor="username" className="auth-label">Username</label>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="login-field">
+            <label className="login-label">Username</label>
             <input
-              id="username"
               type="text"
-              className="auth-input"
-              placeholder="Choose a username"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError('') }}
+              placeholder="Choose a username"
               autoFocus
               required
+              className="login-input"
             />
           </div>
 
           {error && (
-            <div className="auth-error">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
+            <motion.div
+              className="login-error"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <button type="submit" className="auth-btn" disabled={loading || !username.trim()}>
-            {loading ? 'Creating account...' : 'Create account'}
+          <button
+            type="submit"
+            disabled={loading || !username.trim()}
+            className="btn btn-primary login-submit"
+            style={{ opacity: (loading || !username.trim()) ? 0.7 : 1 }}
+          >
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="auth-footer-text">
-          Already have an account?{' '}
-          <Link to="/login" className="auth-link">Login</Link>
-        </p>
-      </div>
+        <div className="login-footer">
+          <p className="login-footer-text">
+            Already have an account?{' '}
+            <Link to="/login" className="login-link">Login</Link>
+          </p>
+          <Link to="/" className="login-back">Back to Home</Link>
+        </div>
+      </motion.div>
     </div>
   )
 }
