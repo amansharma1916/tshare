@@ -5,6 +5,92 @@ import './AdminPanel.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 
+const PAGE_SIZE = 10;
+
+// ──────────────────────────────────────────
+// Reusable Pagination Controls Component
+// ──────────────────────────────────────────
+const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange }) => {
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+
+        if (totalPages <= 0) return [1];
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('dots');
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (currentPage < totalPages - 2) pages.push('dots');
+            pages.push(totalPages);
+        }
+        return pages;
+    };
+
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    const endItem = Math.min(currentPage * PAGE_SIZE, totalItems);
+
+    if (totalPages <= 0) return null;
+
+    return (
+        <div className="pagination-controls">
+            <div className="pagination-info">
+                Showing {startItem}–{endItem} of {totalItems} items
+            </div>
+            <div className="pagination-buttons">
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(1)}
+                    disabled={currentPage === 1}
+                    title="First page"
+                >
+                    ≪
+                </button>
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    title="Previous"
+                >
+                    ‹
+                </button>
+                {getPageNumbers().map((page, index) =>
+                    page === 'dots' ? (
+                        <span key={index} className="pagination-ellipsis">…</span>
+                    ) : (
+                        <button
+                            key={page}
+                            className={`pagination-btn ${page === currentPage ? 'active' : ''}`}
+                            onClick={() => onPageChange(page)}
+                        >
+                            {page}
+                        </button>
+                    )
+                )}
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    title="Next"
+                >
+                    ›
+                </button>
+                <button
+                    className="pagination-btn"
+                    onClick={() => onPageChange(totalPages)}
+                    disabled={currentPage >= totalPages}
+                    title="Last page"
+                >
+                    ≫
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const AdminPanel = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -17,6 +103,8 @@ const AdminPanel = () => {
             ...extraHeaders,
         };
     };
+
+    // ─── Data State ───
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
@@ -29,6 +117,38 @@ const AdminPanel = () => {
     const [error, setError] = useState('');
     const [imagesError, setImagesError] = useState('');
     const [publicRoomsError, setPublicRoomsError] = useState('');
+    const [files, setFiles] = useState([]);
+    const [filesLoading, setFilesLoading] = useState(true);
+    const [filesError, setFilesError] = useState('');
+
+    // ─── Pagination State ───
+    // Texts
+    const [textsPage, setTextsPage] = useState(1);
+    const [textsPagination, setTextsPagination] = useState(null);
+    const [textsSearchInput, setTextsSearchInput] = useState('');
+    const [textsSearchTerm, setTextsSearchTerm] = useState('');
+
+    // Images
+    const [imagesPage, setImagesPage] = useState(1);
+    const [imagesPagination, setImagesPagination] = useState(null);
+    const [imagesSearchInput, setImagesSearchInput] = useState('');
+    const [imagesSearchTerm, setImagesSearchTerm] = useState('');
+
+    // Files
+    const [filesPage, setFilesPage] = useState(1);
+    const [filesPagination, setFilesPagination] = useState(null);
+    const [filesSearchInput, setFilesSearchInput] = useState('');
+    const [filesSearchTerm, setFilesSearchTerm] = useState('');
+
+    // Public Rooms
+    const [publicRoomsPage, setPublicRoomsPage] = useState(1);
+    const [publicRoomsPagination, setPublicRoomsPagination] = useState(null);
+
+    // Users
+    const [usersPage, setUsersPage] = useState(1);
+    const [usersPagination, setUsersPagination] = useState(null);
+
+    // ─── Edit / Modal State ───
     const [editingText, setEditingText] = useState(null);
     const [editedContent, setEditedContent] = useState('');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -40,9 +160,6 @@ const AdminPanel = () => {
     const [editingImage, setEditingImage] = useState(null);
     const [newImageCode, setNewImageCode] = useState('');
     const [imageCodeError, setImageCodeError] = useState('');
-    const [files, setFiles] = useState([]);
-    const [filesLoading, setFilesLoading] = useState(true);
-    const [filesError, setFilesError] = useState('');
     const [showFileCodeModal, setShowFileCodeModal] = useState(false);
     const [editingFile, setEditingFile] = useState(null);
     const [newFileCode, setNewFileCode] = useState('');
@@ -69,166 +186,233 @@ const AdminPanel = () => {
         }
     }, [location.search]);
 
-    // Only fetch data for the active tab
+    // ─── Debounce Effects for Search ───
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setTextsSearchTerm(textsSearchInput);
+            setTextsPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [textsSearchInput]);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setImagesSearchTerm(imagesSearchInput);
+            setImagesPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [imagesSearchInput]);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setFilesSearchTerm(filesSearchInput);
+            setFilesPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [filesSearchInput]);
+
+    // ─── Fetch Effects (one per tab) ───
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
-        switch (activeTab) {
-            case 'texts':
-                fetchTexts();
-                break;
-            case 'images':
-                fetchImages();
-                break;
-            case 'files':
-                fetchFiles();
-                break;
-            case 'public-rooms':
-                fetchPublicRooms();
-                break;
-            case 'users':
-                fetchUsers();
-                break;
-            default:
-                break;
+        if (activeTab === 'texts') {
+            fetchTexts(textsPage, textsSearchTerm);
         }
-    }, [activeTab]);
+    }, [activeTab, textsPage, textsSearchTerm]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'images') {
+            fetchImages(imagesPage, imagesSearchTerm);
+        }
+    }, [activeTab, imagesPage, imagesSearchTerm]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'files') {
+            fetchFiles(filesPage, filesSearchTerm);
+        }
+    }, [activeTab, filesPage, filesSearchTerm]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'public-rooms') {
+            fetchPublicRooms(publicRoomsPage);
+        }
+    }, [activeTab, publicRoomsPage]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'users') {
+            fetchUsers(usersPage);
+        }
+    }, [activeTab, usersPage]);
 
     const refreshAll = () => {
         switch (activeTab) {
             case 'texts':
-                fetchTexts();
+                fetchTexts(textsPage, textsSearchTerm);
                 break;
             case 'images':
-                fetchImages();
+                fetchImages(imagesPage, imagesSearchTerm);
                 break;
             case 'files':
-                fetchFiles();
+                fetchFiles(filesPage, filesSearchTerm);
                 break;
             case 'public-rooms':
-                fetchPublicRooms();
+                fetchPublicRooms(publicRoomsPage);
                 break;
             case 'users':
-                fetchUsers();
+                fetchUsers(usersPage);
                 break;
             default:
                 break;
         }
     };
 
-    const fetchUsers = async () => {
+    // ─── Fetch Functions (with pagination + search) ───
+
+    const fetchUsers = async (pageNum = 1) => {
         setUsersLoading(true);
         setUsersError('');
 
         try {
-            const response = await fetch(endpoints.adminUsers, {
+            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const response = await fetch(`${endpoints.adminUsers}?${params}`, {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
                 setUsers(data.users || []);
+                setUsersPagination(data.pagination || null);
             } else {
                 setUsersError('Failed to fetch users');
             }
+            return data;
         } catch (error) {
             console.error('Error:', error);
             setUsersError('Failed to connect to server. Please try again.');
+            return null;
         } finally {
             setUsersLoading(false);
         }
     };
 
-    const fetchTexts = async () => {
+    const fetchTexts = async (pageNum = 1, searchTerm = '') => {
         setLoading(true);
         setError('');
 
         try {
-            const response = await fetch(endpoints.adminTexts, {
+            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await fetch(`${endpoints.adminTexts}?${params}`, {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
-                setTexts(data.texts);
+                setTexts(data.texts || []);
+                setTextsPagination(data.pagination || null);
             } else {
                 setError('Failed to fetch texts');
             }
+            return data;
         } catch (error) {
             console.error('Error:', error);
             setError('Failed to connect to server. Please try again.');
+            return null;
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchImages = async () => {
+    const fetchImages = async (pageNum = 1, searchTerm = '') => {
         setImagesLoading(true);
         setImagesError('');
 
         try {
-            const response = await fetch(endpoints.adminImages, {
+            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await fetch(`${endpoints.adminImages}?${params}`, {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
-                setImages(data.images);
+                setImages(data.images || []);
+                setImagesPagination(data.pagination || null);
             } else {
                 setImagesError('Failed to fetch images');
             }
+            return data;
         } catch (error) {
             console.error('Error:', error);
             setImagesError('Failed to connect to server. Please try again.');
+            return null;
         } finally {
             setImagesLoading(false);
         }
     };
 
-    const fetchFiles = async () => {
+    const fetchFiles = async (pageNum = 1, searchTerm = '') => {
         setFilesLoading(true);
         setFilesError('');
 
         try {
-            const response = await fetch(endpoints.adminFiles, {
+            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await fetch(`${endpoints.adminFiles}?${params}`, {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
                 setFiles(data.files || []);
+                setFilesPagination(data.pagination || null);
             } else {
                 setFilesError('Failed to fetch files');
             }
+            return data;
         } catch (error) {
             console.error('Error:', error);
             setFilesError('Failed to connect to server. Please try again.');
+            return null;
         } finally {
             setFilesLoading(false);
         }
     };
 
-    const fetchPublicRooms = async () => {
+    const fetchPublicRooms = async (pageNum = 1) => {
         setPublicRoomsLoading(true);
         setPublicRoomsError('');
 
         try {
-            const response = await fetch(endpoints.adminPublicRooms, {
+            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const response = await fetch(`${endpoints.adminPublicRooms}?${params}`, {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
                 setPublicRooms(data.rooms || []);
+                setPublicRoomsPagination(data.pagination || null);
             } else {
                 setPublicRoomsError('Failed to fetch public rooms');
             }
+            return data;
         } catch (error) {
             console.error('Error:', error);
             setPublicRoomsError('Failed to connect to server. Please try again.');
+            return null;
         } finally {
             setPublicRoomsLoading(false);
         }
     };
+
+    // ─── Text Handlers ───
 
     const handleDeleteText = async (id) => {
         if (!window.confirm('Are you sure you want to delete this text?')) {
@@ -244,8 +428,16 @@ const AdminPanel = () => {
             const data = await response.json();
 
             if (data.success) {
-                setTexts(texts.filter(text => text.id !== id));
+                // Optimistically remove from current page
+                setTexts(prev => prev.filter(text => text.id !== id));
                 showActionMessage('Text deleted successfully', 'success');
+
+                // Re-fetch to sync with updated pagination state
+                const result = await fetchTexts(textsPage, textsSearchTerm);
+                // If the page is now empty and not page 1, go back a page
+                if (result && result.texts && result.texts.length === 0 && textsPage > 1) {
+                    setTextsPage(textsPage - 1);
+                }
             } else {
                 showActionMessage(data.message || 'Failed to delete text', 'error');
             }
@@ -270,59 +462,11 @@ const AdminPanel = () => {
 
             if (data.success) {
                 setTexts([]);
+                setTextsPagination(null);
+                setTextsPage(1);
                 showActionMessage('All texts deleted successfully', 'success');
             } else {
                 showActionMessage(data.message || 'Failed to delete texts', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showActionMessage('Failed to connect to server', 'error');
-        }
-    };
-
-    const handleDeleteImage = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this image?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(endpoints.adminDeleteImage(id), {
-                method: 'DELETE',
-                headers: getAuthHeaders(),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setImages(images.filter(image => image.id !== id));
-                showActionMessage('Image deleted successfully', 'success');
-            } else {
-                showActionMessage(data.message || 'Failed to delete image', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showActionMessage('Failed to connect to server', 'error');
-        }
-    };
-
-    const handleDeleteAllImages = async () => {
-        if (!window.confirm('Are you sure you want to delete ALL images? This action cannot be undone.')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(endpoints.adminDeleteAllImages, {
-                method: 'DELETE',
-                headers: getAuthHeaders(),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setImages([]);
-                showActionMessage('All images deleted successfully', 'success');
-            } else {
-                showActionMessage(data.message || 'Failed to delete images', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -464,6 +608,65 @@ const AdminPanel = () => {
         setCodeError('');
     };
 
+    // ─── Image Handlers ───
+
+    const handleDeleteImage = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this image?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteImage(id), {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setImages(prev => prev.filter(image => image.id !== id));
+                showActionMessage('Image deleted successfully', 'success');
+
+                const result = await fetchImages(imagesPage, imagesSearchTerm);
+                if (result && result.images && result.images.length === 0 && imagesPage > 1) {
+                    setImagesPage(imagesPage - 1);
+                }
+            } else {
+                showActionMessage(data.message || 'Failed to delete image', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleDeleteAllImages = async () => {
+        if (!window.confirm('Are you sure you want to delete ALL images? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminDeleteAllImages, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setImages([]);
+                setImagesPagination(null);
+                setImagesPage(1);
+                showActionMessage('All images deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete images', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
     const handleEditImageCode = (image) => {
         setEditingImage(image);
         setNewImageCode(image.id.toString());
@@ -554,6 +757,8 @@ const AdminPanel = () => {
         }
     };
 
+    // ─── Password Handler ───
+
     const handleChangePassword = async () => {
         setPasswordError('');
 
@@ -599,6 +804,8 @@ const AdminPanel = () => {
         }
     };
 
+    // ─── Public Room Handlers ───
+
     const handleDeletePublicRoom = async (code) => {
         if (!window.confirm(`Are you sure you want to delete public room ${code}?`)) {
             return;
@@ -613,8 +820,13 @@ const AdminPanel = () => {
             const data = await response.json();
 
             if (data.success) {
-                setPublicRooms(publicRooms.filter(room => room.code !== code));
+                setPublicRooms(prev => prev.filter(room => room.code !== code));
                 showActionMessage('Public room deleted successfully', 'success');
+
+                const result = await fetchPublicRooms(publicRoomsPage);
+                if (result && result.rooms && result.rooms.length === 0 && publicRoomsPage > 1) {
+                    setPublicRoomsPage(publicRoomsPage - 1);
+                }
             } else {
                 showActionMessage(data.message || 'Failed to delete public room', 'error');
             }
@@ -660,7 +872,9 @@ const AdminPanel = () => {
             const data = await response.json();
 
             if (data.success) {
-                setPublicRooms([...publicRooms, data.room]);
+                // New room is most recent, so it's on page 1
+                setPublicRoomsPage(1);
+                fetchPublicRooms(1);
                 setShowPublicRoomModal(false);
                 setPublicRoomName('');
                 showActionMessage('Public room created successfully', 'success');
@@ -672,6 +886,8 @@ const AdminPanel = () => {
             showActionMessage('Failed to connect to server', 'error');
         }
     };
+
+    // ─── User Handlers ───
 
     const handleDeleteUser = async (id) => {
         if (!window.confirm('Are you sure you want to delete this user? This will also delete all their mapped items.')) {
@@ -687,8 +903,13 @@ const AdminPanel = () => {
             const data = await response.json();
 
             if (data.success) {
-                setUsers(users.filter(user => user.id !== id));
+                setUsers(prev => prev.filter(user => user.id !== id));
                 showActionMessage('User deleted successfully', 'success');
+
+                const result = await fetchUsers(usersPage);
+                if (result && result.users && result.users.length === 0 && usersPage > 1) {
+                    setUsersPage(usersPage - 1);
+                }
             } else {
                 showActionMessage(data.message || 'Failed to delete user', 'error');
             }
@@ -713,6 +934,8 @@ const AdminPanel = () => {
 
             if (data.success) {
                 setUsers([]);
+                setUsersPagination(null);
+                setUsersPage(1);
                 showActionMessage(`All users deleted successfully (${data.deletedCount} users)`, 'success');
             } else {
                 showActionMessage(data.message || 'Failed to delete users', 'error');
@@ -722,6 +945,8 @@ const AdminPanel = () => {
             showActionMessage('Failed to connect to server', 'error');
         }
     };
+
+    // ─── File Handlers ───
 
     const handleDeleteFile = async (id) => {
         if (!window.confirm('Are you sure you want to delete this file?')) {
@@ -737,8 +962,13 @@ const AdminPanel = () => {
             const data = await response.json();
 
             if (data.success) {
-                setFiles(files.filter(file => file.id !== id));
+                setFiles(prev => prev.filter(file => file.id !== id));
                 showActionMessage('File deleted successfully', 'success');
+
+                const result = await fetchFiles(filesPage, filesSearchTerm);
+                if (result && result.files && result.files.length === 0 && filesPage > 1) {
+                    setFilesPage(filesPage - 1);
+                }
             } else {
                 showActionMessage(data.message || 'Failed to delete file', 'error');
             }
@@ -763,6 +993,8 @@ const AdminPanel = () => {
 
             if (data.success) {
                 setFiles([]);
+                setFilesPagination(null);
+                setFilesPage(1);
                 showActionMessage('All files deleted successfully', 'success');
             } else {
                 showActionMessage(data.message || 'Failed to delete files', 'error');
@@ -863,6 +1095,8 @@ const AdminPanel = () => {
         }
     };
 
+    // ─── Utility Handlers ───
+
     const showActionMessage = (text, type) => {
         setActionMessage({ text, type });
         setTimeout(() => {
@@ -875,6 +1109,53 @@ const AdminPanel = () => {
         sessionStorage.removeItem('adminToken');
         navigate('/admin/login');
     };
+
+    const handleTextsPageChange = (newPage) => {
+        const totalPages = textsPagination?.pages || 1;
+        const clampedPage = Math.max(1, Math.min(newPage, totalPages));
+        setTextsPage(clampedPage);
+    };
+
+    const handleImagesPageChange = (newPage) => {
+        const totalPages = imagesPagination?.pages || 1;
+        const clampedPage = Math.max(1, Math.min(newPage, totalPages));
+        setImagesPage(clampedPage);
+    };
+
+    const handleFilesPageChange = (newPage) => {
+        const totalPages = filesPagination?.pages || 1;
+        const clampedPage = Math.max(1, Math.min(newPage, totalPages));
+        setFilesPage(clampedPage);
+    };
+
+    const handlePublicRoomsPageChange = (newPage) => {
+        const totalPages = publicRoomsPagination?.pages || 1;
+        const clampedPage = Math.max(1, Math.min(newPage, totalPages));
+        setPublicRoomsPage(clampedPage);
+    };
+
+    const handleUsersPageChange = (newPage) => {
+        const totalPages = usersPagination?.pages || 1;
+        const clampedPage = Math.max(1, Math.min(newPage, totalPages));
+        setUsersPage(clampedPage);
+    };
+
+    const clearTextsSearch = () => {
+        setTextsSearchInput('');
+        setTextsSearchTerm('');
+    };
+
+    const clearImagesSearch = () => {
+        setImagesSearchInput('');
+        setImagesSearchTerm('');
+    };
+
+    const clearFilesSearch = () => {
+        setFilesSearchInput('');
+        setFilesSearchTerm('');
+    };
+
+    // ─── Render ───
 
     return (
         <div className="admin-panel-container">
@@ -920,7 +1201,7 @@ const AdminPanel = () => {
             >
                 {activeTab === 'texts' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div className="tab-header">
                             <h1>Text Management</h1>
                             <motion.button
                                 className="Btn delete-all"
@@ -930,6 +1211,25 @@ const AdminPanel = () => {
                             >
                                 Delete All Texts
                             </motion.button>
+                        </div>
+
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search texts..."
+                                value={textsSearchInput}
+                                onChange={(e) => setTextsSearchInput(e.target.value)}
+                                className="search-input"
+                            />
+                            {textsSearchInput && (
+                                <button
+                                    className="search-clear"
+                                    onClick={clearTextsSearch}
+                                    title="Clear search"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
 
                         {error && <div className="error-message">{error}</div>}
@@ -995,12 +1295,21 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+
+                        {textsPagination && (
+                            <PaginationControls
+                                currentPage={textsPagination.page}
+                                totalPages={textsPagination.pages}
+                                totalItems={textsPagination.total}
+                                onPageChange={handleTextsPageChange}
+                            />
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'images' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div className="tab-header">
                             <h1>Image Management</h1>
                             <motion.button
                                 className="Btn delete-all"
@@ -1010,6 +1319,25 @@ const AdminPanel = () => {
                             >
                                 Delete All Images
                             </motion.button>
+                        </div>
+
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search by original name..."
+                                value={imagesSearchInput}
+                                onChange={(e) => setImagesSearchInput(e.target.value)}
+                                className="search-input"
+                            />
+                            {imagesSearchInput && (
+                                <button
+                                    className="search-clear"
+                                    onClick={clearImagesSearch}
+                                    title="Clear search"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
 
                         {imagesError && <div className="error-message">{imagesError}</div>}
@@ -1081,12 +1409,21 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+
+                        {imagesPagination && (
+                            <PaginationControls
+                                currentPage={imagesPagination.page}
+                                totalPages={imagesPagination.pages}
+                                totalItems={imagesPagination.total}
+                                onPageChange={handleImagesPageChange}
+                            />
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'files' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div className="tab-header">
                             <h1>File Management</h1>
                             <motion.button
                                 className="Btn delete-all"
@@ -1096,6 +1433,25 @@ const AdminPanel = () => {
                             >
                                 Delete All Files
                             </motion.button>
+                        </div>
+
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search by original name..."
+                                value={filesSearchInput}
+                                onChange={(e) => setFilesSearchInput(e.target.value)}
+                                className="search-input"
+                            />
+                            {filesSearchInput && (
+                                <button
+                                    className="search-clear"
+                                    onClick={clearFilesSearch}
+                                    title="Clear search"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
 
                         {filesError && <div className="error-message">{filesError}</div>}
@@ -1178,12 +1534,21 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+
+                        {filesPagination && (
+                            <PaginationControls
+                                currentPage={filesPagination.page}
+                                totalPages={filesPagination.pages}
+                                totalItems={filesPagination.total}
+                                onPageChange={handleFilesPageChange}
+                            />
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'public-rooms' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div className="tab-header">
                             <h1>Public Rooms</h1>
                             <motion.button
                                 className="Btn create-public-room"
@@ -1248,12 +1613,21 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+
+                        {publicRoomsPagination && (
+                            <PaginationControls
+                                currentPage={publicRoomsPagination.page}
+                                totalPages={publicRoomsPagination.pages}
+                                totalItems={publicRoomsPagination.total}
+                                onPageChange={handlePublicRoomsPageChange}
+                            />
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'users' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div className="tab-header">
                             <h1>Registered Users</h1>
                             {users.length > 0 && (
                                 <motion.button
@@ -1306,6 +1680,15 @@ const AdminPanel = () => {
                                 </table>
                             </div>
                         )}
+
+                        {usersPagination && (
+                            <PaginationControls
+                                currentPage={usersPagination.page}
+                                totalPages={usersPagination.pages}
+                                totalItems={usersPagination.total}
+                                onPageChange={handleUsersPageChange}
+                            />
+                        )}
                     </div>
                 )}
 
@@ -1345,6 +1728,8 @@ const AdminPanel = () => {
                     </div>
                 )}
             </motion.div>
+
+            {/* ─── Modals (unchanged) ─── */}
 
             <AnimatePresence>
                 {editingText && (
