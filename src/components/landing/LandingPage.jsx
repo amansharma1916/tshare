@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, useInView, useAnimation, AnimatePresence } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
-import { endpoints } from '../../api/api'
 import './LandingPage.css'
 
 // Animated counter component
@@ -415,44 +414,7 @@ const ShareTypes = () => {
 
 const LandingPage = () => {
   const navigate = useNavigate()
-  const [stats, setStats] = useState({ texts: 0, images: 0, files: 0, users: 0, rooms: 0 })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [textsRes, imagesRes, filesRes, usersRes, roomsRes] = await Promise.allSettled([
-          fetch(endpoints.adminTexts),
-          fetch(endpoints.adminImages),
-          fetch(endpoints.adminFiles),
-          fetch(endpoints.adminUsers),
-          fetch(endpoints.adminPublicRooms),
-        ])
-
-        const getCount = (res) => {
-          if (res.status === 'fulfilled' && res.value.ok) {
-            return res.value.json().then(d => d.count || d.length || 0).catch(() => 0)
-          }
-          return 0
-        }
-
-        const [texts, images, files, users, rooms] = await Promise.all([
-          getCount(textsRes),
-          getCount(imagesRes),
-          getCount(filesRes),
-          getCount(usersRes),
-          getCount(roomsRes),
-        ])
-
-        setStats({ texts, images, files, users, rooms })
-      } catch (err) {
-        console.error('Failed to fetch stats:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchStats()
-  }, [])
+  const [stats] = useState({ texts: 320, images: 120, files: 40, users: 20, rooms: 3 })
 
   const totalShares = stats.texts + stats.images + stats.files
 

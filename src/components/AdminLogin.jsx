@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminLogin.css';
-import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 
 const AdminLogin = () => {
@@ -35,6 +34,7 @@ const AdminLogin = () => {
 
             if (data.success) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
+                sessionStorage.setItem('adminToken', data.token);
                 navigate('/admin/panel');
             } else {
                 setError(data.message || 'Invalid password');

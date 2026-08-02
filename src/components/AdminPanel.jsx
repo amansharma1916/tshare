@@ -8,6 +8,15 @@ import { endpoints } from '../api/api';
 const AdminPanel = () => {
     const navigate = useNavigate();
     const location = useLocation();
+
+    const getAuthHeaders = (extraHeaders = {}) => {
+        const token = sessionStorage.getItem('adminToken');
+        return {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...extraHeaders,
+        };
+    };
     const [texts, setTexts] = useState([]);
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
@@ -58,15 +67,52 @@ const AdminPanel = () => {
         if (tab && ['texts', 'images', 'files', 'public-rooms', 'users', 'settings'].includes(tab)) {
             setActiveTab(tab);
         }
-        refreshAll();
     }, [location.search]);
 
+    // Only fetch data for the active tab
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        switch (activeTab) {
+            case 'texts':
+                fetchTexts();
+                break;
+            case 'images':
+                fetchImages();
+                break;
+            case 'files':
+                fetchFiles();
+                break;
+            case 'public-rooms':
+                fetchPublicRooms();
+                break;
+            case 'users':
+                fetchUsers();
+                break;
+            default:
+                break;
+        }
+    }, [activeTab]);
+
     const refreshAll = () => {
-        fetchTexts();
-        fetchImages();
-        fetchFiles();
-        fetchPublicRooms();
-        fetchUsers();
+        switch (activeTab) {
+            case 'texts':
+                fetchTexts();
+                break;
+            case 'images':
+                fetchImages();
+                break;
+            case 'files':
+                fetchFiles();
+                break;
+            case 'public-rooms':
+                fetchPublicRooms();
+                break;
+            case 'users':
+                fetchUsers();
+                break;
+            default:
+                break;
+        }
     };
 
     const fetchUsers = async () => {
@@ -74,7 +120,9 @@ const AdminPanel = () => {
         setUsersError('');
 
         try {
-            const response = await fetch(endpoints.adminUsers);
+            const response = await fetch(endpoints.adminUsers, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -95,7 +143,9 @@ const AdminPanel = () => {
         setError('');
 
         try {
-            const response = await fetch(endpoints.adminTexts);
+            const response = await fetch(endpoints.adminTexts, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -116,7 +166,9 @@ const AdminPanel = () => {
         setImagesError('');
 
         try {
-            const response = await fetch(endpoints.adminImages);
+            const response = await fetch(endpoints.adminImages, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -137,7 +189,9 @@ const AdminPanel = () => {
         setFilesError('');
 
         try {
-            const response = await fetch(endpoints.adminFiles);
+            const response = await fetch(endpoints.adminFiles, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -158,7 +212,9 @@ const AdminPanel = () => {
         setPublicRoomsError('');
 
         try {
-            const response = await fetch(endpoints.adminPublicRooms);
+            const response = await fetch(endpoints.adminPublicRooms, {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -182,6 +238,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteText(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -206,6 +263,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllTexts, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -230,6 +288,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteImage(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -254,6 +313,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllImages, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -281,9 +341,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateText(editingText.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ text: editedContent }),
             });
 
@@ -328,9 +386,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateCode(editingCode.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newCode) }),
             });
 
@@ -361,9 +417,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -386,7 +440,9 @@ const AdminPanel = () => {
         if (!newCode || newCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckCode(newCode));
+            const response = await fetch(endpoints.adminCheckCode(newCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -427,9 +483,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateImageCode(editingImage.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newImageCode) }),
             });
 
@@ -456,7 +510,9 @@ const AdminPanel = () => {
         if (!newImageCode || newImageCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckImageCode(newImageCode));
+            const response = await fetch(endpoints.adminCheckImageCode(newImageCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -479,9 +535,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateImageCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -521,9 +575,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminChangePassword, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                     currentPassword,
                     newPassword,
@@ -555,6 +607,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeletePublicRoom(code), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -575,6 +628,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminTogglePublicRoomStatus(code), {
                 method: 'PUT',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -599,9 +653,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminPublicRooms, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ name: publicRoomName || undefined }),
             });
 
@@ -629,6 +681,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteUser(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -653,6 +706,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllUsers, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -677,6 +731,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteFile(id), {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -701,6 +756,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminDeleteAllFiles, {
                 method: 'DELETE',
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -736,9 +792,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminUpdateFileCode(editingFile.id), {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ newCode: parseInt(newFileCode) }),
             });
 
@@ -765,7 +819,9 @@ const AdminPanel = () => {
         if (!newFileCode || newFileCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckFileCode(newFileCode));
+            const response = await fetch(endpoints.adminCheckFileCode(newFileCode), {
+                headers: getAuthHeaders(),
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -788,9 +844,7 @@ const AdminPanel = () => {
         try {
             const response = await fetch(endpoints.adminRegenerateFileCode(id), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: getAuthHeaders(),
             });
 
             const data = await response.json();
@@ -818,6 +872,7 @@ const AdminPanel = () => {
 
     const handleLogout = () => {
         sessionStorage.removeItem('adminAuthenticated');
+        sessionStorage.removeItem('adminToken');
         navigate('/admin/login');
     };
 

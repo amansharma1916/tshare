@@ -5,6 +5,8 @@ import io from 'socket.io-client';
 import './PublicRoom.css';
 import { baseUrl } from '../../api/api';
 
+const SEGMENT_COUNT = 4;
+
 const PublicRoom = () => {
   const socketRef = useRef(null);
   const [username, setUsername] = useState('');
@@ -17,16 +19,21 @@ const PublicRoom = () => {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [users, setUsers] = useState([]);
-  const [showUsersList, setShowUsersList] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
-
+  const [segments, setSegments] = useState(Array(SEGMENT_COUNT).fill(''));
+  const [activeSegment, setActiveSegment] = useState(0);
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const segmentRefs = useRef([]);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const typingTimeoutRef = useRef(null);
+
+  const emojis = ['😀', '😂', '😍', '🤔', '👍', '❤️', '🎉', '🔥', '👏', '✨'];
 
   useEffect(() => {
     socketRef.current = io(baseUrl, {
@@ -39,32 +46,14 @@ const PublicRoom = () => {
       transports: ['websocket', 'polling'],
       forceNew: true,
       path: '/socket.io/',
-      extraHeaders: { "Access-Control-Allow-Origin": "*" }
     });
 
-    socketRef.current.on('connect_error', (err) => {
-      console.error('Socket connection error:', err.message);
-      setIsOffline(true);
-      if (socketRef.current.io.opts.transports[0] === 'websocket') {
-        socketRef.current.io.opts.transports = ['polling', 'websocket'];
-        socketRef.current.connect();
-      }
-    });
-
-    socketRef.current.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
-      setIsOffline(true);
-    });
-
-    socketRef.current.on('connect', () => {
-      console.log('Socket connected with transport:', socketRef.current.io.engine.transport.name);
-      setIsOffline(false);
-    });
+    socketRef.current.on('connect_error', () => setIsOffline(true));
+    socketRef.current.on('disconnect', () => setIsOffline(true));
+    socketRef.current.on('connect', () => setIsOffline(false));
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      if (socketRef.current) socketRef.current.disconnect();
     };
   }, []);
 
@@ -77,7 +66,9 @@ const PublicRoom = () => {
     const code = params.get('code');
     if (code) {
       setRoomCode(code);
-      const storedUsername = localStorage.getItem('chat-username');
+      const codeSegments = code.split('').slice(0, SEGMENT_COUNT);
+      setSegments(codeSegments.concat(Array(Math.max(0, SEGMENT_COUNT - codeSegments.length)).fill('')));
+      const storedUsername = localStorage.getItem('tshare_username');
       if (storedUsername) {
         setUsername(storedUsername);
       } else {
@@ -91,17 +82,11 @@ const PublicRoom = () => {
     const s = socketRef.current;
 
     const handleConnect = () => {
-      console.log('Socket connected:', s.id);
-      if (roomCode && username) {
-        s.emit('join-room', { roomCode, username });
-      }
+      if (roomCode && username) s.emit('join-room', { roomCode, username });
     };
 
-    const handleReconnect = (attempt) => {
-      console.log('Reconnected after', attempt, 'tries');
-      if (roomCode && username) {
-        s.emit('join-room', { roomCode, username });
-      }
+    const handleReconnect = () => {
+      if (roomCode && username) s.emit('join-room', { roomCode, username });
     };
 
     const handleRoomJoined = (data) => {
@@ -110,7 +95,6 @@ const PublicRoom = () => {
       setIsLoading(false);
       setMessages(data.messages || []);
       setUsers(data.users || []);
-
       const params = new URLSearchParams(location.search);
       params.set('code', data.roomCode);
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
@@ -180,11 +164,11 @@ const PublicRoom = () => {
   }, [roomCode, username, navigate, location.pathname]);
 
   const handleJoinRoom = async (code = roomCode, name = username) => {
-    if (!socketRef.current || !name) return;
+    if (!socketRef.current) return;
 
     setIsLoading(true);
     setError('');
-    localStorage.setItem('chat-username', name);
+    if (name) localStorage.setItem('tshare_username', name);
 
     try {
       const controller = new AbortController();
@@ -214,7 +198,6 @@ const PublicRoom = () => {
 
         socketRef.current.once('room-joined', onRoomJoined);
         socketRef.current.once('room-error', onRoomError);
-
         socketRef.current.emit('join-room', { roomCode: code, username: name });
 
         setTimeout(() => {
@@ -225,18 +208,13 @@ const PublicRoom = () => {
             setIsLoading(false);
           }
         }, 8000);
-
       } else {
         setError(data.message || 'Invalid room code');
         setIsLoading(false);
       }
     } catch (err) {
       console.error('Error validating room code:', err);
-      if (err.name === 'AbortError') {
-        setError('Request timed out. Please check your connection and try again.');
-      } else {
-        setError('Failed to validate room code');
-      }
+      setError(err.name === 'AbortError' ? 'Request timed out.' : 'Failed to validate room code');
       setIsLoading(false);
     }
   };
@@ -245,63 +223,130 @@ const PublicRoom = () => {
     e.preventDefault();
     if (!username.trim()) return;
     setShowUsernameModal(false);
+    localStorage.setItem('tshare_username', username);
     handleJoinRoom(roomCode, username);
+  };
+
+  const handleAnonymous = () => {
+    setShowUsernameModal(false);
+    const guestName = `Guest-${Math.floor(1000 + Math.random() * 9000)}`;
+    setUsername(guestName);
+    handleJoinRoom(roomCode, guestName);
   };
 
   const handleSubmitCode = (e) => {
     e.preventDefault();
-    if (!roomCode.trim()) {
-      setError('Please enter a room code');
+    const code = segments.join('');
+    if (code.length !== SEGMENT_COUNT) {
+      setError('Please enter all 4 digits');
       return;
     }
-
-    const storedUsername = localStorage.getItem('chat-username');
+    setRoomCode(code);
+    const storedUsername = localStorage.getItem('tshare_username');
     if (storedUsername) {
       setUsername(storedUsername);
-      handleJoinRoom(roomCode, storedUsername);
+      handleJoinRoom(code, storedUsername);
     } else {
       setShowUsernameModal(true);
     }
   };
 
+  const handleSegmentChange = (index, value) => {
+    const digit = value.replace(/\D/g, '');
+    if (!digit) return;
+    const newSegments = [...segments];
+    newSegments[index] = digit.slice(-1);
+    setSegments(newSegments);
+    setError('');
+    if (index < SEGMENT_COUNT - 1) {
+      setActiveSegment(index + 1);
+      segmentRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleSegmentKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const newSegments = [...segments];
+      if (segments[index]) {
+        newSegments[index] = '';
+        setSegments(newSegments);
+      } else if (index > 0) {
+        newSegments[index - 1] = '';
+        setSegments(newSegments);
+        setActiveSegment(index - 1);
+        segmentRefs.current[index - 1]?.focus();
+      }
+    }
+
+    if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      setActiveSegment(index - 1);
+      segmentRefs.current[index - 1]?.focus();
+    }
+
+    if (e.key === 'ArrowRight' && index < SEGMENT_COUNT - 1) {
+      e.preventDefault();
+      setActiveSegment(index + 1);
+      segmentRefs.current[index + 1]?.focus();
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmitCode(e);
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, SEGMENT_COUNT);
+    if (!pasted) return;
+    const newSegments = [...segments];
+    for (let i = 0; i < pasted.length; i++) {
+      newSegments[i] = pasted[i];
+    }
+    setSegments(newSegments);
+    setError('');
+    const nextIndex = Math.min(pasted.length, SEGMENT_COUNT - 1);
+    setActiveSegment(nextIndex);
+    segmentRefs.current[nextIndex]?.focus();
+  };
+
+  const clearAll = () => {
+    setSegments(Array(SEGMENT_COUNT).fill(''));
+    setActiveSegment(0);
+    segmentRefs.current[0]?.focus();
+    setError('');
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!messageText.trim() || !socketRef.current || !isJoined || isSendingMessage) return;
+    if (!messageText.trim() || !socketRef.current || !isJoined || isSending) return;
 
-    setIsSendingMessage(true);
-
-    const messageToSend = {
-      roomCode,
-      text: messageText,
-      username
-    };
+    setIsSending(true);
+    const messageToSend = { roomCode, text: messageText, username };
 
     const timeoutId = setTimeout(() => {
       console.error('Message acknowledgment timeout');
       setIsOffline(true);
-      setIsSendingMessage(false);
+      setIsSending(false);
     }, 5000);
 
     const handleAck = (success) => {
       clearTimeout(timeoutId);
-      setIsSendingMessage(false);
-      if (success === false) {
-        console.error('Message sending failed on server');
-      }
+      setIsSending(false);
+      if (success === false) console.error('Message sending failed on server');
     };
 
     setMessageText('');
     setIsTyping(false);
-
-    if (socketRef.current) {
-      socketRef.current.emit('typing-stop', { roomCode, username });
-    }
+    if (socketRef.current) socketRef.current.emit('typing-stop', { roomCode, username });
 
     try {
       socketRef.current.emit('send-message', messageToSend, handleAck);
     } catch (error) {
       console.error('Error emitting message:', error);
-      setIsSendingMessage(false);
+      setIsSending(false);
       setIsOffline(true);
       setMessages(prev => [...prev, {
         ...messageToSend,
@@ -314,51 +359,32 @@ const PublicRoom = () => {
 
   const handleTyping = (e) => {
     setMessageText(e.target.value);
-    
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     if (!isTyping && socketRef.current) {
       setIsTyping(true);
       socketRef.current.emit('typing-start', { roomCode, username });
     }
-    
     typingTimeoutRef.current = setTimeout(() => {
-      if (socketRef.current) {
-        socketRef.current.emit('typing-stop', { roomCode, username });
-      }
+      if (socketRef.current) socketRef.current.emit('typing-stop', { roomCode, username });
       setIsTyping(false);
     }, 1000);
   };
 
-  const handleBackToHome = () => {
-    navigate('/');
+  const handleEmojiClick = (emoji) => {
+    setMessageText(prev => prev + emoji);
+    setShowEmojiPicker(false);
   };
 
-  const toggleUsersList = () => {
-    setShowUsersList(prev => !prev);
+  const handleCopyMessage = (text, index) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopiedMessageId(index);
+        setTimeout(() => setCopiedMessageId(null), 2000);
+      })
+      .catch(err => console.error('Failed to copy:', err));
   };
 
-  const touchStartRef = useRef(null);
-  const handleTouchStart = (e) => {
-    touchStartRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!touchStartRef.current) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStartRef.current - touchEnd;
-
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        setShowUsersList(true);
-      } else {
-        setShowUsersList(false);
-      }
-    }
-    touchStartRef.current = null;
-  };
+  const handleBackToHome = () => navigate('/');
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -366,9 +392,7 @@ const PublicRoom = () => {
   };
 
   const leaveRoom = () => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
+    if (socketRef.current) socketRef.current.disconnect();
     setIsJoined(false);
     setMessages([]);
     setUsers([]);
@@ -377,22 +401,21 @@ const PublicRoom = () => {
 
   return (
     <div className="public-room">
+      {/* Offline Indicator */}
       <AnimatePresence>
         {isOffline && (
           <motion.div
-            className="offline-indicator"
+            className="offline-banner"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10.706 3.294A12.545 12.545 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c.63 0 1.249.05 1.852.148l.854-.854zM8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065 8.448 8.448 0 0 1 3.51-1.27L8 6zm2.596 1.404.785-.785c.63.24 1.227.545 1.785.907a.482.482 0 0 1 .063.745.525.525 0 0 1-.652.065 8.462 8.462 0 0 0-1.98-.932zM8 10l.933-.933a6.455 6.455 0 0 1 2.013.637c.285.145.326.524.1.75-.226.226-.551.19-.75-.1-.15-.15-.314-.289-.486-.406L8 10z" />
-              <path d="M13.229 8.271a.482.482 0 0 0-.063-.745A9.455 9.455 0 0 0 8 6c-.887 0-1.744.128-2.558.364l-.22-.22A10.545 10.545 0 0 1 8 5c.8 0 1.55.154 2.25.41l.773-.772a.25.25 0 0 1 .175-.073h.15L13.5 6l-2.147.146a.25.25 0 0 0-.175.073l-.847.847zm-8.65 1.195-.20.02a11.527 11.527 0 0 1-.576-.11l-.21.21a.5.5 0 0 1-.707 0l-1.05-1.05a.5.5 0 0 1 0-.707l.316-.316a6.527 6.527 0 0 1-.588-.314.48.48 0 0 0-.654.104.506.506 0 0 0 .056.682A12.487 12.487 0 0 0 5.937 9.45l-1.358 1.358a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 0-.707l1.743-1.743A12.55 12.55 0 0 0 8 7a12.55 12.55 0 0 0 6.336 1.696c.079 0 .158-.001.237-.004.003-.079.004-.158.004-.237a12.55 12.55 0 0 0-1.696-6.336l.016-.017-1.472-1.473a.5.5 0 0 1 0-.707zM8 1c.273 0 .547.006.82.019l.73-.73A.25.25 0 0 0 8.7 0H7.3a.25.25 0 0 0-.15.45l.73.73c.273-.013.547-.02.82-.02z" />
-              <path d="M5 13a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-2-1a2 2 0 1 0 4 0 2 2 0 0 0-4 0z" />
             </svg>
             <span>Connection Lost</span>
             <motion.button
-              className="retry-button"
+              className="retry-btn"
               onClick={() => {
                 if (socketRef.current) {
                   socketRef.current.disconnect();
@@ -407,40 +430,10 @@ const PublicRoom = () => {
                     forceNew: true,
                     path: '/socket.io/'
                   });
-
-                  socketRef.current.on('connect_error', (err) => {
-                    console.error('Socket connection error on retry:', err.message);
-                    setIsOffline(true);
-                  });
-
-                  socketRef.current.on('disconnect', (reason) => {
-                    console.log('Socket disconnected on retry:', reason);
-                    setIsOffline(true);
-                  });
-
                   socketRef.current.on('connect', () => {
-                    console.log('Socket reconnected with transport:', socketRef.current.io.engine.transport.name);
                     setIsOffline(false);
                     if (isJoined && roomCode && username) {
                       socketRef.current.emit('join-room', { roomCode, username });
-                      socketRef.current.once('room-joined', (data) => {
-                        console.log('Successfully rejoined room');
-                        if (data.messages && data.messages.length > 0) {
-                          const lastLocalMessageTime = messages.length > 0 ?
-                            new Date(messages[messages.length - 1].timestamp).getTime() : 0;
-                          const newMessages = data.messages.filter(msg =>
-                            new Date(msg.timestamp).getTime() > lastLocalMessageTime
-                          );
-                          if (newMessages.length > 0) {
-                            setMessages(prev => [...prev, ...newMessages]);
-                          }
-                        }
-                        setUsers(data.users || []);
-                      });
-                      socketRef.current.once('room-error', (errorMsg) => {
-                        console.error('Error rejoining room:', errorMsg);
-                        setIsJoined(false);
-                      });
                     }
                   });
                 }
@@ -448,12 +441,13 @@ const PublicRoom = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Retry Connection
+              Retry
             </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Username Modal */}
       <AnimatePresence>
         {showUsernameModal && (
           <motion.div
@@ -467,11 +461,18 @@ const PublicRoom = () => {
               initial={{ opacity: 0, y: -30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -30, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <h2>Welcome to Public Chat</h2>
-              <p>Enter your name to join the conversation</p>
-              {error && <div className="error-message">{error}</div>}
+              <div className="modal-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                  <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+              </div>
+              <h2>Welcome!</h2>
+              <p>Enter your name to join the chat</p>
+              {error && <div className="error-msg">{error}</div>}
               <form onSubmit={handleSubmitUsername}>
                 <input
                   type="text"
@@ -482,201 +483,311 @@ const PublicRoom = () => {
                   maxLength={20}
                 />
                 <motion.button
+                  className="btn btn-primary btn-block"
                   type="submit"
                   disabled={!username.trim()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Continue
+                  Join Chat
                 </motion.button>
               </form>
               <motion.button
-                className="back-link"
-                onClick={handleBackToHome}
+                className="btn btn-secondary btn-block"
+                onClick={handleAnonymous}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Cancel
+                Continue as Guest
               </motion.button>
+              <button className="text-btn" onClick={handleBackToHome}>Cancel</button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {!isJoined ? (
+        /* Join Room View */
         <motion.div
-          className="code-entry-container"
+          className="join-view"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
         >
           <motion.div
-            className="code-entry-form"
+            className="join-card"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h1>Join Public Chat Room</h1>
-            <p className="join-room-info">
-              Enter a public room code to chat with others in real-time
-            </p>
-            {error && <motion.div className="error-message" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>{error}</motion.div>}
+            <div className="join-card__header">
+              <div className="join-card__icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                  <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+              </div>
+              <h1>Join Public Chat</h1>
+              <p className="join-card__subtitle">Enter a room code to start chatting</p>
+            </div>
+
+            {error && <motion.div className="error-msg" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{error}</motion.div>}
+
             <form onSubmit={handleSubmitCode}>
-              <div className="form-group">
-                <label htmlFor="roomCode">Room Code</label>
-                <input
-                  id="roomCode"
-                  type="text"
-                  placeholder="Enter room code"
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  disabled={isLoading}
-                />
-              </div>
-              <motion.button
-                className="join-btn"
-                type="submit"
-                disabled={isLoading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isLoading ? 'Joining...' : 'Join Room'}
-              </motion.button>
-            </form>
-            <div className="room-info">
-              Don't have a room code? Create one on the home page.
-            </div>
-            <motion.button
-              className="back-link"
-              onClick={handleBackToHome}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Back to Home
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      ) : (
-        <motion.div
-          className="chat-room"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="room-header">
-            <h2>{roomName || `Public Room ${roomCode}`}</h2>
-            <div className="room-code">
-              Code: <span>{roomCode}</span>
-            </div>
-          </div>
-
-          <div
-            className="chat-container"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            <motion.button
-              className="toggle-users-btn"
-              onClick={toggleUsersList}
-              title="Toggle users list"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-              </svg>
-              <span className="user-count">{users.length}</span>
-            </motion.button>
-
-            <div className={`users-sidebar ${showUsersList ? 'visible' : ''}`}>
-              <h3>Online Users ({users.length})</h3>
-              <ul className="users-list">
-                {users.map((user) => (
-                  <li
-                    key={user.id}
-                    className={user.username === username ? 'current-user' : ''}
-                  >
-                    {user.username} {user.username === username && '(You)'}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="messages-container">
-              <div className="messages">
-                {messages.length === 0 ? (
-                  <div className="no-messages">
-                    No messages yet. Start the conversation!
-                  </div>
-                ) : (
-                  <>
-                    {messages.map((message, index) => (
-                      <motion.div
-                        className={`message ${message.type === 'system'
-                            ? 'system-message'
-                            : message.username === username
-                              ? 'my-message'
-                              : 'other-message'
-                          }`}
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {message.type !== 'system' && (
-                          <div className="message-username">
-                            {message.username === username ? 'You' : message.username}
-                          </div>
-                        )}
-                        <div className="message-content">
-                          <div className="message-text">{message.text}</div>
-                          <div className="message-time">
-                            {formatTime(message.timestamp)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    {typingUsers.length > 0 && typingUsers.some(user => user.username !== username) && (
-                      <div className="message system-message">
-                        {typingUsers
-                          .filter(user => user.username !== username)
-                          .map(user => user.username)
-                          .join(', ')} {typingUsers.length > 1 ? 'are' : 'is'} typing...
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </>
-                )}
+              <div className="input-group">
+                <label>Room Code</label>
+                <div className="code-inputs">
+                  {segments.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { segmentRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleSegmentChange(i, e.target.value)}
+                      onKeyDown={(e) => handleSegmentKeyDown(i, e)}
+                      onFocus={() => setActiveSegment(i)}
+                      className={`code-input ${digit ? 'filled' : ''} ${activeSegment === i ? 'active' : ''}`}
+                      aria-label={`Digit ${i + 1}`}
+                      disabled={isLoading}
+                    />
+                  ))}
+                </div>
               </div>
 
-              <form className="message-form" onSubmit={handleSendMessage}>
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  value={messageText}
-                  onChange={handleTyping}
-                  disabled={isSendingMessage}
-                />
+              <div className="join-card__actions">
+                <button type="button" className="btn btn-ghost" onClick={clearAll} disabled={isLoading}>
+                  Clear
+                </button>
                 <motion.button
+                  className="btn btn-primary btn-flex"
                   type="submit"
-                  disabled={!messageText.trim() || isSendingMessage}
+                  disabled={isLoading || segments.join('').length !== SEGMENT_COUNT}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {isSendingMessage ? 'Sending...' : 'Send'}
+                  {isLoading ? (
+                    <span className="spinner" />
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                      Join Room
+                    </>
+                  )}
                 </motion.button>
-              </form>
+              </div>
+            </form>
+
+            <p className="join-card__hint">
+              Don't have a code? Create a public room from the home page.
+            </p>
+          </motion.div>
+        </motion.div>
+      ) : (
+        /* Chat View */
+        <motion.div
+          className="chat-view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {/* Chat Header */}
+          <div className="chat-header">
+            <div className="chat-header__info">
+              <div className="chat-header__avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              </div>
+              <div className="chat-header__text">
+                <h2>{roomName || `Room ${roomCode}`}</h2>
+                <span className="chat-header__status">
+                  <span className="status-dot" />
+                  {users.length} online
+                </span>
+              </div>
+            </div>
+            <div className="chat-header__actions">
+              <motion.button
+                className="icon-btn"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title="Emoji"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </motion.button>
+              <motion.button
+                className="icon-btn"
+                onClick={leaveRoom}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title="Leave Room"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </motion.button>
             </div>
           </div>
 
-          <motion.button
-            className="leave-button"
-            onClick={handleBackToHome}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Leave Room
-          </motion.button>
+          {/* Emoji Picker */}
+          <AnimatePresence>
+            {showEmojiPicker && (
+              <motion.div
+                className="emoji-picker"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                {emojis.map(emoji => (
+                  <motion.button
+                    key={emoji}
+                    className="emoji-btn"
+                    onClick={() => handleEmojiClick(emoji)}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Messages */}
+          <div className="messages-area">
+            <div className="messages-list">
+              {messages.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state__icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                  </div>
+                  <p>No messages yet</p>
+                  <span>Be the first to say hello!</span>
+                </div>
+              ) : (
+                messages.map((message, index) => (
+                  <motion.div
+                    key={index}
+                    className={`message ${message.type === 'system' ? 'message--system' : message.username === username ? 'message--own' : 'message--other'}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {message.type !== 'system' && (
+                      <div className="message__sender">
+                        {message.username === username ? 'You' : message.username}
+                      </div>
+                    )}
+                    <div className="message__body">
+                      <div className="message__text">{message.text}</div>
+                      <div className="message__meta">
+                        <span className="message__time">{formatTime(message.timestamp)}</span>
+                        {message.type !== 'system' && (
+                          <motion.button
+                            className={`message__copy ${copiedMessageId === index ? 'copied' : ''}`}
+                            onClick={() => handleCopyMessage(message.text, index)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {copiedMessageId === index ? (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            ) : (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                              </svg>
+                            )}
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Typing Indicator */}
+          <AnimatePresence>
+            {typingUsers.length > 0 && typingUsers.some(user => user.username !== username) && (
+              <motion.div
+                className="typing-indicator"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+              >
+                <div className="typing-dots">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span>
+                  {typingUsers.filter(user => user.username !== username).map(user => user.username).join(', ')}
+                  {' '}{typingUsers.length > 1 ? 'are' : 'is'} typing...
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Message Input */}
+          <form className="message-input-area" onSubmit={handleSendMessage}>
+            <div className="input-wrapper">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                value={messageText}
+                onChange={handleTyping}
+                disabled={isSending}
+                autoFocus
+              />
+              <motion.button
+                type="button"
+                className="input-action"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </motion.button>
+              <motion.button
+                type="submit"
+                className="send-btn"
+                disabled={!messageText.trim() || isSending}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isSending ? (
+                  <span className="spinner small" />
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                )}
+              </motion.button>
+            </div>
+          </form>
         </motion.div>
       )}
     </div>
