@@ -83,10 +83,9 @@ function App() {
         <Route path='/share' element={<LayoutRoute><SharePage /></LayoutRoute>} />
         <Route path='/share-image' element={<LayoutRoute><ImageSharePage /></LayoutRoute>} />
         <Route path='/share-file' element={<LayoutRoute><FileSharePage /></LayoutRoute>} />
+
+        {/* Single unified receive page — auto-detects content type from API */}
         <Route path='/receive' element={<LayoutRoute><RecievePage /></LayoutRoute>} />
-        <Route path='/receive-text' element={<LayoutRoute><RecievePage fixedType="text" /></LayoutRoute>} />
-        <Route path='/receive-image' element={<LayoutRoute><RecievePage fixedType="image" /></LayoutRoute>} />
-        <Route path='/receive-file' element={<LayoutRoute><RecievePage fixedType="file" /></LayoutRoute>} />
         <Route path='/public-room' element={<LayoutRoute><PublicRoom /></LayoutRoute>} />
         <Route path='/admin/panel' element={<LayoutRoute><AdminPanel /></LayoutRoute>} />
         <Route path='/privacy-policy' element={<LayoutRoute><PrivacyPolicy /></LayoutRoute>} />
@@ -94,9 +93,12 @@ function App() {
         <Route path='/about' element={<LayoutRoute><About /></LayoutRoute>} />
         <Route path='/contact' element={<LayoutRoute><Contact /></LayoutRoute>} />
 
-        {/* Redirect old routes to new ones */}
+        {/* Redirect old routes to unified receive page */}
         <Route path='/sharePage' element={<Navigate to="/share" replace />} />
         <Route path='/recievePage' element={<Navigate to="/receive" replace />} />
+        <Route path='/receive-text' element={<Navigate to="/receive" replace />} />
+        <Route path='/receive-image' element={<Navigate to="/receive" replace />} />
+        <Route path='/receive-file' element={<Navigate to="/receive" replace />} />
 
         {/* Catch-all: redirect to landing page */}
         <Route path='*' element={<Navigate to="/" replace />} />

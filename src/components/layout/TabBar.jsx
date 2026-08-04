@@ -6,9 +6,7 @@ const tabConfig = [
   { id: 'share', label: 'Share Text', icon: 'message-square', path: '/share' },
   { id: 'share-image', label: 'Share Image', icon: 'image', path: '/share-image' },
   { id: 'share-file', label: 'Share File', icon: 'file', path: '/share-file' },
-  { id: 'receive', label: 'Receive Text', icon: 'download', path: '/receive-text' },
-  { id: 'receive-image', label: 'Receive Image', icon: 'image', path: '/receive-image' },
-  { id: 'receive-file', label: 'Receive File', icon: 'file', path: '/receive-file' },
+  { id: 'receive', label: 'Receive', icon: 'download', path: '/receive' },
   { id: 'public-room', label: 'Public Rooms', icon: 'users', path: '/public-room' },
   { id: 'admin', label: 'Admin Panel', icon: 'shield', path: '/admin/panel' },
   { id: 'about', label: 'About', icon: 'info', path: '/about' },
@@ -28,16 +26,13 @@ const TabBar = () => {
     if (path.startsWith('/share-image')) return tabConfig[2]
     if (path.startsWith('/share-file')) return tabConfig[3]
     if (path.startsWith('/share')) return tabConfig[1]
-    if (path === '/receive-text') return tabConfig[4]
-    if (path === '/receive-image') return tabConfig[5]
-    if (path === '/receive-file') return tabConfig[6]
-    if (path.startsWith('/receive')) return tabConfig[4]
-    if (path.startsWith('/public-room')) return tabConfig[7]
-    if (path.startsWith('/admin')) return tabConfig[8]
-    if (path.startsWith('/about')) return tabConfig[9]
-    if (path.startsWith('/contact')) return tabConfig[10]
-    if (path.startsWith('/privacy')) return tabConfig[11]
-    if (path.startsWith('/terms')) return tabConfig[12]
+    if (path.startsWith('/receive') || path.startsWith('/receive-text') || path.startsWith('/receive-image') || path.startsWith('/receive-file')) return tabConfig[4]
+    if (path.startsWith('/public-room')) return tabConfig[5]
+    if (path.startsWith('/admin')) return tabConfig[6]
+    if (path.startsWith('/about')) return tabConfig[7]
+    if (path.startsWith('/contact')) return tabConfig[8]
+    if (path.startsWith('/privacy')) return tabConfig[9]
+    if (path.startsWith('/terms')) return tabConfig[10]
     return null
   }
 

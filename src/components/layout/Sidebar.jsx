@@ -19,9 +19,7 @@ const sidebarSections = [
   {
     label: 'Receive',
     items: [
-      { label: 'Receive Text', icon: 'download', path: '/receive-text' },
-      { label: 'Receive Image', icon: 'image', path: '/receive-image' },
-      { label: 'Receive File', icon: 'file', path: '/receive-file' },
+      { label: 'Receive Content', icon: 'download', path: '/receive' },
     ],
   },
   {
@@ -73,9 +71,6 @@ const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
     if (path === '/share') return location.pathname === '/share'
     if (path === '/share-image') return location.pathname === '/share-image'
     if (path === '/share-file') return location.pathname === '/share-file'
-    if (path === '/receive-text') return location.pathname === '/receive-text'
-    if (path === '/receive-image') return location.pathname === '/receive-image'
-    if (path === '/receive-file') return location.pathname === '/receive-file'
     if (path === '/receive') return location.pathname === '/receive'
     if (path === '/dashboard') return location.pathname === '/dashboard'
     if (path === '/admin/panel') return location.pathname === '/admin/panel' && !location.search
