@@ -8,35 +8,25 @@ import { useLayout } from './layout/LayoutContext';
 
 const SEGMENT_COUNT = 4;
 
-const RecievePage = ({ fixedType = null }) => {
+const RecievePage = () => {
   const navigate = useNavigate();
   const { insideLayout } = useLayout();
-  const [receivedData, setReceivedData] = useState('');
   const [loading, setLoading] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [imageData, setImageData] = useState(null);
-  const [imageCode, setImageCode] = useState('');
-  const [fileLoading, setFileLoading] = useState(false);
-  const [fileData, setFileData] = useState(null);
-  const [fileCode, setFileCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [segments, setSegments] = useState(Array(SEGMENT_COUNT).fill(''));
   const [activeSegment, setActiveSegment] = useState(0);
   const segmentRefs = useRef([]);
-  const [contentType, setContentType] = useState(fixedType || 'text');
+
+  // Unified receive state — holds whatever type the API returns
+  const [receivedContent, setReceivedContent] = useState(null); // { dataType, id, text/image/file, createdAt }
   const [showContent, setShowContent] = useState(false);
+
   const [popupOpen, setPopupOpen] = useState(false);
   const [pendingCode, setPendingCode] = useState('');
-  const [pendingContentType, setPendingContentType] = useState('text');
   const [popupError, setPopupError] = useState('');
   const [popupSubmitting, setPopupSubmitting] = useState(false);
-
-  useEffect(() => {
-    setContentType(fixedType || 'text');
-    setPendingContentType(fixedType || 'text');
-  }, [fixedType]);
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -54,6 +44,7 @@ const RecievePage = ({ fixedType = null }) => {
     setError('');
     setSuccessMessage('');
     setShowContent(false);
+    setReceivedContent(null);
 
     if (index < SEGMENT_COUNT - 1) {
       setActiveSegment(index + 1);
@@ -115,12 +106,11 @@ const RecievePage = ({ fixedType = null }) => {
     setSegments(Array(SEGMENT_COUNT).fill(''));
     setActiveSegment(0);
     segmentRefs.current[0]?.focus();
-    setReceivedData('');
-    setImageData(null);
-    setFileData(null);
+    setReceivedContent(null);
     setError('');
     setSuccessMessage('');
     setShowContent(false);
+    setCopied(false);
   };
 
   const handleReceive = () => {
@@ -133,25 +123,22 @@ const RecievePage = ({ fixedType = null }) => {
     const username = localStorage.getItem('tshare_username');
     if (!username) {
       setPendingCode(code);
-      setPendingContentType(contentType);
       setPopupError('');
       setPopupOpen(true);
       return;
     }
 
-    doReceive(code, contentType, username);
+    doReceive(code, username);
   };
 
-  const doReceive = (code, type, username) => {
-    if (type === 'text') return receiveData(code, username);
-    else if (type === 'image') return receiveImage(code, username);
-    else if (type === 'file') return receiveFile(code, username);
+  const doReceive = (code, username) => {
+    return receiveData(code, username);
   };
 
   const handleUsernameSubmit = (username) => {
     setPopupError('');
     setPopupSubmitting(true);
-    doReceive(pendingCode, pendingContentType, username)
+    doReceive(pendingCode, username)
       .then(() => {
         setPopupOpen(false);
       })
@@ -165,105 +152,59 @@ const RecievePage = ({ fixedType = null }) => {
 
   const handleAnonymous = () => {
     setPopupOpen(false);
-    doReceive(pendingCode, pendingContentType, '');
+    doReceive(pendingCode, '');
   };
 
-  const receiveData = (code, username) => {
+  // ──────────────────────────────────────────
+  // UNIFIED RECEIVE — calls the single /data/:id endpoint
+  // The API returns { dataType, id, text / image / file, createdAt }
+  // ──────────────────────────────────────────
+  const receiveData = async (code, username) => {
     setLoading(true);
     setError('');
     setSuccessMessage('');
     setShowContent(false);
-    setImageData(null);
-    setFileData(null);
+    setReceivedContent(null);
 
-    return fetch(endpoints.get(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
-      .then(res => {
-        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or data not found') });
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.text) {
-          const unescapedText = data.text
-            .replace(/\\n/g, '\n')
-            .replace(/\\t/g, '\t')
-            .replace(/\\\\/g, '\\');
-          setReceivedData(unescapedText);
-          setSuccessMessage('Text received successfully');
-          setShowContent(true);
-        } else {
-          throw new Error('No data found for this code');
-        }
-      })
-      .catch(error => {
-        setError(error.message || 'Failed to retrieve data');
-        throw error;
-      })
-      .finally(() => setLoading(false));
-  };
+    try {
+      const url = endpoints.getData(code) + (username ? '?username=' + encodeURIComponent(username) : '');
+      const res = await fetch(url);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Invalid code or data not found');
+      }
+      const data = await res.json();
 
-  const receiveImage = (code, username) => {
-    setImageLoading(true);
-    setError('');
-    setSuccessMessage('');
-    setShowContent(false);
-    setReceivedData('');
-    setFileData(null);
-
-    return fetch(endpoints.getImage(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
-      .then(res => {
-        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or image not found') });
-        return res.json();
-      })
-      .then(data => {
-        if (data?.image?.url) {
-          setImageData(data.image);
-          setImageCode(code);
-          setSuccessMessage('Image received');
-          setShowContent(true);
-        } else {
-          throw new Error('No image found for this code');
-        }
-      })
-      .catch(error => {
-        setError(error.message || 'Failed to retrieve image');
-        throw error;
-      })
-      .finally(() => setImageLoading(false));
-  };
-
-  const receiveFile = (code, username) => {
-    setFileLoading(true);
-    setError('');
-    setSuccessMessage('');
-    setShowContent(false);
-    setReceivedData('');
-    setImageData(null);
-
-    return fetch(endpoints.getFile(code) + (username ? '?username=' + encodeURIComponent(username) : ''))
-      .then(res => {
-        if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Invalid code or file not found') });
-        return res.json();
-      })
-      .then(data => {
-        if (data?.file?.url) {
-          setFileData(data.file);
-          setFileCode(code);
-          setSuccessMessage('File received');
-          setShowContent(true);
-        } else {
-          throw new Error('No file found for this code');
-        }
-      })
-      .catch(error => {
-        setError(error.message || 'Failed to retrieve file');
-        throw error;
-      })
-      .finally(() => setFileLoading(false));
+      if (data?.dataType === 'text') {
+        const unescapedText = data.text
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\\\/g, '\\');
+        setReceivedContent({ dataType: 'text', id: data.id, text: unescapedText, createdAt: data.createdAt });
+        setSuccessMessage('Text received successfully');
+        setShowContent(true);
+      } else if (data?.dataType === 'image') {
+        setReceivedContent({ dataType: 'image', id: data.id, ...data.image, createdAt: data.createdAt });
+        setSuccessMessage('Image received');
+        setShowContent(true);
+      } else if (data?.dataType === 'file') {
+        setReceivedContent({ dataType: 'file', id: data.id, ...data.file, createdAt: data.createdAt });
+        setSuccessMessage('File received');
+        setShowContent(true);
+      } else {
+        throw new Error('Unknown or unsupported data type');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to retrieve data');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyToClipboard = () => {
-    if (!receivedData) return;
-    navigator.clipboard.writeText(receivedData)
+    if (!receivedContent?.text) return;
+    navigator.clipboard.writeText(receivedContent.text)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -271,50 +212,31 @@ const RecievePage = ({ fixedType = null }) => {
       .catch(error => console.error('Error copying:', error));
   };
 
-  const downloadImage = () => {
-    if (!imageCode) return;
-    window.location.href = endpoints.downloadImage(imageCode);
-  };
-
-  const downloadFile = () => {
-    if (!fileCode) return;
-    window.location.href = endpoints.downloadFile(fileCode);
-  };
-
-  const isReceiving = loading || imageLoading || fileLoading;
-
-  const contentVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+  const downloadCurrent = () => {
+    if (!receivedContent?.id) return;
+    if (receivedContent.dataType === 'image') {
+      window.location.href = endpoints.downloadImage(receivedContent.id);
+    } else if (receivedContent.dataType === 'file') {
+      window.location.href = endpoints.downloadFile(receivedContent.id);
     }
   };
 
-  const getTitle = () => {
-    if (fixedType === 'text') return 'Receive Text';
-    if (fixedType === 'image') return 'Receive Image';
-    if (fixedType === 'file') return 'Receive File';
-    return 'Receive Content';
+  const isReceiving = loading;
+
+  const contentVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
 
-  const getDesc = () => {
-    if (fixedType === 'text') return 'Enter a 4-digit code to retrieve shared text.';
-    if (fixedType === 'image') return 'Enter a 4-digit code to retrieve a shared image.';
-    if (fixedType === 'file') return 'Enter a 4-digit code to retrieve a shared file.';
-    return 'Enter the 4-digit code shared with you.';
-  };
-
-  const getHeaderIcon = () => {
-    if (fixedType === 'text') {
+  const getTypeIcon = () => {
+    if (receivedContent?.dataType === 'text') {
       return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
         </svg>
       );
     }
-    if (fixedType === 'image') {
+    if (receivedContent?.dataType === 'image') {
       return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -323,7 +245,7 @@ const RecievePage = ({ fixedType = null }) => {
         </svg>
       );
     }
-    if (fixedType === 'file') {
+    if (receivedContent?.dataType === 'file') {
       return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -331,6 +253,7 @@ const RecievePage = ({ fixedType = null }) => {
         </svg>
       );
     }
+    // Generic receive icon (before content is known)
     return (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -340,11 +263,123 @@ const RecievePage = ({ fixedType = null }) => {
     );
   };
 
-  const getHeaderIconClass = () => {
-    if (fixedType === 'text') return 'share__header-icon';
-    if (fixedType === 'image') return 'share__header-icon share__header-icon--image';
-    if (fixedType === 'file') return 'share__header-icon share__header-icon--file';
+  const getTypeIconClass = () => {
+    if (receivedContent?.dataType === 'image') return 'share__header-icon share__header-icon--image';
+    if (receivedContent?.dataType === 'file') return 'share__header-icon share__header-icon--file';
     return 'share__header-icon';
+  };
+
+  const getTitle = () => {
+    if (receivedContent?.dataType === 'text') return 'Receive Text';
+    if (receivedContent?.dataType === 'image') return 'Receive Image';
+    if (receivedContent?.dataType === 'file') return 'Receive File';
+    return 'Receive Content';
+  };
+
+  const getDesc = () => 'Enter the 4-digit code shared with you to retrieve text, images, or files.';
+
+  const renderContent = () => {
+    if (!receivedContent) return null;
+
+    if (receivedContent.dataType === 'text') {
+      return (
+        <div className="receive__text-content">
+          <div className="receive__text-wrapper">
+            <pre className="receive__text">{receivedContent.text}</pre>
+          </div>
+          <button className="btn btn--secondary receive__action-btn" onClick={copyToClipboard}>
+            {copied ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Copied
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+                Copy Text
+              </>
+            )}
+          </button>
+        </div>
+      );
+    }
+
+    if (receivedContent.dataType === 'image') {
+      return (
+        <div className="receive__image-content">
+          <div className="receive__image-wrapper">
+            <motion.img
+              src={receivedContent.url}
+              alt={receivedContent.originalName || 'Shared image'}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            />
+          </div>
+          <div className="receive__file-info">
+            <div className="receive__file-icon receive__file-icon--image">
+              {getTypeIcon()}
+            </div>
+            <div className="receive__file-details">
+              <span className="receive__file-name">{receivedContent.originalName || 'Shared image'}</span>
+            </div>
+          </div>
+          <button className="btn btn--secondary receive__action-btn" onClick={downloadCurrent}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download
+          </button>
+        </div>
+      );
+    }
+
+    if (receivedContent.dataType === 'file') {
+      return (
+        <div className="receive__file-content">
+          <div className="receive__file-preview">
+            <iframe
+              src={endpoints.previewFile(receivedContent.id)}
+              title="File preview"
+            />
+          </div>
+          <div className="receive__file-info">
+            <div className="receive__file-icon receive__file-icon--file">
+              {getTypeIcon()}
+            </div>
+            <div className="receive__file-details">
+              <span className="receive__file-name">{receivedContent.originalName || 'Shared file'}</span>
+              {receivedContent.size && (
+                <span className="receive__file-size">
+                  {receivedContent.size >= 1024 * 1024
+                    ? (receivedContent.size / (1024 * 1024)).toFixed(1) + ' MB'
+                    : receivedContent.size >= 1024
+                      ? (receivedContent.size / 1024).toFixed(1) + ' KB'
+                      : receivedContent.size + ' B'}
+                </span>
+              )}
+            </div>
+          </div>
+          <button className="btn btn--secondary receive__action-btn" onClick={downloadCurrent}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download File
+          </button>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -390,8 +425,8 @@ const RecievePage = ({ fixedType = null }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className={getHeaderIconClass()}>
-              {getHeaderIcon()}
+            <div className={getTypeIconClass()}>
+              {getTypeIcon()}
             </div>
             <h1 className="share__title">{getTitle()}</h1>
             <p className="share__desc">{getDesc()}</p>
@@ -495,122 +530,16 @@ const RecievePage = ({ fixedType = null }) => {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {showContent && (
+            {showContent && receivedContent && (
               <motion.div
-                key={`content-${contentType}`}
+                key={`content-${receivedContent.dataType}`}
                 className="receive__content"
                 variants={contentVariants}
                 initial="hidden"
                 animate="visible"
                 exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
               >
-                {contentType === 'text' && receivedData && (
-                  <div className="receive__text-content">
-                    <div className="receive__text-wrapper">
-                      <pre className="receive__text">{receivedData}</pre>
-                    </div>
-                    <button
-                      className="btn btn--secondary receive__action-btn"
-                      onClick={copyToClipboard}
-                    >
-                      {copied ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                          </svg>
-                          Copy Text
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {contentType === 'image' && imageData && (
-                  <div className="receive__image-content">
-                    <div className="receive__image-wrapper">
-                      <motion.img
-                        src={imageData.url}
-                        alt={imageData.originalName || 'Shared image'}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                      />
-                    </div>
-                    <div className="receive__file-info">
-                      <div className="receive__file-icon receive__file-icon--image">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                          <circle cx="8.5" cy="8.5" r="1.5" />
-                          <polyline points="21 15 16 10 5 21" />
-                        </svg>
-                      </div>
-                      <div className="receive__file-details">
-                        <span className="receive__file-name">{imageData.originalName || 'Shared image'}</span>
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn--secondary receive__action-btn"
-                      onClick={downloadImage}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Download
-                    </button>
-                  </div>
-                )}
-
-                {contentType === 'file' && fileData && (
-                  <div className="receive__file-content">
-                    <div className="receive__file-preview">
-                      <iframe
-                        src={endpoints.previewFile(fileCode)}
-                        title="File preview"
-                      />
-                    </div>
-                    <div className="receive__file-info">
-                      <div className="receive__file-icon receive__file-icon--file">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                          <polyline points="13 2 13 9 20 9" />
-                        </svg>
-                      </div>
-                      <div className="receive__file-details">
-                        <span className="receive__file-name">{fileData.originalName || 'Shared file'}</span>
-                        {fileData.size && (
-                          <span className="receive__file-size">
-                            {fileData.size >= 1024 * 1024
-                              ? (fileData.size / (1024 * 1024)).toFixed(1) + ' MB'
-                              : fileData.size >= 1024
-                                ? (fileData.size / 1024).toFixed(1) + ' KB'
-                                : fileData.size + ' B'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn--secondary receive__action-btn"
-                      onClick={downloadFile}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                      </svg>
-                      Download File
-                    </button>
-                  </div>
-                )}
+                {renderContent()}
               </motion.div>
             )}
           </AnimatePresence>

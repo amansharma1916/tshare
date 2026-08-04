@@ -16,6 +16,7 @@ export const endpoints = {
     getPdf: (id) => `${API_URL}/pdf/${id}`,
     previewPdf: (id) => `${API_URL}/pdf/preview/${id}`,
     downloadPdf: (id) => `${API_URL}/pdf/download/${id}`,
+    getData: (id) => `${API_URL}/data/${id}`,
     uploadFile: `${API_URL}/file/upload`,
     getFile: (id) => `${API_URL}/file/${id}`,
     previewFile: (id) => `${API_URL}/file/preview/${id}`,

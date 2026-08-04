@@ -40,7 +40,7 @@ const TopBar = ({ onSearch, onToggleMobileMenu }) => {
         </svg>
         <input
           type="text"
-          placeholder="Search tasks, orders, products..."
+          placeholder="semantic search (comming soon)"
           id="global-search"
           onKeyDown={handleSearchKeyDown}
         />

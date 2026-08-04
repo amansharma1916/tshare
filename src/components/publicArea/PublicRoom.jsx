@@ -68,7 +68,7 @@ const PublicRoom = () => {
       setRoomCode(code);
       const codeSegments = code.split('').slice(0, SEGMENT_COUNT);
       setSegments(codeSegments.concat(Array(Math.max(0, SEGMENT_COUNT - codeSegments.length)).fill('')));
-      const storedUsername = localStorage.getItem('tshare_username');
+      const storedUsername = localStorage.getItem('tshare_public_username');
       if (storedUsername) {
         setUsername(storedUsername);
       } else {
@@ -168,7 +168,7 @@ const PublicRoom = () => {
 
     setIsLoading(true);
     setError('');
-    if (name) localStorage.setItem('tshare_username', name);
+    if (name) localStorage.setItem('tshare_public_username', name);
 
     try {
       const controller = new AbortController();
@@ -223,7 +223,7 @@ const PublicRoom = () => {
     e.preventDefault();
     if (!username.trim()) return;
     setShowUsernameModal(false);
-    localStorage.setItem('tshare_username', username);
+    localStorage.setItem('tshare_public_username', username);
     handleJoinRoom(roomCode, username);
   };
 
@@ -242,7 +242,7 @@ const PublicRoom = () => {
       return;
     }
     setRoomCode(code);
-    const storedUsername = localStorage.getItem('tshare_username');
+    const storedUsername = localStorage.getItem('tshare_public_username');
     if (storedUsername) {
       setUsername(storedUsername);
       handleJoinRoom(code, storedUsername);
