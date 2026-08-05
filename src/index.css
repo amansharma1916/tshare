@@ -140,6 +140,10 @@
   --z-dropdown: 50;
   --z-modal: 100;
   --z-context-menu: 100;
+
+  /* Skeleton Loading Colors */
+  --color-skeleton-base: rgba(255, 255, 255, 0.06);
+  --color-skeleton-highlight: rgba(255, 255, 255, 0.12);
 }
 
 *,

@@ -18,6 +18,9 @@ import Dashboard from './components/dashboard/Dashboard.jsx'
 import LandingPage from './components/landing/LandingPage.jsx'
 import { endpoints } from './api/api.js'
 import AppLayout from './components/layout/AppLayout.jsx'
+import BuyPremium from './components/premium/BuyPremium.jsx'
+import PremiumLogin from './components/premium/PremiumLogin.jsx'
+import PremiumDashboard from './components/premium/PremiumDashboard.jsx'
 
 // Layout wrapper for routes that need the sidebar/topbar
 const LayoutRoute = ({ children }) => {
@@ -80,6 +83,9 @@ function App() {
 
         {/* App pages (inside layout) */}
         <Route path='/dashboard' element={<LayoutRoute><Dashboard /></LayoutRoute>} />
+        <Route path='/buy' element={<LayoutRoute><BuyPremium /></LayoutRoute>} />
+        <Route path='/premium/login' element={<LayoutRoute><PremiumLogin /></LayoutRoute>} />
+        <Route path='/premium/dashboard' element={<LayoutRoute><PremiumDashboard /></LayoutRoute>} />
         <Route path='/share' element={<LayoutRoute><SharePage /></LayoutRoute>} />
         <Route path='/share-image' element={<LayoutRoute><ImageSharePage /></LayoutRoute>} />
         <Route path='/share-file' element={<LayoutRoute><FileSharePage /></LayoutRoute>} />

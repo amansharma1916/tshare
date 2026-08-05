@@ -594,6 +594,85 @@
   gap: 0.75rem;
 }
 
+/* ── Premium Code Modal ── */
+.premium-code-modal {
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.premium-code-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #1c1c1f;
+  border-radius: 6px;
+  border-left: 3px solid #7c3aed;
+}
+
+.detail-row.full-width {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #a1a1aa;
+  font-size: 0.85rem;
+  min-width: 120px;
+}
+
+.detail-value {
+  color: #e4e4e7;
+  font-size: 0.85rem;
+  text-align: right;
+  word-break: break-word;
+}
+
+.detail-row.full-width .detail-value {
+  text-align: left;
+  width: 100%;
+}
+
+.code-value {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.text-content {
+  background: #0e0e10;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.link-value {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.link-value:hover {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
 .password-field {
   margin-bottom: 1.25rem;
 }

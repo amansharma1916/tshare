@@ -5,8 +5,7 @@ import './RecievePage.css';
 import { endpoints } from '../api/api';
 import UsernamePopup from './auth/UsernamePopup';
 import { useLayout } from './layout/LayoutContext';
-
-const SEGMENT_COUNT = 4;
+import { Skeleton } from './common/Skeleton';
 
 const RecievePage = () => {
   const navigate = useNavigate();
@@ -15,7 +14,8 @@ const RecievePage = () => {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [segments, setSegments] = useState(Array(SEGMENT_COUNT).fill(''));
+  const [segmentCount, setSegmentCount] = useState(4);
+  const [segments, setSegments] = useState(Array(4).fill(''));
   const [activeSegment, setActiveSegment] = useState(0);
   const segmentRefs = useRef([]);
 
@@ -30,27 +30,37 @@ const RecievePage = () => {
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
-  }, []);
+  }, [segmentCount]);
 
   const getCode = () => segments.join('');
 
+  const handleToggleMode = (count) => {
+    setSegmentCount(count);
+    setSegments(Array(count).fill(''));
+    setActiveSegment(0);
+    setError('');
+    setSuccessMessage('');
+    setShowContent(false);
+    setReceivedContent(null);
+  };
+
   const handleSegmentChange = useCallback((index, value) => {
-    const digit = value.replace(/\D/g, '');
-    if (!digit) return;
+    const char = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    if (!char) return;
 
     const newSegments = [...segments];
-    newSegments[index] = digit.slice(-1);
+    newSegments[index] = char.slice(-1);
     setSegments(newSegments);
     setError('');
     setSuccessMessage('');
     setShowContent(false);
     setReceivedContent(null);
 
-    if (index < SEGMENT_COUNT - 1) {
+    if (index < segmentCount - 1) {
       setActiveSegment(index + 1);
       segmentRefs.current[index + 1]?.focus();
     }
-  }, [segments]);
+  }, [segments, segmentCount]);
 
   const handleSegmentKeyDown = useCallback((index, e) => {
     if (e.key === 'Backspace') {
@@ -73,7 +83,7 @@ const RecievePage = () => {
       segmentRefs.current[index - 1]?.focus();
     }
 
-    if (e.key === 'ArrowRight' && index < SEGMENT_COUNT - 1) {
+    if (e.key === 'ArrowRight' && index < segmentCount - 1) {
       e.preventDefault();
       setActiveSegment(index + 1);
       segmentRefs.current[index + 1]?.focus();
@@ -83,11 +93,11 @@ const RecievePage = () => {
       e.preventDefault();
       handleReceive();
     }
-  }, [segments]);
+  }, [segments, segmentCount]);
 
   const handlePaste = useCallback((e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, SEGMENT_COUNT);
+    const pasted = e.clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, segmentCount);
     if (!pasted) return;
 
     const newSegments = [...segments];
@@ -97,13 +107,13 @@ const RecievePage = () => {
     setSegments(newSegments);
     setError('');
 
-    const nextIndex = Math.min(pasted.length, SEGMENT_COUNT - 1);
+    const nextIndex = Math.min(pasted.length, segmentCount - 1);
     setActiveSegment(nextIndex);
     segmentRefs.current[nextIndex]?.focus();
-  }, [segments]);
+  }, [segments, segmentCount]);
 
   const clearAll = () => {
-    setSegments(Array(SEGMENT_COUNT).fill(''));
+    setSegments(Array(segmentCount).fill(''));
     setActiveSegment(0);
     segmentRefs.current[0]?.focus();
     setReceivedContent(null);
@@ -115,8 +125,8 @@ const RecievePage = () => {
 
   const handleReceive = () => {
     const code = getCode();
-    if (code.length !== SEGMENT_COUNT) {
-      setError('Please enter all 4 digits');
+    if (code.length !== segmentCount) {
+      setError(`Please enter all ${segmentCount} digits`);
       return;
     }
 
@@ -180,15 +190,15 @@ const RecievePage = () => {
           .replace(/\\n/g, '\n')
           .replace(/\\t/g, '\t')
           .replace(/\\\\/g, '\\');
-        setReceivedContent({ dataType: 'text', id: data.id, text: unescapedText, createdAt: data.createdAt });
+        setReceivedContent({ dataType: 'text', id: data.id, text: unescapedText, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
         setSuccessMessage('Text received successfully');
         setShowContent(true);
       } else if (data?.dataType === 'image') {
-        setReceivedContent({ dataType: 'image', id: data.id, ...data.image, createdAt: data.createdAt });
+        setReceivedContent({ dataType: 'image', id: data.id, ...data.image, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
         setSuccessMessage('Image received');
         setShowContent(true);
       } else if (data?.dataType === 'file') {
-        setReceivedContent({ dataType: 'file', id: data.id, ...data.file, createdAt: data.createdAt });
+        setReceivedContent({ dataType: 'file', id: data.id, ...data.file, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
         setSuccessMessage('File received');
         setShowContent(true);
       } else {
@@ -222,6 +232,14 @@ const RecievePage = () => {
   };
 
   const isReceiving = loading;
+
+  const renderReceivingSkeleton = () => (
+    <div className="receive__content">
+      <div className="receive__text-content">
+        <Skeleton className="receive__text-wrapper" style={{ height: '200px' }} />
+      </div>
+    </div>
+  );
 
   const contentVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -383,7 +401,7 @@ const RecievePage = () => {
   };
 
   return (
-    <div className={insideLayout ? 'share-page' : 'page'}>
+    <div className={`${insideLayout ? 'share-page' : 'page'} ${receivedContent?.isPremium ? 'receive-page--premium' : ''}`}>
       {!insideLayout && (
         <motion.nav
           className="nav"
@@ -419,6 +437,27 @@ const RecievePage = () => {
 
       <main className="receive">
         <div className="receive__container">
+          {receivedContent?.isPremium && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                background: 'linear-gradient(90deg, #d4af37, #f59e0b)',
+                color: '#000',
+                padding: '10px 16px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                marginBottom: '20px',
+                fontSize: '14px',
+                boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              👑 Content shared by Premium User: <strong>{receivedContent.displayName || 'Premium User'}</strong>
+            </motion.div>
+          )}
+
           <motion.div
             className="share__header"
             initial={{ opacity: 0, y: 20 }}
@@ -432,6 +471,43 @@ const RecievePage = () => {
             <p className="share__desc">{getDesc()}</p>
           </motion.div>
 
+          <div className="toggle-container" style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+            <button
+              type="button"
+              onClick={() => handleToggleMode(4)}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                border: segmentCount === 4 ? '1px solid #d4af37' : '1px solid var(--border-default)',
+                background: segmentCount === 4 ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
+                color: segmentCount === 4 ? '#f59e0b' : 'var(--text-muted)',
+                transition: 'all 0.2s'
+              }}
+            >
+              4 Digits Mode
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleMode(6)}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                border: segmentCount === 6 ? '1px solid #d4af37' : '1px solid var(--border-default)',
+                background: segmentCount === 6 ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
+                color: segmentCount === 6 ? '#f59e0b' : 'var(--text-muted)',
+                transition: 'all 0.2s'
+              }}
+            >
+              6 Digits Mode
+            </button>
+          </div>
+
           <motion.div
             className="receive__code-input"
             initial={{ opacity: 0, y: 20 }}
@@ -444,16 +520,15 @@ const RecievePage = () => {
                   key={i}
                   ref={(el) => { segmentRefs.current[i] = el; }}
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleSegmentChange(i, e.target.value)}
                   onKeyDown={(e) => handleSegmentKeyDown(i, e)}
                   onFocus={() => setActiveSegment(i)}
                   className={`segment-input ${digit ? 'segment-input--filled' : ''} ${activeSegment === i ? 'segment-input--active' : ''}`}
-                  aria-label={`Digit ${i + 1} of 4`}
+                  aria-label={`Digit ${i + 1} of ${segmentCount}`}
                   autoComplete="off"
+                  style={{ textTransform: 'uppercase' }}
                 />
               ))}
             </div>
@@ -469,7 +544,7 @@ const RecievePage = () => {
               <button
                 className="btn btn--primary receive__go-btn"
                 onClick={handleReceive}
-                disabled={isReceiving || getCode().length !== SEGMENT_COUNT}
+                disabled={isReceiving || getCode().length !== segmentCount}
               >
                 {isReceiving ? (
                   <span className="btn__loading">
@@ -530,7 +605,17 @@ const RecievePage = () => {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {showContent && receivedContent && (
+            {loading && !receivedContent ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderReceivingSkeleton()}
+              </motion.div>
+            ) : showContent && receivedContent ? (
               <motion.div
                 key={`content-${receivedContent.dataType}`}
                 className="receive__content"
@@ -541,7 +626,7 @@ const RecievePage = () => {
               >
                 {renderContent()}
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
         </div>
       </main>

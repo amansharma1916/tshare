@@ -1018,3 +1018,46 @@
     to { transform: translateX(0); }
   }
 }
+
+/* ============================================
+   Premium Marquee Styles
+   ============================================ */
+.premium-marquee-container {
+  background: linear-gradient(90deg, #18181b 0%, #1e1b15 25%, #2a220d 50%, #1e1b15 75%, #18181b 100%);
+  border-bottom: 2px solid #d4af37;
+  padding: 10px 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+
+.premium-marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+  animation: premium-marquee 30s linear infinite;
+  display: flex;
+}
+
+.premium-marquee-text span {
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #fef08a;
+  text-shadow: 0 0 2px rgba(212, 175, 55, 0.2);
+  margin-right: 80px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.premium-marquee-text span strong {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+@keyframes premium-marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}

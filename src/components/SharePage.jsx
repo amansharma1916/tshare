@@ -6,6 +6,7 @@ import { endpoints, baseUrl } from '../api/api';
 import io from 'socket.io-client';
 import UsernamePopup from './auth/UsernamePopup';
 import { useLayout } from './layout/LayoutContext';
+import { Skeleton } from './common/Skeleton';
 
 const SharePage = () => {
   const navigate = useNavigate();
@@ -125,6 +126,20 @@ const SharePage = () => {
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
+  const renderLoadingState = () => (
+    <div className="share__editor">
+      <div className="editor-wrapper">
+        <div className="editor-textarea-wrapper">
+          <Skeleton className="editor-textarea" style={{ height: '200px' }} />
+        </div>
+        <div className="editor-actions">
+          <Skeleton className="editor-clear-btn" style={{ width: '80px', height: '40px' }} />
+          <Skeleton className="editor-share-btn" style={{ width: '120px', height: '40px' }} />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className={insideLayout ? 'share-page' : 'page'}>
       {!insideLayout && (
@@ -182,7 +197,17 @@ const SharePage = () => {
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {showCode && code ? (
+            {loading && !code ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderLoadingState()}
+              </motion.div>
+            ) : showCode && code ? (
               <motion.div
                 key="code"
                 className="code-reveal"
