@@ -58,6 +58,21 @@ export const endpoints = {
     userMap: `${API_URL}/user/map`,
     userItems: (username) => `${API_URL}/user/${username}/items`,
     userHistory: (username) => `${API_URL}/user/${username}/history`,
+    createOrder: `${API_URL}/api/create-order`,
+    verifyPayment: `${API_URL}/api/verify-payment`,
+    checkPremiumCode: (code) => `${API_URL}/api/check-premium-code/${code}`,
+    premiumLogin: `${API_URL}/api/premium-login`,
+    myCodes: `${API_URL}/api/my-codes`,
+    updatePremiumCode: `${API_URL}/api/update-premium-code`,
+    adminPremiumCodes: `${API_URL}/admin/premium-codes`,
+    adminDeletePremiumCode: (code) => `${API_URL}/admin/premium-codes/${code}`,
+    adminPremiumUsers: `${API_URL}/admin/premium-users`,
+    pricingSettings: `${API_URL}/api/pricing`,
+    adminGetPricing: `${API_URL}/admin/pricing`,
+    adminUpdatePricing: `${API_URL}/admin/pricing`,
+    adminAddPremiumCodeForSale: `${API_URL}/admin/premium-codes/for-sale`,
+    premiumCodesForSale: `${API_URL}/api/codes-for-sale`,
+    recentPurchases: `${API_URL}/api/recent-purchases`,
 };
 
 export default {

@@ -5,17 +5,40 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import TabBar from './TabBar'
 import { LayoutProvider } from './LayoutContext'
+import { endpoints } from '../../api/api'
 import './AppLayout.css'
 
 const AppLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [recentPurchases, setRecentPurchases] = useState([])
   const location = useLocation()
   const navigate = useNavigate()
 
   const username = localStorage.getItem('tshare_username') || ''
   const isAdmin = sessionStorage.getItem('adminAuthenticated') === 'true'
+  const isNotAdminPage = !location.pathname.startsWith('/admin')
+
+  useEffect(() => {
+    if (isNotAdminPage) {
+      fetchRecentPurchases();
+      const interval = setInterval(fetchRecentPurchases, 25000);
+      return () => clearInterval(interval);
+    }
+  }, [location.pathname]);
+
+  const fetchRecentPurchases = async () => {
+    try {
+      const res = await fetch(endpoints.recentPurchases);
+      const data = await res.json();
+      if (data.success) {
+        setRecentPurchases(data.purchases || []);
+      }
+    } catch (err) {
+      console.error('Error fetching recent purchases:', err);
+    }
+  };
 
   // Use same sidebar sections as desktop
   const sidebarSections = [
@@ -23,6 +46,7 @@ const AppLayout = ({ children }) => {
       label: 'Main',
       items: [
         { label: 'Dashboard', icon: 'layout-dashboard', path: '/dashboard' },
+        { label: 'Buy Code', icon: 'credit-card', path: '/buy' },
       ],
     },
     {
@@ -61,6 +85,8 @@ const AppLayout = ({ children }) => {
         { label: 'Files', icon: 'file', path: '/admin/panel?tab=files' },
         { label: 'Public Rooms', icon: 'users', path: '/admin/panel?tab=public-rooms' },
         { label: 'Users', icon: 'user', path: '/admin/panel?tab=users' },
+        { label: 'Premium Codes', icon: 'credit-card', path: '/admin/panel?tab=premium-codes' },
+        { label: 'Premium Users', icon: 'user-check', path: '/admin/panel?tab=premium-users' },
         { label: 'Settings', icon: 'settings', path: '/admin/panel?tab=settings' },
       ],
     }] : []),
@@ -151,6 +177,17 @@ const AppLayout = ({ children }) => {
       <div className="main-area">
         <TopBar onSearch={handleSearch} onToggleMobileMenu={handleMobileMenuToggle} />
         <div className="content-area">
+          {isNotAdminPage && recentPurchases.length > 0 && (
+            <div className="premium-marquee-container">
+              <div className="premium-marquee-text">
+                {[...recentPurchases, ...recentPurchases].map((purchase, index) => (
+                  <span key={index}>
+                    👑 <strong>{purchase.displayName || 'Anonymous'}</strong> purchased Premium Code {purchase.code ? <strong>{purchase.code.toUpperCase()}</strong> : <strong>🔒</strong>}!
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <LayoutProvider>
             {children}
           </LayoutProvider>
@@ -196,6 +233,12 @@ const AppLayout = ({ children }) => {
                             <rect width="7" height="5" x="14" y="3" rx="1" />
                             <rect width="7" height="9" x="14" y="12" rx="1" />
                             <rect width="7" height="5" x="3" y="16" rx="1" />
+                          </>
+                        )}
+                        {item.icon === 'credit-card' && (
+                          <>
+                            <rect width="20" height="14" x="2" y="5" rx="2" />
+                            <line x1="2" x2="22" y1="10" y2="10" />
                           </>
                         )}
                         {item.icon === 'message-square' && (
@@ -251,6 +294,13 @@ const AppLayout = ({ children }) => {
                           <>
                             <rect width="20" height="16" x="2" y="4" rx="2" />
                             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                          </>
+                        )}
+                        {item.icon === 'user-check' && (
+                          <>
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                            <polyline points="16 11 18 13 22 9" />
                           </>
                         )}
                         {item.icon === 'user' && (

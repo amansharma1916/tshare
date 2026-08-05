@@ -121,6 +121,21 @@ const AdminPanel = () => {
     const [filesLoading, setFilesLoading] = useState(true);
     const [filesError, setFilesError] = useState('');
 
+    // ─── Premium State ───
+    const [premiumCodes, setPremiumCodes] = useState([]);
+    const [premiumCodesLoading, setPremiumCodesLoading] = useState(true);
+    const [premiumCodesError, setPremiumCodesError] = useState('');
+
+    const [premiumUsers, setPremiumUsers] = useState([]);
+    const [premiumUsersLoading, setPremiumUsersLoading] = useState(true);
+    const [premiumUsersError, setPremiumUsersError] = useState('');
+
+    // Pricing & Pre-sale Settings State
+    const [price4Digit, setPrice4Digit] = useState(299);
+    const [price6Digit, setPrice6Digit] = useState(99);
+    const [newSaleCode, setNewSaleCode] = useState('');
+    const [newSalePrice, setNewSalePrice] = useState(99);
+
     // ─── Pagination State ───
     // Texts
     const [textsPage, setTextsPage] = useState(1);
@@ -172,6 +187,10 @@ const AdminPanel = () => {
     const [activeTab, setActiveTab] = useState('texts');
     const [showPublicRoomModal, setShowPublicRoomModal] = useState(false);
     const [publicRoomName, setPublicRoomName] = useState('');
+    
+    // Premium Code View Modal State
+    const [showPremiumCodeModal, setShowPremiumCodeModal] = useState(false);
+    const [viewingPremiumCode, setViewingPremiumCode] = useState(null);
 
     useEffect(() => {
         const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
@@ -181,7 +200,7 @@ const AdminPanel = () => {
         // Read tab from query params
         const params = new URLSearchParams(location.search);
         const tab = params.get('tab');
-        if (tab && ['texts', 'images', 'files', 'public-rooms', 'users', 'settings'].includes(tab)) {
+        if (tab && ['texts', 'images', 'files', 'public-rooms', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
             setActiveTab(tab);
         }
     }, [location.search]);
@@ -247,6 +266,27 @@ const AdminPanel = () => {
         }
     }, [activeTab, usersPage]);
 
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'premium-codes') {
+            fetchPremiumCodes();
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'premium-users') {
+            fetchPremiumUsers();
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'settings') {
+            fetchPricingSettings();
+        }
+    }, [activeTab]);
+
     const refreshAll = () => {
         switch (activeTab) {
             case 'texts':
@@ -263,6 +303,12 @@ const AdminPanel = () => {
                 break;
             case 'users':
                 fetchUsers(usersPage);
+                break;
+            case 'premium-codes':
+                fetchPremiumCodes();
+                break;
+            case 'premium-users':
+                fetchPremiumUsers();
                 break;
             default:
                 break;
@@ -296,6 +342,138 @@ const AdminPanel = () => {
         } finally {
             setUsersLoading(false);
         }
+    };
+
+    const fetchPremiumCodes = async () => {
+        setPremiumCodesLoading(true);
+        setPremiumCodesError('');
+        try {
+            const response = await fetch(endpoints.adminPremiumCodes, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success) {
+                setPremiumCodes(data.codes || []);
+            } else {
+                setPremiumCodesError(data.message || 'Failed to fetch premium codes');
+            }
+        } catch (err) {
+            setPremiumCodesError('Failed to connect to server');
+        } finally {
+            setPremiumCodesLoading(false);
+        }
+    };
+
+    const fetchPremiumUsers = async () => {
+        setPremiumUsersLoading(true);
+        setPremiumUsersError('');
+        try {
+            const response = await fetch(endpoints.adminPremiumUsers, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success) {
+                setPremiumUsers(data.users || []);
+            } else {
+                setPremiumUsersError(data.message || 'Failed to fetch premium users');
+            }
+        } catch (err) {
+            setPremiumUsersError('Failed to connect to server');
+        } finally {
+            setPremiumUsersLoading(false);
+        }
+    };
+
+    const fetchPricingSettings = async () => {
+        try {
+            const response = await fetch(endpoints.adminGetPricing, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success && data.settings) {
+                setPrice4Digit(data.settings.premiumCodePrice4Digit);
+                setPrice6Digit(data.settings.premiumCodePrice6Digit);
+            }
+        } catch (err) {
+            console.error('Failed to fetch pricing:', err);
+        }
+    };
+
+    const handleUpdatePricing = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(endpoints.adminUpdatePricing, {
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    premiumCodePrice4Digit: Number(price4Digit),
+                    premiumCodePrice6Digit: Number(price6Digit)
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage('Pricing settings updated successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to update pricing', 'error');
+            }
+        } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleAddSaleCode = async (e) => {
+        e.preventDefault();
+        if (!newSaleCode || !/^[a-zA-Z0-9]{4}$|^[a-zA-Z0-9]{6}$/.test(newSaleCode.trim())) {
+            showActionMessage('Code must be exactly 4 or 6 alphanumeric characters', 'error');
+            return;
+        }
+        try {
+            const response = await fetch(endpoints.adminAddPremiumCodeForSale, {
+                method: 'POST',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: newSaleCode.trim(),
+                    price: Number(newSalePrice)
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage('Code for sale added successfully!', 'success');
+                setNewSaleCode('');
+                setNewSalePrice(99);
+                if (activeTab === 'premium-codes') {
+                    fetchPremiumCodes();
+                }
+            } else {
+                showActionMessage(data.message || 'Failed to add code', 'error');
+            }
+        } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleDeletePremiumCode = async (code) => {
+        if (!window.confirm(`Are you sure you want to delete premium code ${code}?`)) return;
+        try {
+            const response = await fetch(endpoints.adminDeletePremiumCode(code), {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                setPremiumCodes(prev => prev.filter(item => item.code !== code));
+                showActionMessage('Premium code deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete premium code', 'error');
+            }
+        } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleViewPremiumCode = (codeItem) => {
+        setViewingPremiumCode(codeItem);
+        setShowPremiumCodeModal(true);
     };
 
     const fetchTexts = async (pageNum = 1, searchTerm = '') => {
@@ -1692,10 +1870,213 @@ const AdminPanel = () => {
                     </div>
                 )}
 
+                {activeTab === 'premium-codes' && (
+                    <div>
+                        <div className="tab-header">
+                            <h1>Premium Codes Management</h1>
+                        </div>
+                        {premiumCodesError && <div className="error-message">{premiumCodesError}</div>}
+                        {premiumCodesLoading ? (
+                            <div className="loading">Loading premium codes...</div>
+                        ) : premiumCodes.length === 0 ? (
+                            <div className="no-data">No premium codes found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Owner</th>
+                                            <th>Content Type</th>
+                                            <th>Price Paid</th>
+                                            <th>Expires At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {premiumCodes.map((item) => (
+                                            <tr key={item.code}>
+                                                <td className="room-code">{item.code}</td>
+                                                <td>{item.isForSale ? <span className="status-badge active" style={{ background: '#7c2d12', color: '#fdba74' }}>FOR SALE</span> : item.owner}</td>
+                                                <td>{item.isForSale ? 'N/A' : (item.dataType ? item.dataType.toUpperCase() : 'EMPTY')}</td>
+                                                <td>₹{item.price || 0}</td>
+                                                <td>{item.expiresAt ? new Date(item.expiresAt).toLocaleString() : 'N/A'}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn edit"
+                                                        onClick={() => handleViewPremiumCode(item)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        View
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeletePremiumCode(item.code)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'premium-users' && (
+                    <div>
+                        <div className="tab-header">
+                            <h1>Premium Registered Users</h1>
+                        </div>
+                        {premiumUsersError && <div className="error-message">{premiumUsersError}</div>}
+                        {premiumUsersLoading ? (
+                            <div className="loading">Loading premium users...</div>
+                        ) : premiumUsers.length === 0 ? (
+                            <div className="no-data">No premium users found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Status</th>
+                                            <th>Joined At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {premiumUsers.map((user) => (
+                                            <tr key={user._id || user.username}>
+                                                <td>{user.username}</td>
+                                                <td>
+                                                    <span className="status-badge active">
+                                                        Premium
+                                                    </span>
+                                                </td>
+                                                <td>{user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</td>
+                                                <td className="actions">
+                                                    <motion.button
+                                                        className="action-btn delete"
+                                                        onClick={() => handleDeleteUser(user._id)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Delete User
+                                                    </motion.button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {activeTab === 'settings' && (
                     <div>
                         <h1>Admin Settings</h1>
                         <div className="settings-section">
+                            <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
+                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
+                                <form onSubmit={handleUpdatePricing} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>4-Digit Code Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={price4Digit}
+                                            onChange={(e) => setPrice4Digit(e.target.value)}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>6-Digit Code Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={price6Digit}
+                                            onChange={(e) => setPrice6Digit(e.target.value)}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        className="Btn change-password"
+                                        style={{ height: '38px' }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Update Prices
+                                    </motion.button>
+                                </form>
+                            </div>
+
+                            <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
+                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Create Premium Code For Sale</h3>
+                                <form onSubmit={handleAddSaleCode} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Code (4 or 6 chars)</label>
+                                        <input
+                                            type="text"
+                                            value={newSaleCode}
+                                            placeholder="e.g. GOLD"
+                                            onChange={(e) => setNewSaleCode(e.target.value)}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={newSalePrice}
+                                            onChange={(e) => setNewSalePrice(e.target.value)}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '100px'
+                                            }}
+                                        />
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        className="Btn change-password"
+                                        style={{ height: '38px' }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Add Code For Sale
+                                    </motion.button>
+                                </form>
+                            </div>
+
                             <div className="settings-field">
                                 <div>
                                     <div className="field-label">Change Password</div>
@@ -2072,6 +2453,127 @@ const AdminPanel = () => {
                                     </motion.button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showPremiumCodeModal && viewingPremiumCode && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="modal premium-code-modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Premium Code Details</h2>
+                            <div className="premium-code-details">
+                                <div className="detail-row">
+                                    <span className="detail-label">Code:</span>
+                                    <span className="detail-value code-value">{viewingPremiumCode.code}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Owner:</span>
+                                    <span className="detail-value">
+                                        {viewingPremiumCode.isForSale ? (
+                                            <span className="status-badge active" style={{ background: '#7c2d12', color: '#fdba74' }}>FOR SALE</span>
+                                        ) : viewingPremiumCode.owner || 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Content Type:</span>
+                                    <span className="detail-value">
+                                        {viewingPremiumCode.isForSale ? 'N/A' : (viewingPremiumCode.dataType ? viewingPremiumCode.dataType.toUpperCase() : 'EMPTY')}
+                                    </span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Price Paid:</span>
+                                    <span className="detail-value">₹{viewingPremiumCode.price || 0}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Status:</span>
+                                    <span className="detail-value">
+                                        <span className={`status-badge ${viewingPremiumCode.active ? 'active' : 'inactive'}`}>
+                                            {viewingPremiumCode.active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">For Sale:</span>
+                                    <span className="detail-value">{viewingPremiumCode.isForSale ? 'Yes' : 'No'}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Public:</span>
+                                    <span className="detail-value">{viewingPremiumCode.isPublic ? 'Yes' : 'No'}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Display Name:</span>
+                                    <span className="detail-value">{viewingPremiumCode.displayName || 'N/A'}</span>
+                                </div>
+                                {viewingPremiumCode.text && (
+                                    <div className="detail-row full-width">
+                                        <span className="detail-label">Text Content:</span>
+                                        <div className="detail-value text-content">{viewingPremiumCode.text}</div>
+                                    </div>
+                                )}
+                                {viewingPremiumCode.url && (
+                                    <div className="detail-row full-width">
+                                        <span className="detail-label">URL:</span>
+                                        <a href={viewingPremiumCode.url} target="_blank" rel="noopener noreferrer" className="detail-value link-value">
+                                            {viewingPremiumCode.url}
+                                        </a>
+                                    </div>
+                                )}
+                                {viewingPremiumCode.originalName && (
+                                    <div className="detail-row">
+                                        <span className="detail-label">Original Name:</span>
+                                        <span className="detail-value">{viewingPremiumCode.originalName}</span>
+                                    </div>
+                                )}
+                                {viewingPremiumCode.size > 0 && (
+                                    <div className="detail-row">
+                                        <span className="detail-label">Size:</span>
+                                        <span className="detail-value">{(viewingPremiumCode.size / 1024).toFixed(2)} KB</span>
+                                    </div>
+                                )}
+                                {viewingPremiumCode.mimeType && (
+                                    <div className="detail-row">
+                                        <span className="detail-label">MIME Type:</span>
+                                        <span className="detail-value">{viewingPremiumCode.mimeType}</span>
+                                    </div>
+                                )}
+                                <div className="detail-row">
+                                    <span className="detail-label">Purchased At:</span>
+                                    <span className="detail-value">{viewingPremiumCode.purchasedAt ? new Date(viewingPremiumCode.purchasedAt).toLocaleString() : 'N/A'}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Expires At:</span>
+                                    <span className="detail-value">{viewingPremiumCode.expiresAt ? new Date(viewingPremiumCode.expiresAt).toLocaleString() : 'N/A'}</span>
+                                </div>
+                                <div className="detail-row">
+                                    <span className="detail-label">Updated At:</span>
+                                    <span className="detail-value">{viewingPremiumCode.updatedAt ? new Date(viewingPremiumCode.updatedAt).toLocaleString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={() => {
+                                        setShowPremiumCodeModal(false);
+                                        setViewingPremiumCode(null);
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Close
+                                </motion.button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

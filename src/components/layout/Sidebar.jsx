@@ -6,6 +6,7 @@ const sidebarSections = [
     label: 'Main',
     items: [
       { label: 'Dashboard', icon: 'layout-dashboard', path: '/dashboard' },
+      { label: 'Buy Code', icon: 'credit-card', path: '/buy' },
     ],
   },
   {
@@ -42,6 +43,8 @@ const sidebarSections = [
       { label: 'Files', icon: 'file', path: '/admin/panel?tab=files' },
       { label: 'Public Rooms', icon: 'users', path: '/admin/panel?tab=public-rooms' },
       { label: 'Users', icon: 'user', path: '/admin/panel?tab=users' },
+      { label: 'Premium Codes', icon: 'credit-card', path: '/admin/panel?tab=premium-codes' },
+      { label: 'Premium Users', icon: 'user-check', path: '/admin/panel?tab=premium-users' },
       { label: 'Settings', icon: 'settings', path: '/admin/panel?tab=settings' },
     ],
   },
@@ -125,6 +128,12 @@ const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
                           <rect width="7" height="5" x="3" y="16" rx="1" />
                         </>
                       )}
+                      {item.icon === 'credit-card' && (
+                        <>
+                          <rect width="20" height="14" x="2" y="5" rx="2" />
+                          <line x1="2" x2="22" y1="10" y2="10" />
+                        </>
+                      )}
                       {item.icon === 'message-square' && (
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       )}
@@ -139,6 +148,13 @@ const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
                         <>
                           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
                           <polyline points="14 2 14 8 20 8" />
+                        </>
+                      )}
+                      {item.icon === 'user-check' && (
+                        <>
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <polyline points="16 11 18 13 22 9" />
                         </>
                       )}
                       {item.icon === 'download' && (
