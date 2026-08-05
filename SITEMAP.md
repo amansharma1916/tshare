@@ -1,18 +1,28 @@
 # TShare Frontend Sitemap
 
-Last updated: 19 April 2026
+Last updated: 8 May 2026
 
 ## 1. Route-Level Sitemap
 
-- `/` - Home / Landing (`P1`)
-- `/sharePage` - Share Text (`SharePage`)
+- `/` - Home / Landing (`LandingPage`)
+- `/share` - Share Text (`SharePage`)
 - `/share-image` - Share Image (`ImageSharePage`)
-- `/share-pdf` - Share PDF (`PdfSharePage`)
-- `/recievePage` - Receive Content (`RecievePage`)
+- `/share-file` - Share PDF (`FileSharePage`)
+- `/receive` - Receive Content (`RecievePage`)
+- `/login` - User Login (`Login`)
+- `/register` - User Register (`Register`)
 - `/admin/login` - Admin Login (`AdminLogin`)
 - `/admin/panel` - Admin Panel (`AdminPanel`) [session-gated]
+- `/dashboard` - User Dashboard (`Dashboard`)
+- `/buy` - Buy Premium (`BuyPremium`)
+- `/premium/login` - Premium Login (`PremiumLogin`)
+- `/premium/dashboard` - Premium Dashboard (`PremiumDashboard`)
 - `/public-room` - Public Room Chat (`PublicRoom`)
 - `/public-room?code=<ROOM_CODE>` - Public Room Chat with prefilled room code (`PublicRoom`)
+- `/privacy-policy` - Privacy Policy (`PrivacyPolicy`)
+- `/terms-of-service` - Terms of Service (`TermsOfService`)
+- `/about` - About Page (`About`)
+- `/contact` - Contact Page (`Contact`)
 
 ## 2. Detailed Page Structure
 
@@ -40,7 +50,7 @@ Outbound links:
 
 ---
 
-### 2.2 `/sharePage` Share Text
+### 2.2 `/share` Share Text
 
 Purpose:
 - Create a text payload and receive a share code.
@@ -52,7 +62,7 @@ Primary sections:
 - Action buttons:
   - Share Text (POST save request)
   - Share Image -> `/share-image`
-  - Share PDF -> `/share-pdf`
+  - Share PDF -> `/share-file`
   - Back -> `/`
 
 Key states:
@@ -63,7 +73,7 @@ Key states:
 
 Outbound links:
 - `/share-image`
-- `/share-pdf`
+- `/share-file`
 - `/`
 
 ---
@@ -80,8 +90,8 @@ Primary sections:
 - Code badge (after successful upload), click-to-copy.
 - Action buttons:
   - Share Image (upload)
-  - Share Text -> `/sharePage`
-  - Share PDF -> `/share-pdf`
+  - Share Text -> `/share`
+  - Share PDF -> `/share-file`
   - Back -> `/`
 
 Key states:
@@ -92,13 +102,13 @@ Key states:
 - Error message (upload failure).
 
 Outbound links:
-- `/sharePage`
-- `/share-pdf`
+- `/share`
+- `/share-file`
 - `/`
 
 ---
 
-### 2.4 `/share-pdf` Share PDF
+### 2.4 `/share-file` Share PDF
 
 Purpose:
 - Upload a PDF and generate a share code.
@@ -111,7 +121,7 @@ Primary sections:
 - Action buttons:
   - Share PDF (upload)
   - Share Image -> `/share-image`
-  - Share Text -> `/sharePage`
+  - Share Text -> `/share`
   - Back -> `/`
 
 Key states:
@@ -123,12 +133,12 @@ Key states:
 
 Outbound links:
 - `/share-image`
-- `/sharePage`
+- `/share`
 - `/`
 
 ---
 
-### 2.5 `/recievePage` Receive Content
+### 2.5 `/receive` Receive Content
 
 Purpose:
 - Retrieve shared text/image/PDF by code.
@@ -250,7 +260,7 @@ Outbound links:
 
 ---
 
-### 2.8 `/public-room` Public Room Chat
+### 2.9 `/public-room` Public Room Chat
 
 Purpose:
 - Real-time public chat room join + messaging via Socket.IO.
@@ -299,13 +309,14 @@ Outbound links:
 
 Primary user journeys:
 - Home (`/`)
-  - -> Share Text (`/sharePage`) -> Share Image (`/share-image`) / Share PDF (`/share-pdf`) / Back Home
-  - -> Receive (`/recievePage`) -> Back Home
+  - -> Share Text (`/share`) -> Share Image (`/share-image`) / Share PDF (`/share-file`) / Back Home
+  - -> Receive (`/receive`) -> Back Home
   - -> Public Rooms (`/public-room`) -> Join room -> Chat -> Back Home
   - -> Admin Login (`/admin/login`) -> Admin Panel (`/admin/panel`) -> Logout -> Home
+  - -> Buy Premium (`/buy`) -> Premium Login (`/premium/login`) -> Premium Dashboard (`/premium/dashboard`)
 
 Cross-links between share modes:
-- `/sharePage` <-> `/share-image` <-> `/share-pdf`
+- `/share` <-> `/share-image` <-> `/share-file`
 - Each share mode has direct return to `/`
 
 Public room deep-link path:
@@ -316,6 +327,9 @@ Public room deep-link path:
 - Admin route gating:
   - `/admin/panel` is client-guarded by sessionStorage flag.
   - Unauthorized user is redirected to `/admin/login`.
+- Premium route gating:
+  - `/premium/dashboard` requires premium authentication.
+  - `/buy` is accessible to all users.
 - Public rooms:
   - Room code is validated before join.
   - Room availability depends on server-side room status (active/inactive).
@@ -326,15 +340,80 @@ These are not separate URLs but are meaningful nodes in the information architec
 - Generated code badges (text/image/pdf) with copy affordance.
 - Receive result modes (text/image/pdf) inside one page.
 - Admin modals (edit/create/password/code operations).
+- Premium purchase flow states.
 - Public room connectivity states (online/offline/retry).
 - Public room typing indicator state.
 
-## 6. Backend-Linked URL Patterns Used by Frontend
+## 6. Premium Features
+
+### 6.1 `/buy` - Buy Premium
+
+Purpose:
+- Allow users to purchase premium subscription.
+
+Primary sections:
+- Pricing plans display.
+- Feature comparison.
+- Payment integration.
+- Purchase CTA buttons.
+
+Key states:
+- Idle.
+- Loading (processing payment).
+- Success (payment completed).
+- Error (payment failed).
+
+Outbound links:
+- `/` (back to home)
+- `/premium/dashboard` (after successful purchase)
+
+### 6.2 `/premium/login` - Premium Login
+
+Purpose:
+- Authenticate premium users.
+
+Primary sections:
+- Premium code input.
+- Login button.
+- Error messaging.
+
+Key states:
+- Idle.
+- Submitting.
+- Success (redirect to dashboard).
+- Error (invalid code).
+
+Outbound links:
+- `/` (back to home)
+- `/premium/dashboard` (on success)
+
+### 6.3 `/premium/dashboard` - Premium Dashboard
+
+Purpose:
+- View premium features and benefits.
+
+Primary sections:
+- Premium status display.
+- Feature access list.
+- Account management options.
+
+Key states:
+- Loading.
+- Active premium features.
+- Expired/inactive premium.
+
+Outbound links:
+- `/` (back to home)
+- `/buy` (upgrade/renew)
+
+## 7. Backend-Linked URL Patterns Used by Frontend
 
 For coordination with backend/API docs:
 - Text retrieval by code: `/get/:id`
 - Image retrieval/download: `/image/:id`, `/image/download/:id`
 - PDF retrieval/preview/download: `/pdf/:id`, `/pdf/preview/:id`, `/pdf/download/:id`
 - Public room validation: `/public-room/validate/:code`
+- Premium code validation: `/api/validate-premium-code`
+- Payment processing: `/api/process-payment`
 
 These are API endpoints, not frontend routes, but they define key content paths used by the UI.
