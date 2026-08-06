@@ -28,6 +28,11 @@ const PremiumDashboard = () => {
   const [filePreview, setFilePreview] = useState('')
   const [fileError, setFileError] = useState('')
   const [isDragOver, setIsDragOver] = useState(false)
+
+  // Password protection state
+  const [codePassword, setCodePassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
   
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -91,6 +96,9 @@ const PremiumDashboard = () => {
     setFileError('')
     setDisplayNameInput(codeObj.displayName || '')
     setIsPublic(codeObj.isPublic !== false)
+    // Set password state
+    setCodePassword('')
+    setPasswordMessage({ type: '', text: '' })
     setSuccessMessage('')
     setErrorMessage('')
   }
@@ -216,6 +224,49 @@ const PremiumDashboard = () => {
     }
   }
 
+  // Set or update password for the selected code
+  const handleSetPassword = async (e) => {
+    e.preventDefault()
+    if (!selectedCode) return
+
+    setPasswordLoading(true)
+    setPasswordMessage({ type: '', text: '' })
+
+    try {
+      const res = await fetch(endpoints.setCodePassword, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          code: selectedCode.code,
+          password: codePassword
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        setPasswordMessage({ 
+          type: 'success', 
+          text: data.message || 'Password updated successfully' 
+        })
+        // Update selected code to reflect password change
+        const updatedCodes = codes.map(c => c.code === selectedCode.code ? { ...c, hasPassword: data.premiumCode.hasPassword } : c)
+        setCodes(updatedCodes)
+        setSelectedCode({ ...selectedCode, hasPassword: data.premiumCode.hasPassword })
+        setCodePassword('')
+      } else {
+        setPasswordMessage({ type: 'error', text: data.message || 'Failed to update password' })
+      }
+    } catch (err) {
+      console.error(err)
+      setPasswordMessage({ type: 'error', text: 'Network error while updating password' })
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('tshare_premium_token')
     localStorage.removeItem('tshare_premium_username')
@@ -264,14 +315,55 @@ const PremiumDashboard = () => {
                 <button
                   key={c.code}
                   className={`preset-btn ${selectedCode && selectedCode.code === c.code ? 'active' : ''}`}
-                  style={{ textAlign: 'left', padding: '12px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+                  style={{ 
+                    textAlign: 'left', 
+                    padding: '10px 12px', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    gap: '8px',
+                    width: '100%',
+                    minHeight: '80px'
+                  }}
                   onClick={() => handleCodeSelect(c)}
                 >
-                  <span style={{ fontSize: '16px', fontWeight: 600, letterSpacing: '1px' }}>{c.code.toUpperCase()}</span>
-                  <span style={{ fontSize: '12px', opacity: 0.7 }}>{c.dataType ? c.dataType.toUpperCase() : 'EMPTY'}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, letterSpacing: '1px' }}>{c.code.toUpperCase()}</span>
+                    <span style={{ 
+                      fontSize: '10px', 
+                      opacity: 0.7, 
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: 'rgba(212, 175, 55, 0.1)',
+                      border: '1px solid rgba(212, 175, 55, 0.2)'
+                    }}>
+                      {c.dataType ? c.dataType.toUpperCase() : 'EMPTY'}
+                    </span>
+                  </div>
+                  
+                  {/* Content Preview */}
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: 'var(--text-muted)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {c.dataType === 'text' && c.text && (
+                      <span>{c.text.substring(0, 50)}{c.text.length > 50 ? '...' : ''}</span>
+                    )}
+                    {c.dataType === 'image' && c.originalName && (
+                      <span>{c.originalName}</span>
+                    )}
+                    {c.dataType === 'file' && c.originalName && (
+                      <span>📎 {c.originalName}</span>
+                    )}
+                    {!c.dataType && !c.text && !c.originalName && (
+                      <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No content</span>
+                    )}
+                  </div>
                 </button>
               ))}
-              <button className="btn btn-secondary" style={{ marginTop: '10px', justifyContent: 'center' }} onClick={() => navigate('/buy')}>
+              <button className="btn btn-secondary" style={{ marginTop: '10px', justifyContent: 'center', fontSize: '12px', padding: '8px 12px' }} onClick={() => navigate('/buy')}>
                 + Purchase Another
               </button>
             </div>
@@ -301,6 +393,7 @@ const PremiumDashboard = () => {
                   </div>
                 </div>
 
+                {/* Content Update Form */}
                 <form onSubmit={handleUpdate} className="premium-form">
                   {successMessage && (
                     <div className="alert alert-success" style={{ padding: '12px' }}>
@@ -350,18 +443,6 @@ const PremiumDashboard = () => {
                         <span style={{ fontSize: '13px', fontWeight: 600, color: isPublic ? '#f59e0b' : 'var(--text-muted)' }}>
                           {isPublic ? '🌐 Public' : '🔒 Hidden'}
                         </span>
-                        {/* <span style={{
-                          width: '36px', height: '20px', borderRadius: '10px',
-                          background: isPublic ? 'linear-gradient(135deg, #d4af37, #f59e0b)' : 'rgba(100, 100, 100, 0.3)',
-                          position: 'relative', transition: 'all 0.3s', flexShrink: 0
-                        }}>
-                          <span style={{
-                            position: 'absolute', top: '2px', left: isPublic ? '18px' : '2px',
-                            width: '16px', height: '16px', borderRadius: '50%',
-                            background: '#fff', transition: 'left 0.3s',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                          }} />
-                        </span> */}
                       </div>
                       <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
                         {isPublic ? 'Code & display name shown in public marquee' : 'Only display name shown in public marquee'}
@@ -417,7 +498,7 @@ const PremiumDashboard = () => {
                   </button>
 
                   {/* DataType Tabs */}
-                  <div>
+                  <div style={{ marginBottom: '20px' }}>
                     <label className="section-label">Content Type</label>
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                       {['text', 'image', 'file'].map((tab) => (
@@ -436,7 +517,7 @@ const PremiumDashboard = () => {
 
                   {/* Form fields based on tab */}
                   {activeTab === 'text' && (
-                    <div>
+                    <div style={{ marginBottom: '20px' }}>
                       <label className="section-label">Shared Text</label>
                       <textarea
                         rows="6"
@@ -450,7 +531,7 @@ const PremiumDashboard = () => {
                   )}
 
                   {(activeTab === 'image' || activeTab === 'file') && (
-                    <div>
+                    <div style={{ marginBottom: '20px' }}>
                       <label className="section-label">Upload {activeTab === 'image' ? 'Image' : 'File'}</label>
                       <div
                         className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${filePreview ? 'dropzone--has-file' : ''}`}
@@ -563,6 +644,96 @@ const PremiumDashboard = () => {
                     </button>
                   </div>
                 </form>
+
+                {/* Password Protection Section - OUTSIDE the form */}
+                <div style={{ 
+                  marginTop: '24px', 
+                  padding: '20px', 
+                  borderRadius: '12px', 
+                  border: '1px solid var(--border-subtle)',
+                  background: 'rgba(212, 175, 55, 0.05)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#d4af37' }}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                    <label className="section-label" style={{ margin: 0 }}>Password Protection</label>
+                    {selectedCode.hasPassword && (
+                      <span style={{
+                        fontSize: '11px',
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                        color: '#000',
+                        fontWeight: 600
+                      }}>
+                        PROTECTED
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                    {selectedCode.hasPassword 
+                      ? 'This code is password protected. Enter a new password below to change it, or leave empty to remove protection.'
+                      : 'Add an optional password to protect this code. Anyone receiving content will need to enter this password first.'}
+                  </p>
+
+                  {passwordMessage.text && (
+                    <div style={{
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      background: passwordMessage.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      border: `1px solid ${passwordMessage.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                      color: passwordMessage.type === 'success' ? '#22c55e' : '#ef4444',
+                      fontSize: '13px'
+                    }}>
+                      {passwordMessage.text}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSetPassword}>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <input
+                        type="password"
+                        className="custom-amount-input"
+                        placeholder={selectedCode.hasPassword ? "Enter new password (leave empty to remove)" : "Enter password (optional)"}
+                        style={{ 
+                          flex: '1 1 250px',
+                          paddingLeft: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                        value={codePassword}
+                        onChange={(e) => setCodePassword(e.target.value)}
+                      />
+                      <button
+                        type="submit"
+                        className="btn-settings-save"
+                        disabled={passwordLoading}
+                        style={{ 
+                          flex: '0 0 auto',
+                          background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                          color: '#000',
+                          fontWeight: 600,
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {passwordLoading ? (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="btn__spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></span>
+                            Saving...
+                          </span>
+                        ) : (
+                          selectedCode.hasPassword ? 'Change Password' : 'Set Password'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
           </div>
@@ -571,5 +742,7 @@ const PremiumDashboard = () => {
     </div>
   )
 }
+
+PremiumDashboard.propTypes = {};
 
 export default PremiumDashboard

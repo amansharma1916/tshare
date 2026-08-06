@@ -94,6 +94,16 @@ const About = () => {
               
               <li><strong>Real-time Notifications:</strong> Get notified when users join or leave rooms with system messages.</li>
               
+              <li><strong>Premium Codes:</strong> Purchase exclusive premium codes with golden branding, custom display names, and advanced features.</li>
+              
+              <li><strong>Password Protection:</strong> Secure your premium content with optional password protection. Recipients must enter the password to access protected content.</li>
+              
+              <li><strong>Content Management Dashboard:</strong> Premium users get a dedicated dashboard to manage their codes, update content, and track activity.</li>
+              
+              <li><strong>Public Marquee:</strong> Premium users can choose to display their codes and display names in a public showcase.</li>
+              
+              <li><strong>6-Digit Codes:</strong> Extended code length option for even more unique and memorable codes.</li>
+              
               <li><strong>Admin Panel:</strong> Comprehensive admin dashboard to manage all shared content, users, and public rooms.</li>
               
               <li><strong>Auto-reconnection:</strong> Smart socket reconnection handling ensures you stay connected even with network issues.</li>

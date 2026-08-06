@@ -73,7 +73,9 @@ export const endpoints = {
     adminAddPremiumCodeForSale: `${API_URL}/admin/premium-codes/for-sale`,
     premiumCodesForSale: `${API_URL}/api/codes-for-sale`,
     recentPurchases: `${API_URL}/api/recent-purchases`,
-};
+    setCodePassword: `${API_URL}/api/set-code-password`,
+    verifyCodePassword: `${API_URL}/api/verify-code-password`,
+  };
 
 export default {
     API_URL,
