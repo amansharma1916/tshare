@@ -28,6 +28,13 @@ const RecievePage = () => {
   const [popupError, setPopupError] = useState('');
   const [popupSubmitting, setPopupSubmitting] = useState(false);
 
+  // Password protection state
+  const [passwordRequired, setPasswordRequired] = useState(false);
+  const [protectedCode, setProtectedCode] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+
   useEffect(() => {
     segmentRefs.current[0]?.focus();
   }, [segmentCount]);
@@ -165,6 +172,64 @@ const RecievePage = () => {
     doReceive(pendingCode, '');
   };
 
+  const handlePasswordSubmit = async () => {
+    if (!passwordInput.trim()) {
+      setPasswordError('Please enter a password');
+      return;
+    }
+    
+    setPasswordSubmitting(true);
+    setPasswordError('');
+
+    try {
+      // Verify password and get data in one call
+      const verifyRes = await fetch(endpoints.verifyCodePassword, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: protectedCode, 
+          password: passwordInput 
+        })
+      });
+
+      if (!verifyRes.ok) {
+        const err = await verifyRes.json().catch(() => ({}));
+        throw new Error(err.message || 'Incorrect password');
+      }
+
+      const data = await verifyRes.json();
+
+      // Process the data directly from verify response
+      if (data?.dataType === 'text') {
+        const unescapedText = data.text
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\\\/g, '\\');
+        setReceivedContent({ dataType: 'text', id: data.id, text: unescapedText, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
+        setSuccessMessage('Text received successfully');
+        setShowContent(true);
+      } else if (data?.dataType === 'image') {
+        setReceivedContent({ dataType: 'image', id: data.id, ...data.image, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
+        setSuccessMessage('Image received');
+        setShowContent(true);
+      } else if (data?.dataType === 'file') {
+        setReceivedContent({ dataType: 'file', id: data.id, ...data.file, createdAt: data.createdAt, isPremium: data.isPremium, displayName: data.displayName });
+        setSuccessMessage('File received');
+        setShowContent(true);
+      }
+
+      // Clear password state
+      setPasswordRequired(false);
+      setProtectedCode('');
+      setPasswordInput('');
+      setPasswordError('');
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to verify password');
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  };
+
   // ──────────────────────────────────────────
   // UNIFIED RECEIVE — calls the single /data/:id endpoint
   // The API returns { dataType, id, text / image / file, createdAt }
@@ -178,7 +243,28 @@ const RecievePage = () => {
 
     try {
       const url = endpoints.getData(code) + (username ? '?username=' + encodeURIComponent(username) : '');
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      // Check if password is required
+      if (res.status === 401) {
+        const err = await res.json().catch(() => ({}));
+        if (err.requiresPassword) {
+          // Show password prompt - don't proceed with request
+          setPasswordRequired(true);
+          setProtectedCode(code);
+          setPasswordInput('');
+          setPasswordError('');
+          setLoading(false);
+          return;
+        }
+        throw new Error(err.message || 'Invalid code or data not found');
+      }
+      
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Invalid code or data not found');
@@ -401,7 +487,7 @@ const RecievePage = () => {
   };
 
   return (
-    <div className={`${insideLayout ? 'share-page' : 'page'} ${receivedContent?.isPremium ? 'receive-page--premium' : ''}`}>
+    <div className={`${insideLayout ? 'share-page' : 'page'} ${(receivedContent?.isPremium || passwordRequired) ? 'receive-page--premium' : ''} ${passwordRequired ? 'password-mode' : ''}`}>
       {!insideLayout && (
         <motion.nav
           className="nav"
@@ -437,7 +523,7 @@ const RecievePage = () => {
 
       <main className="receive">
         <div className="receive__container">
-          {receivedContent?.isPremium && (
+          {receivedContent?.isPremium && !passwordRequired && !passwordRequired && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -463,13 +549,174 @@ const RecievePage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            style={passwordRequired ? { 
+              color: '#fff',
+              background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: '1px solid rgba(212, 175, 55, 0.3)'
+            } : undefined}
           >
             <div className={getTypeIconClass()}>
               {getTypeIcon()}
             </div>
-            <h1 className="share__title">{getTitle()}</h1>
-            <p className="share__desc">{getDesc()}</p>
+            <h1 className="share__title" style={passwordRequired ? { color: '#fff' } : undefined}>{getTitle()}</h1>
+            <p className="share__desc" style={passwordRequired ? { color: '#fff' } : undefined}>{getDesc()}</p>
           </motion.div>
+
+          {/* Password Protection Overlay - Blurred Content */}
+          {passwordRequired && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                position: 'relative',
+                marginBottom: '20px',
+                padding: '30px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%)',
+                border: '2px solid #d4af37',
+                boxShadow: '0 20px 60px rgba(212, 175, 55, 0.3)',
+                textAlign: 'center'
+              }}
+            >
+              {/* Lock Icon */}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                margin: '0 auto 20px auto',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 32px rgba(212, 175, 55, 0.5)'
+              }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              </div>
+
+              <h2 style={{
+                fontSize: '28px',
+                fontWeight: 700,
+                margin: '0 0 10px 0',
+                background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                Premium Protected Content
+              </h2>
+              
+              <p style={{
+                color: '#b0b0b0',
+                fontSize: '14px',
+                margin: '0 0 25px 0',
+                lineHeight: '1.6'
+              }}>
+                This content is password protected. Enter the password to unlock premium content.
+              </p>
+
+              {passwordError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#ef4444',
+                    fontSize: '13px'
+                  }}
+                >
+                  {passwordError}
+                </motion.div>
+              )}
+
+              <div style={{ marginBottom: '20px' }}>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError('');
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                  placeholder="Enter password to unlock"
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '2px solid #d4af37',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    color: '#fff',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    letterSpacing: '3px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'all 0.3s'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    setPasswordRequired(false);
+                    setProtectedCode('');
+                    setPasswordInput('');
+                    setPasswordError('');
+                  }}
+                  disabled={passwordSubmitting}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: '1px solid #555',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: '#b0b0b0',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: passwordSubmitting ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  disabled={passwordSubmitting}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                    color: '#000',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    cursor: passwordSubmitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 8px 24px rgba(212, 175, 55, 0.4)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {passwordSubmitting ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="btn__spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: '#000', borderTopColor: 'transparent' }}></span>
+                      Verifying...
+                    </span>
+                  ) : (
+                    'Unlock Content'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          )}
 
           <div className="toggle-container" style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
             <button

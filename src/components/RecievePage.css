@@ -619,6 +619,14 @@
   box-shadow: 0 4px 25px rgba(212, 175, 55, 0.5), 0 0 60px rgba(212, 175, 55, 0.2) !important;
 }
 
+/* Override golden banner when password is required — use dark theme */
+.receive-page--premium.password-mode .receive__container > div:first-child {
+  background: rgba(30, 27, 21, 0.5) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
 @keyframes premiumBannerShimmer {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
