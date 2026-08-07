@@ -364,29 +364,14 @@
 }
 
 .bp-vault__rail {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  overflow-x: auto;
   padding: 6px 4px;
-  scroll-behavior: smooth;
 }
 
-.bp-vault__rail::-webkit-scrollbar {
-  height: 6px;
-}
-
-.bp-vault__rail::-webkit-scrollbar-thumb {
-  background: var(--color-premium-border);
-  border-radius: 3px;
-}
-
-.bp-vault__rail::-webkit-scrollbar-track {
-  background: transparent;
-}
 
 .bp-vault__tile {
-  flex: 0 0 auto;
-  min-width: 118px;
   padding: 16px 18px;
   background: var(--bg-glass);
   border: 1px solid var(--border-subtle);
