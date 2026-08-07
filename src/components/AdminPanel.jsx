@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
@@ -7,10 +7,63 @@ import { endpoints } from '../api/api';
 
 const PAGE_SIZE = 10;
 
+// Truncate text to a maximum number of words, appending an ellipsis
+const truncateText = (text, maxWords = 50) => {
+    if (!text) return '';
+    const words = text.split(/\s+/);
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+};
+
+// Renders clamped text with a "View More" button that only appears when the
+// content is *actually* visually truncated (i.e. the "..." ellipsis is shown
+// by the line clamp), regardless of the raw word count.
+const TruncatedText = ({ text, onViewText }) => {
+    const contentRef = useRef(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+
+    useLayoutEffect(() => {
+        const el = contentRef.current;
+        if (el) {
+            setIsOverflowing(el.scrollHeight > el.clientHeight);
+        }
+    }, [text]);
+
+    return (
+        <div>
+            <div
+                ref={contentRef}
+                style={{
+                    maxWidth: '400px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: '1.5'
+                }}
+            >
+                {truncateText(text)}
+            </div>
+            {isOverflowing && (
+                <motion.button
+                    className="action-btn edit"
+                    onClick={onViewText}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ marginTop: '6px', padding: '4px 10px', fontSize: '12px' }}
+                >
+                    View More
+                </motion.button>
+            )}
+        </div>
+    );
+};
+
 // ──────────────────────────────────────────
 // Reusable Pagination Controls Component
 // ──────────────────────────────────────────
-const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange }) => {
+const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange, pageSize, onPageSizeChange }) => {
     const getPageNumbers = () => {
         const pages = [];
         const maxVisible = 5;
@@ -30,8 +83,8 @@ const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange 
         return pages;
     };
 
-    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-    const endItem = Math.min(currentPage * PAGE_SIZE, totalItems);
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const endItem = Math.min(currentPage * pageSize, totalItems);
 
     if (totalPages <= 0) return null;
 
@@ -41,6 +94,16 @@ const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange 
                 Showing {startItem}–{endItem} of {totalItems} items
             </div>
             <div className="pagination-buttons">
+                <select
+                    className="page-size-select"
+                    value={pageSize}
+                    onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                    title="Items per page"
+                >
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
                 <button
                     className="pagination-btn"
                     onClick={() => onPageChange(1)}
@@ -137,6 +200,9 @@ const AdminPanel = () => {
     const [newSalePrice, setNewSalePrice] = useState(99);
 
     // ─── Pagination State ───
+    // Page Size
+    const [pageSize, setPageSize] = useState(10);
+    
     // Texts
     const [textsPage, setTextsPage] = useState(1);
     const [textsPagination, setTextsPagination] = useState(null);
@@ -191,6 +257,10 @@ const AdminPanel = () => {
     // Premium Code View Modal State
     const [showPremiumCodeModal, setShowPremiumCodeModal] = useState(false);
     const [viewingPremiumCode, setViewingPremiumCode] = useState(null);
+    
+    // Text View Modal State
+    const [showTextViewModal, setShowTextViewModal] = useState(false);
+    const [viewingText, setViewingText] = useState(null);
 
     useEffect(() => {
         const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
@@ -236,35 +306,35 @@ const AdminPanel = () => {
         if (activeTab === 'texts') {
             fetchTexts(textsPage, textsSearchTerm);
         }
-    }, [activeTab, textsPage, textsSearchTerm]);
+    }, [activeTab, textsPage, textsSearchTerm, pageSize]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'images') {
             fetchImages(imagesPage, imagesSearchTerm);
         }
-    }, [activeTab, imagesPage, imagesSearchTerm]);
+    }, [activeTab, imagesPage, imagesSearchTerm, pageSize]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'files') {
             fetchFiles(filesPage, filesSearchTerm);
         }
-    }, [activeTab, filesPage, filesSearchTerm]);
+    }, [activeTab, filesPage, filesSearchTerm, pageSize]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'public-rooms') {
             fetchPublicRooms(publicRoomsPage);
         }
-    }, [activeTab, publicRoomsPage]);
+    }, [activeTab, publicRoomsPage, pageSize]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'users') {
             fetchUsers(usersPage);
         }
-    }, [activeTab, usersPage]);
+    }, [activeTab, usersPage, pageSize]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
@@ -322,7 +392,7 @@ const AdminPanel = () => {
         setUsersError('');
 
         try {
-            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const params = new URLSearchParams({ page: pageNum, limit: pageSize });
             const response = await fetch(`${endpoints.adminUsers}?${params}`, {
                 headers: getAuthHeaders(),
             });
@@ -481,7 +551,7 @@ const AdminPanel = () => {
         setError('');
 
         try {
-            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const params = new URLSearchParams({ page: pageNum, limit: pageSize });
             if (searchTerm) params.append('search', searchTerm);
 
             const response = await fetch(`${endpoints.adminTexts}?${params}`, {
@@ -510,7 +580,7 @@ const AdminPanel = () => {
         setImagesError('');
 
         try {
-            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const params = new URLSearchParams({ page: pageNum, limit: pageSize });
             if (searchTerm) params.append('search', searchTerm);
 
             const response = await fetch(`${endpoints.adminImages}?${params}`, {
@@ -539,7 +609,7 @@ const AdminPanel = () => {
         setFilesError('');
 
         try {
-            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const params = new URLSearchParams({ page: pageNum, limit: pageSize });
             if (searchTerm) params.append('search', searchTerm);
 
             const response = await fetch(`${endpoints.adminFiles}?${params}`, {
@@ -568,7 +638,7 @@ const AdminPanel = () => {
         setPublicRoomsError('');
 
         try {
-            const params = new URLSearchParams({ page: pageNum, limit: PAGE_SIZE });
+            const params = new URLSearchParams({ page: pageNum, limit: pageSize });
             const response = await fetch(`${endpoints.adminPublicRooms}?${params}`, {
                 headers: getAuthHeaders(),
             });
@@ -650,6 +720,11 @@ const AdminPanel = () => {
             console.error('Error:', error);
             showActionMessage('Failed to connect to server', 'error');
         }
+    };
+
+    const handleViewText = (text) => {
+        setViewingText(text);
+        setShowTextViewModal(true);
     };
 
     const handleEditText = (text) => {
@@ -957,7 +1032,7 @@ const AdminPanel = () => {
 
         try {
             const response = await fetch(endpoints.adminChangePassword, {
-                method: 'POST',
+                method: 'PUT',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
                     currentPassword,
@@ -1275,6 +1350,26 @@ const AdminPanel = () => {
 
     // ─── Utility Handlers ───
 
+    // Format date in 12-hour format with AM/PM
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'N/A';
+        
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        const minutesStr = minutes.toString().padStart(2, '0');
+        
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}, ${hours12}:${minutesStr} ${ampm}`;
+    };
+
     const showActionMessage = (text, type) => {
         setActionMessage({ text, type });
         setTimeout(() => {
@@ -1286,6 +1381,16 @@ const AdminPanel = () => {
         sessionStorage.removeItem('adminAuthenticated');
         sessionStorage.removeItem('adminToken');
         navigate('/admin/login');
+    };
+
+    const handlePageSizeChange = (newSize) => {
+        setPageSize(newSize);
+        // Reset all pages to 1 when page size changes
+        setTextsPage(1);
+        setImagesPage(1);
+        setFilesPage(1);
+        setPublicRoomsPage(1);
+        setUsersPage(1);
     };
 
     const handleTextsPageChange = (newPage) => {
@@ -1431,8 +1536,10 @@ const AdminPanel = () => {
                                         {texts.map((text) => (
                                             <tr key={text.id}>
                                                 <td className="room-code">{text.id}</td>
-                                                <td className="text-content">{text.text}</td>
-                                                <td>{new Date(text.createdAt).toLocaleString()}</td>
+                                        <td className="text-content">
+                                            <TruncatedText text={text.text} onViewText={() => handleViewText(text)} />
+                                        </td>
+                                                <td>{formatDate(text.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn edit"
@@ -1480,6 +1587,8 @@ const AdminPanel = () => {
                                 totalPages={textsPagination.pages}
                                 totalItems={textsPagination.total}
                                 onPageChange={handleTextsPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         )}
                     </div>
@@ -1546,7 +1655,7 @@ const AdminPanel = () => {
                                                     </div>
                                                 </td>
                                                 <td>{image.originalName}</td>
-                                                <td>{new Date(image.createdAt).toLocaleString()}</td>
+                                                <td>{formatDate(image.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn edit"
@@ -1594,6 +1703,8 @@ const AdminPanel = () => {
                                 totalPages={imagesPagination.pages}
                                 totalItems={imagesPagination.total}
                                 onPageChange={handleImagesPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         )}
                     </div>
@@ -1671,7 +1782,7 @@ const AdminPanel = () => {
                                                 </td>
                                                 <td>{file.originalName}</td>
                                                 <td>{file.size ? (file.size / 1024).toFixed(2) + ' KB' : 'N/A'}</td>
-                                                <td>{new Date(file.createdAt).toLocaleString()}</td>
+                                                <td>{formatDate(file.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn edit"
@@ -1719,6 +1830,8 @@ const AdminPanel = () => {
                                 totalPages={filesPagination.pages}
                                 totalItems={filesPagination.total}
                                 onPageChange={handleFilesPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         )}
                     </div>
@@ -1766,7 +1879,7 @@ const AdminPanel = () => {
                                                         {room.active ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
-                                                <td>{new Date(room.createdAt).toLocaleString()}</td>
+                                                <td>{formatDate(room.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className={`action-btn ${room.active ? 'deactivate' : 'activate'}`}
@@ -1798,6 +1911,8 @@ const AdminPanel = () => {
                                 totalPages={publicRoomsPagination.pages}
                                 totalItems={publicRoomsPagination.total}
                                 onPageChange={handlePublicRoomsPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         )}
                     </div>
@@ -1841,7 +1956,7 @@ const AdminPanel = () => {
                                             <tr key={user.id || user.username}>
                                                 <td>{user.username}</td>
                                                 <td>{user.itemCount || 0}</td>
-                                                <td>{user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</td>
+                                                <td>{formatDate(user.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn delete"
@@ -1865,6 +1980,8 @@ const AdminPanel = () => {
                                 totalPages={usersPagination.pages}
                                 totalItems={usersPagination.total}
                                 onPageChange={handleUsersPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         )}
                     </div>
@@ -1900,7 +2017,7 @@ const AdminPanel = () => {
                                                 <td>{item.isForSale ? <span className="status-badge active" style={{ background: '#7c2d12', color: '#fdba74' }}>FOR SALE</span> : item.owner}</td>
                                                 <td>{item.isForSale ? 'N/A' : (item.dataType ? item.dataType.toUpperCase() : 'EMPTY')}</td>
                                                 <td>₹{item.price || 0}</td>
-                                                <td>{item.expiresAt ? new Date(item.expiresAt).toLocaleString() : 'N/A'}</td>
+                                                <td>{formatDate(item.expiresAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn edit"
@@ -1958,7 +2075,7 @@ const AdminPanel = () => {
                                                         Premium
                                                     </span>
                                                 </td>
-                                                <td>{user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</td>
+                                                <td>{formatDate(user.createdAt)}</td>
                                                 <td className="actions">
                                                     <motion.button
                                                         className="action-btn delete"
@@ -2459,6 +2576,62 @@ const AdminPanel = () => {
             </AnimatePresence>
 
             <AnimatePresence>
+                {showTextViewModal && viewingText && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => {
+                            setShowTextViewModal(false);
+                            setViewingText(null);
+                        }}
+                    >
+                        <motion.div
+                            className="modal"
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ maxWidth: '800px', maxHeight: '80vh' }}
+                        >
+                            <h2>Full Text Content</h2>
+                            <div className="code-info" style={{ marginBottom: '12px' }}>
+                                Code: <span className="highlight">{viewingText.id}</span>
+                            </div>
+                            <div style={{
+                                background: 'var(--bg-elevated)',
+                                padding: '20px',
+                                borderRadius: '8px',
+                                maxHeight: '500px',
+                                overflowY: 'auto',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                fontSize: '14px',
+                                lineHeight: '1.6',
+                                color: 'var(--text-primary)'
+                            }}>
+                                {viewingText.text}
+                            </div>
+                            <div className="modal-buttons">
+                                <motion.button
+                                    className="Btn cancel"
+                                    onClick={() => {
+                                        setShowTextViewModal(false);
+                                        setViewingText(null);
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Close
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
                 {showPremiumCodeModal && viewingPremiumCode && (
                     <motion.div
                         className="modal-overlay"
@@ -2550,15 +2723,15 @@ const AdminPanel = () => {
                                 )}
                                 <div className="detail-row">
                                     <span className="detail-label">Purchased At:</span>
-                                    <span className="detail-value">{viewingPremiumCode.purchasedAt ? new Date(viewingPremiumCode.purchasedAt).toLocaleString() : 'N/A'}</span>
+                                    <span className="detail-value">{formatDate(viewingPremiumCode.purchasedAt)}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">Expires At:</span>
-                                    <span className="detail-value">{viewingPremiumCode.expiresAt ? new Date(viewingPremiumCode.expiresAt).toLocaleString() : 'N/A'}</span>
+                                    <span className="detail-value">{formatDate(viewingPremiumCode.expiresAt)}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">Updated At:</span>
-                                    <span className="detail-value">{viewingPremiumCode.updatedAt ? new Date(viewingPremiumCode.updatedAt).toLocaleString() : 'N/A'}</span>
+                                    <span className="detail-value">{formatDate(viewingPremiumCode.updatedAt)}</span>
                                 </div>
                             </div>
                             <div className="modal-buttons">

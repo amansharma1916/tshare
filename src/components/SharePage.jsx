@@ -32,7 +32,7 @@ const SharePage = () => {
   }, []);
 
   const charCount = text.length;
-  const maxChars = 10000;
+  const maxChars = 50000;
 
   const saveTextDb = () => {
     if (!text.trim()) {
