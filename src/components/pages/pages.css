@@ -1,60 +1,211 @@
+/* ============================================================
+   TShare Static Pages — code-vault theme (matches landing page)
+   ============================================================ */
+
+/* Page shell with vault background */
 .page {
+  position: relative;
   min-height: 100%;
-  background: var(--content-bg);
-  color: var(--text-secondary);
-  padding: 20px;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(124, 58, 237, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(236, 72, 153, 0.12), transparent 55%),
+    var(--layout-bg);
+  overflow-x: hidden;
 }
 
+/* subtle technical grid */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(167, 139, 250, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167, 139, 250, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 75%);
+  pointer-events: none;
+}
+
+/* ambient orbs */
+.page__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.page__orb--1 {
+  width: 420px;
+  height: 420px;
+  background: var(--theme-primary);
+  top: -120px;
+  right: -80px;
+}
+
+.page__orb--2 {
+  width: 320px;
+  height: 320px;
+  background: var(--theme-accent);
+  bottom: 10%;
+  left: -90px;
+}
+
+/* Main container — vault card */
 .page__container {
+  position: relative;
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 32px 28px;
+  background: linear-gradient(160deg, rgba(28, 28, 31, 0.92), rgba(18, 18, 21, 0.96));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  padding: 48px 40px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 40px rgba(124, 58, 237, 0.1);
+  overflow: hidden;
+}
+
+/* vault corner accents */
+.page__container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-2xl);
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--theme-primary), transparent, var(--theme-accent));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* glowing scan line */
+.page__container::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 14%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--theme-primary-light), transparent);
+  box-shadow: 0 0 14px var(--theme-primary);
+  opacity: 0.5;
+  animation: pageScan 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pageScan {
+  0% { top: 14%; opacity: 0.1; }
+  25% { top: 44%; opacity: 0.7; }
+  50% { top: 62%; opacity: 0.1; }
+  75% { top: 32%; opacity: 0.6; }
+  100% { top: 14%; opacity: 0.1; }
+}
+
+/* Page header */
+.page__header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page__header-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, rgba(124, 58, 237, 0.22), rgba(236, 72, 153, 0.14));
+  color: var(--theme-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+}
+
+.page__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: rgba(24, 24, 27, 0.7);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.page__badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--theme-success);
+  box-shadow: 0 0 10px var(--theme-success);
+  animation: pagePulse 2.2s infinite;
+}
+
+@keyframes pagePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.75); }
+}
+
+.page__title {
+  font-size: clamp(1.6rem, 4.4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.page__title-gradient {
+  background: linear-gradient(120deg, var(--theme-primary-light), var(--theme-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.page__subtitle {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Content */
+.page__content {
+  position: relative;
+  line-height: 1.7;
 }
 
 .page__last-updated {
   color: var(--text-muted);
   font-size: 0.875rem;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
   font-style: italic;
-}
-
-.page__title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  line-height: 1.3;
-}
-
-.page__subtitle {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.6;
-}
-
-.page__content {
-  line-height: 1.7;
+  font-family: var(--font-mono);
 }
 
 .page__section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .page__section h2 {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 12px;
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border-default);
-  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 10px;
+  letter-spacing: -0.01em;
 }
 
 .page__section h3 {
@@ -72,12 +223,13 @@
 
 .page__section ul {
   margin-left: 24px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .page__section ul li {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--text-tertiary);
+  line-height: 1.6;
 }
 
 .page__section ul li::marker {
@@ -96,24 +248,24 @@
   text-decoration: underline;
 }
 
-/* Contact Page Styles */
+/* Contact info cards */
 .contact__info {
   display: grid;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .contact__info-item {
-  background: var(--bg-elevated);
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 14px 18px;
+  border-radius: 12px;
+  padding: 16px 20px;
 }
 
 .contact__info-item strong {
   display: block;
   color: var(--theme-primary-light);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -122,86 +274,15 @@
 .contact__info-item p {
   margin: 0;
   color: var(--text-tertiary);
+  font-size: 14px;
 }
 
-.contact__form {
-  background: var(--bg-elevated);
+/* FAQ */
+.faq__item {
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border-default);
   border-radius: 12px;
-  padding: 24px;
-  margin-top: 20px;
-}
-
-.form__group {
-  margin-bottom: 16px;
-}
-
-.form__group label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 13px;
-}
-
-.form__group input,
-.form__group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--layout-bg);
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
-}
-
-.form__group input:focus,
-.form__group textarea:focus {
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 0 3px var(--theme-primary-subtle);
-}
-
-.form__group input::placeholder,
-.form__group textarea::placeholder {
-  color: var(--text-subtle);
-}
-
-.form__group textarea {
-  resize: vertical;
-  min-height: 120px;
-}
-
-.contact__submit-btn {
-  width: 100%;
-  padding: 12px 20px;
-  background: var(--theme-primary);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.contact__submit-btn:hover {
-  background: var(--theme-primary-hover);
-  transform: translateY(-1px);
-}
-
-.contact__submit-btn:active {
-  transform: translateY(0);
-}
-
-/* FAQ Styles */
-.faq__item {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 18px;
+  padding: 20px;
   margin-bottom: 12px;
 }
 
@@ -210,47 +291,93 @@
   margin-bottom: 8px;
   color: var(--text-primary);
   font-size: 14px;
+  font-weight: 600;
 }
 
 .faq__item p {
   margin: 0;
   color: var(--text-tertiary);
   font-size: 13px;
+  line-height: 1.6;
 }
 
-/* Responsive Design */
+/* Steps (About page) */
+.how-it-works {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.step {
+  text-align: center;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.step__number {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(140deg, rgba(124, 58, 237, 0.22), rgba(236, 72, 153, 0.14));
+  color: var(--theme-primary-light);
+  font-weight: 700;
+  font-size: 16px;
+  border: 1px solid var(--border-default);
+}
+
+.step h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.step p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .page__container {
+    padding: 32px 24px;
+  }
+
+  .how-it-works {
+    grid-template-columns: 1fr;
+  }
+
+  .page__title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
   .page {
     padding: 12px;
   }
 
   .page__container {
-    padding: 24px 18px;
+    padding: 24px 16px;
   }
 
   .page__title {
-    font-size: 22px;
+    font-size: 1.4rem;
   }
 
   .page__section h2 {
     font-size: 16px;
-  }
-
-  .contact__form {
-    padding: 18px;
-  }
-}
-
-@media (max-width: 480px) {
-  .page__container {
-    padding: 18px 12px;
-  }
-
-  .page__title {
-    font-size: 20px;
-  }
-
-  .contact__form {
-    padding: 14px;
   }
 }

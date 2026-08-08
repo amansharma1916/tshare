@@ -25,8 +25,27 @@ const Contact = () => {
 
   return (
     <div className="page">
+      <div className="page__orb page__orb--1" />
+      <div className="page__orb page__orb--2" />
       <div className="page__container">
-        <h1 className="page__title">Contact Us</h1>
+        <div className="page__header">
+          <div className="page__header-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          </div>
+          <span className="page__badge">
+            <span className="page__badge-dot" />
+            Contact · We reply within 24h
+          </span>
+          <h1 className="page__title">
+            <span className="page__title-gradient">Contact</span> Us
+          </h1>
+          <p className="page__subtitle">
+            Have a question, suggestion, or feedback? We would love to hear from you.
+          </p>
+        </div>
         <div className="page__content">
           <section className="page__section">
             <h2>Get in Touch</h2>

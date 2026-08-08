@@ -18,13 +18,28 @@ const About = () => {
 
   return (
     <div className="page">
+      <div className="page__orb page__orb--1" />
+      <div className="page__orb page__orb--2" />
       <div className="page__container">
-        <header>
-          <h1 className="page__title">About TShare - Instant File Sharing Platform</h1>
+        <div className="page__header">
+          <div className="page__header-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </div>
+          <span className="page__badge">
+            <span className="page__badge-dot" />
+            About · Open source · Made with care
+          </span>
+          <h1 className="page__title">
+            About <span className="page__title-gradient">TShare</span>
+          </h1>
           <p className="page__subtitle">
             Fast, secure, and user-friendly content sharing without registration
           </p>
-        </header>
+        </div>
         <div className="page__content">
           <section className="page__section">
             <h2>About the Owner</h2>

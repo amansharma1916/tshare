@@ -220,8 +220,44 @@ const ImageSharePage = () => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <h1 className="share__title">Share an Image</h1>
-            <p className="share__desc">Upload an image and get a 4-digit code to share instantly.</p>
+            <span className="share__badge">
+              <span className="share__badge-dot" />
+              Image · Instant &amp; free · No account
+            </span>
+            <h1 className="share__title">
+              Lock an image behind a <span className="share__title-grad">4-digit key</span>
+            </h1>
+            <p className="share__desc">
+              Drop a photo or screenshot. We store it and hand you a short code — anyone who
+              enters it can view or download the image on any device, no account needed.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="share__steps"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="share__step">
+              <span className="share__step-num">1</span>
+              <span className="share__step-txt"><strong>Select</strong> an image</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            <div className="share__step">
+              <span className="share__step-num">2</span>
+              <span className="share__step-txt"><strong>Lock</strong> it behind a code</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            <div className="share__step">
+              <span className="share__step-num">3</span>
+              <span className="share__step-txt"><strong>Share</strong> the 4-digit key</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            {/* <div className="share__step">
+              <span className="share__step-num">4</span>
+              <span className="share__step-txt"><strong>Open</strong> anytime, any device</span>
+            </div> */}
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -283,6 +319,20 @@ const ImageSharePage = () => {
                 <p className="code-reveal__hint">
                   {imageCopied ? 'Copied to clipboard!' : 'Click the code to copy it'}
                 </p>
+                <div className="code-reveal__meta">
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    Stored &amp; reusable
+                  </span>
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></svg>
+                    Open on any device
+                  </span>
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                    No account needed
+                  </span>
+                </div>
                 <button className="code-reveal__share-another" onClick={handleShareAnother}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 5v14" />
@@ -301,7 +351,13 @@ const ImageSharePage = () => {
                 transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
                 <div className="editor-wrapper">
-                  <div
+                  <div className="image-card">
+                    <div className="editor-bar">
+                      <span className="editor-bar__dots" aria-hidden="true"><i /><i /><i /></span>
+                      <span className="editor-bar__label">tshare / image</span>
+                      <span className="editor-bar__live"><span className="editor-bar__pulse" /> up to 5MB</span>
+                    </div>
+                    <div
                     className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${imagePreview ? 'dropzone--has-file' : ''}`}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
@@ -343,6 +399,7 @@ const ImageSharePage = () => {
                         </div>
                       </div>
                     )}
+                  </div>
                   </div>
 
                   {imageFile && (
