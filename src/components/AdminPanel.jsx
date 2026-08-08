@@ -197,7 +197,17 @@ const AdminPanel = () => {
     const [price4Digit, setPrice4Digit] = useState(299);
     const [price6Digit, setPrice6Digit] = useState(99);
     const [newSaleCode, setNewSaleCode] = useState('');
-    const [newSalePrice, setNewSalePrice] = useState(99);
+    const [newSalePrice, setNewSalePrice] = useState(30);
+
+    // Stats Management State
+    const [stats, setStats] = useState({
+        visitors: 0,
+        files_shared: 0,
+        received: 0,
+        premium_users: 0
+    });
+    const [statsLoading, setStatsLoading] = useState(false);
+    const [statsError, setStatsError] = useState('');
 
     // ─── Pagination State ───
     // Page Size
@@ -354,6 +364,7 @@ const AdminPanel = () => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'settings') {
             fetchPricingSettings();
+            fetchStats();
         }
     }, [activeTab]);
 
@@ -460,6 +471,47 @@ const AdminPanel = () => {
             }
         } catch (err) {
             console.error('Failed to fetch pricing:', err);
+        }
+    };
+
+    const fetchStats = async () => {
+        setStatsLoading(true);
+        setStatsError('');
+        try {
+            const response = await fetch(endpoints.adminStats, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success && data.stats) {
+                setStats(data.stats);
+            } else {
+                setStatsError('Failed to fetch stats');
+            }
+        } catch (err) {
+            setStatsError('Failed to connect to server');
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
+    const handleUpdateStats = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(endpoints.adminStats, {
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(stats)
+            });
+            const data = await response.json();
+            if (data.success) {
+                setStats(data.stats);
+                showActionMessage('Stats updated successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to update stats', 'error');
+            }
+        } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
         }
     };
 
@@ -2190,6 +2242,86 @@ const AdminPanel = () => {
                                         whileTap={{ scale: 0.95 }}
                                     >
                                         Add Code For Sale
+                                    </motion.button>
+                                </form>
+                            </div>
+
+                            <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
+                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Update Statistics</h3>
+                                {statsError && <div className="error-message">{statsError}</div>}
+                                <form onSubmit={handleUpdateStats} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Visitors</label>
+                                        <input
+                                            type="number"
+                                            value={stats.visitors}
+                                            onChange={(e) => setStats({...stats, visitors: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Files Shared</label>
+                                        <input
+                                            type="number"
+                                            value={stats.files_shared}
+                                            onChange={(e) => setStats({...stats, files_shared: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Received</label>
+                                        <input
+                                            type="number"
+                                            value={stats.received}
+                                            onChange={(e) => setStats({...stats, received: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Premium Users</label>
+                                        <input
+                                            type="number"
+                                            value={stats.premium_users}
+                                            onChange={(e) => setStats({...stats, premium_users: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        className="Btn change-password"
+                                        style={{ height: '38px' }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Update Stats
                                     </motion.button>
                                 </form>
                             </div>

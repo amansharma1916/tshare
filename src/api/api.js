@@ -7,6 +7,7 @@ export const baseUrl = API_URL;
 
 export const endpoints = {
     wakeServer: `${API_URL}/wake-server`,
+    visit: `${API_URL}/visit`,
     save: `${API_URL}/save`,
     get: (id) => `${API_URL}/get/${id}`,
     uploadImage: `${API_URL}/image/upload`,
@@ -72,7 +73,8 @@ export const endpoints = {
     adminUpdatePricing: `${API_URL}/admin/pricing`,
     adminAddPremiumCodeForSale: `${API_URL}/admin/premium-codes/for-sale`,
     premiumCodesForSale: `${API_URL}/api/codes-for-sale`,
-    recentPurchases: `${API_URL}/api/recent-purchases`,
+    stats: `${API_URL}/api/stats`,
+    adminStats: `${API_URL}/admin/stats`,
     setCodePassword: `${API_URL}/api/set-code-password`,
     verifyCodePassword: `${API_URL}/api/verify-code-password`,
   };
