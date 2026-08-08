@@ -52,9 +52,26 @@ function App() {
     const wakeServer = async () => {
       try {
         await fetch(endpoints.wakeServer, {
-          method: 'GET',
+          method: 'POST',
           signal: controller.signal,
           keepalive: true,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      } catch (error) {
+        // Fail silently to avoid blocking UI if the server is cold.
+      }
+    }
+
+    const recordVisit = async () => {
+      try {
+        await fetch(endpoints.visit, {
+          method: 'POST',
+          signal: controller.signal,
+          keepalive: true,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -65,6 +82,7 @@ function App() {
     }
 
     wakeServer()
+    recordVisit()
 
     return () => controller.abort()
   }, [])

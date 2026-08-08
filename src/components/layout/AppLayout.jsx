@@ -13,6 +13,12 @@ const AppLayout = ({ children }) => {
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [recentPurchases, setRecentPurchases] = useState([])
+  const [stats, setStats] = useState({
+    visitors: 0,
+    files_shared: 0,
+    received: 0,
+    premium_users: 0,
+  })
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -30,10 +36,18 @@ const AppLayout = ({ children }) => {
 
   const fetchRecentPurchases = async () => {
     try {
-      const res = await fetch(endpoints.recentPurchases);
+      const res = await fetch(endpoints.stats);
       const data = await res.json();
       if (data.success) {
         setRecentPurchases(data.purchases || []);
+        if (data.stats) {
+          setStats({
+            visitors: data.stats.visitors || 0,
+            files_shared: data.stats.files_shared || 0,
+            received: data.stats.received || 0,
+            premium_users: data.stats.premium_users || 0,
+          });
+        }
       }
     } catch (err) {
       console.error('Error fetching recent purchases:', err);
@@ -189,7 +203,7 @@ const AppLayout = ({ children }) => {
             </div>
           )}
           <LayoutProvider>
-            {children}
+            {React.cloneElement(children, { stats })}
           </LayoutProvider>
         </div>
       </div>

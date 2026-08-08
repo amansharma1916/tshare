@@ -412,11 +412,8 @@ const ShareTypes = () => {
   )
 }
 
-const LandingPage = () => {
+const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 } }) => {
   const navigate = useNavigate()
-  const [stats] = useState({ texts: 320, images: 120, files: 40, users: 20, rooms: 3 })
-
-  const totalShares = stats.texts + stats.images + stats.files
 
   return (
     <div className="landing">
@@ -505,23 +502,30 @@ const LandingPage = () => {
           >
             <div className="landing__stat">
               <div className="landing__stat-value">
-                <Counter value={totalShares} />
+                <Counter value={stats.files_shared} />
               </div>
               <div className="landing__stat-label">Total Shares</div>
             </div>
             <div className="landing__stat-divider" />
             <div className="landing__stat">
               <div className="landing__stat-value">
-                <Counter value={stats.users} />
+                <Counter value={stats.received} />
               </div>
-              <div className="landing__stat-label">Active Users</div>
+              <div className="landing__stat-label">Total Received</div>
             </div>
             <div className="landing__stat-divider" />
             <div className="landing__stat">
               <div className="landing__stat-value">
-                <Counter value={stats.rooms} />
+                <Counter value={stats.visitors} />
               </div>
-              <div className="landing__stat-label">Public Rooms</div>
+              <div className="landing__stat-label">Visitors</div>
+            </div>
+            <div className="landing__stat-divider" />
+            <div className="landing__stat">
+              <div className="landing__stat-value">
+                <Counter value={stats.premium_users} />
+              </div>
+              <div className="landing__stat-label">Premium Users</div>
             </div>
           </motion.div>
         </div>
