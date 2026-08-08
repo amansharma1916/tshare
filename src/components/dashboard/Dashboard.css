@@ -4,6 +4,20 @@
   align-items: flex-start;
   justify-content: center;
   padding: 7rem 1.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(320px 240px at 15% 10%, rgba(124, 58, 237, 0.18), transparent 70%),
+    radial-gradient(280px 220px at 85% 25%, rgba(219, 39, 119, 0.14), transparent 70%),
+    radial-gradient(260px 200px at 50% 90%, rgba(56, 189, 248, 0.10), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .dashboard--summary {
@@ -11,6 +25,8 @@
 }
 
 .dashboard__container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 720px;
   display: flex;
@@ -22,7 +38,91 @@
   max-width: 960px;
 }
 
-/* Welcome Header */
+/* Vault Header */
+.dashboard__vault-header {
+  position: relative;
+  padding: 22px 24px;
+  background: linear-gradient(160deg, rgba(28, 28, 31, 0.92), rgba(20, 20, 23, 0.96));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+.dashboard__vault-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-2xl);
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.45), transparent 55%, rgba(219, 39, 119, 0.25));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.dashboard__vault-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: var(--bg-glass);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+
+.dashboard__vault-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--theme-success);
+  box-shadow: 0 0 8px var(--theme-success);
+  animation: landingPulse 2s infinite;
+}
+
+.dashboard__vault-header-title {
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.dashboard__vault-gradient {
+  background: linear-gradient(120deg, var(--theme-primary-light), var(--theme-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard__vault-header-subtitle {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-tertiary);
+  max-width: 480px;
+}
+
+/* Auth loader */
+.dashboard__auth-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 60vh;
+  color: var(--text-tertiary);
+}
+
+/* Welcome Header (keep for backwards compat if used elsewhere) */
 .dashboard__welcome {
   display: flex;
   align-items: center;

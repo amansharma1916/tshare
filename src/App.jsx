@@ -13,6 +13,7 @@ import TermsOfService from './components/pages/TermsOfService.jsx'
 import About from './components/pages/About.jsx'
 import Contact from './components/pages/Contact.jsx'
 import Login from './components/auth/Login.jsx'
+import AuthOptions from './components/auth/AuthOptions.jsx'
 import Register from './components/auth/Register.jsx'
 import Dashboard from './components/dashboard/Dashboard.jsx'
 import LandingPage from './components/landing/LandingPage.jsx'
@@ -95,6 +96,7 @@ function App() {
         <Route path='/' element={<LayoutRoute><LandingPage /></LayoutRoute>} />
 
         {/* Auth pages (inside layout) */}
+        <Route path='/auth' element={<LayoutRoute><AuthOptions /></LayoutRoute>} />
         <Route path='/login' element={<LayoutRoute><Login /></LayoutRoute>} />
         <Route path='/register' element={<LayoutRoute><Register /></LayoutRoute>} />
         <Route path='/admin/login' element={<LayoutRoute><AdminLogin /></LayoutRoute>} />

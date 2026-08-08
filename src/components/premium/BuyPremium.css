@@ -670,25 +670,67 @@
   z-index: 1;
   width: 100%;
   max-width: 480px;
-  background: rgba(20, 20, 20, 0.8);
+  background: linear-gradient(160deg, rgba(28, 28, 31, 0.92), rgba(20, 20, 23, 0.96));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: var(--radius-2xl);
   padding: 40px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.15);
+  overflow: hidden;
 }
 
-/* Header section */
+.premium-login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-2xl);
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.45), transparent 55%, rgba(245, 158, 11, 0.25));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Vault Header */
 .premium-login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
-.premium-login-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
+.premium-login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.08);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(254, 240, 138, 0.8);
+  margin-bottom: 14px;
+}
+
+.premium-login-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: landingPulse 2s infinite;
+}
+
+.premium-login-icon-wrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, #d4af37, #f59e0b);
   display: flex;
@@ -699,14 +741,18 @@
 }
 
 .premium-login-title {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.premium-login-title-gradient {
   background: linear-gradient(135deg, #d4af37, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -0.5px;
 }
 
 .premium-login-subtitle {

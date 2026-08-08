@@ -277,7 +277,7 @@ const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, prem
                 <Icon name="send" size={18} /> Share something
               </button>
               <button className="landing__btn landing__btn--ghost" onClick={() => navigate('/receive')} type="button">
-                <Icon name="scan" size={18} /> Open a code
+                <Icon name="scan" size={18} /> Receive from code
               </button>
               <Link className="landing__btn landing__btn--text" to="/public-room">
                 <Icon name="users" size={18} /> Join a room

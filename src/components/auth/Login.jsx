@@ -44,6 +44,10 @@ const Login = () => {
 
   return (
     <div className="login-page">
+      <div className="login-orb login-orb--1" />
+      <div className="login-orb login-orb--2" />
+      <div className="login-orb login-orb--3" />
+
       <motion.div
         className="login-card"
         initial={{ opacity: 0, y: 20 }}
@@ -51,10 +55,13 @@ const Login = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="login-header">
-          <div className="login-logo">
-            <img src="/s2.svg" alt="TShare" width="32" height="32" />
+          <div className="login-badge">
+            <span className="login-badge-dot" />
+            Account
           </div>
-          <h1 className="login-title">Welcome Back</h1>
+          <h1 className="login-title">
+            Welcome <span className="login-gradient">Back</span>
+          </h1>
           <p className="login-subtitle">Sign in to your TShare account</p>
         </div>
 

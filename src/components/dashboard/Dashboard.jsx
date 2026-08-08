@@ -256,23 +256,26 @@ const Dashboard = () => {
             <DashboardSkeleton />
           ) : (
             <div>
-              {/* Welcome Header */}
+              {/* Vault Header */}
               <motion.div
-                className="dashboard__welcome"
+                className="dashboard__vault-header"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="dashboard__welcome-avatar">
-                  {username.charAt(0).toUpperCase()}
+                <div className="dashboard__vault-header-badge">
+                  <span className="dashboard__vault-badge-dot" />
+                  Dashboard
                 </div>
-                <div className="dashboard__welcome-text">
-                  <h1 className="dashboard__welcome-title">Welcome back, {username}</h1>
-                  <p className="dashboard__welcome-subtitle">Here's your sharing activity summary</p>
-                </div>
+                <h1 className="dashboard__vault-header-title">
+                  Welcome back, <span className="dashboard__vault-gradient">{username}</span>
+                </h1>
+                <p className="dashboard__vault-header-subtitle">
+                  Here's your sharing activity summary
+                </p>
               </motion.div>
 
-              {/* Premium Dashboard Access Banner */}
+              {/* Premium Access Banner */}
               <motion.div
                 style={{
                   background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(245, 158, 11, 0.04) 100%)',

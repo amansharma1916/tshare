@@ -48,10 +48,13 @@ const Register = () => {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="login-header">
-          <div className="login-logo">
-            <img src="/s2.svg" alt="TShare" width="32" height="32" />
+          <div className="login-badge">
+            <span className="login-badge-dot" />
+            Account
           </div>
-          <h1 className="login-title">Create Account</h1>
+          <h1 className="login-title">
+            Create <span className="login-gradient">Account</span>
+          </h1>
           <p className="login-subtitle">Choose a username to get started</p>
         </div>
 
