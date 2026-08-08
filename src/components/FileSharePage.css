@@ -1,10 +1,47 @@
-/* Import shared styles from SharePage */
+/* Import shared styles from SharePage (steps, editor-bar, buttons, code-reveal, media tabs) */
 @import './SharePage.css';
 
-/* File-specific header icon */
+/* File accent for the header icon */
 .share__header-icon--file {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--theme-warning);
+  background: linear-gradient(140deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* ==================== Vault card (terminal bar + dropzone) ==================== */
+.image-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(28, 28, 31, 0.92), rgba(20, 20, 23, 0.96));
+  border: 1px solid var(--border-default);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.image-card:focus-within {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+.image-card .dropzone {
+  border: none;
+  border-top: 1px dashed var(--border-default);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.15);
+  min-height: 300px;
+}
+
+.image-card .dropzone--has-file {
+  min-height: 260px;
+}
+
+.image-card .dropzone:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.image-card .dropzone--active {
+  background: rgba(124, 58, 237, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.4);
 }
 
 /* File preview */
@@ -31,9 +68,9 @@
   width: 72px;
   height: 72px;
   border-radius: var(--radius-lg);
-  background: var(--bg-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--theme-warning);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-default);
+  color: #fbbf24;
 }
 
 .file-preview__details {
@@ -57,8 +94,12 @@
   font-family: var(--font-mono);
 }
 
-/* Responsive */
+/* ==================== Responsive ==================== */
 @media (max-width: 768px) {
+  .image-card .dropzone {
+    min-height: 240px;
+  }
+
   .dropzone__preview--file {
     min-height: 140px;
     padding: 16px;
@@ -76,6 +117,14 @@
 }
 
 @media (max-width: 480px) {
+  .image-card .dropzone {
+    min-height: 200px;
+  }
+
+  .image-card .dropzone--has-file {
+    min-height: 200px;
+  }
+
   .dropzone__preview--file {
     min-height: 120px;
     padding: 12px;

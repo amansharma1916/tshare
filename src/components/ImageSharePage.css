@@ -1,26 +1,27 @@
-/* Import shared styles from SharePage */
+/* Import shared styles from SharePage (steps, editor-bar, buttons, code-reveal, media tabs) */
 @import './SharePage.css';
 
-/* Image-specific header icon */
+/* Image accent for the header icon */
 .share__header-icon--image {
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--color-success);
+  background: linear-gradient(140deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
-/* Dropzone */
+/* ==================== Dropzone ==================== */
 .dropzone {
   width: 100%;
   min-height: 280px;
-  border: 2px dashed var(--border-default);
-  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
   position: relative;
   overflow: hidden;
   background: var(--bg-elevated);
+  border: 2px dashed var(--border-default);
+  border-radius: var(--radius-xl);
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 .dropzone:hover {
@@ -29,9 +30,9 @@
 }
 
 .dropzone--active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
-  box-shadow: 0 0 0 4px var(--color-primary-subtle);
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-subtle);
+  box-shadow: 0 0 0 4px var(--theme-primary-subtle);
 }
 
 .dropzone--has-file {
@@ -61,28 +62,28 @@
   width: 72px;
   height: 72px;
   border-radius: var(--radius-lg);
-  background: var(--bg-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-default);
+  color: #4ade80;
   transition: all var(--duration-normal) var(--ease-out);
 }
 
 .dropzone:hover .dropzone__icon {
-  color: var(--text-secondary);
-  border-color: var(--border-default);
+  color: #6ee7b7;
+  border-color: var(--border-strong);
 }
 
 .dropzone--active .dropzone__icon {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  color: #4ade80;
+  border-color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
 }
 
 .dropzone__text {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .dropzone__title {
@@ -144,15 +145,15 @@
   align-items: center;
   gap: var(--space-2);
   padding: 0.625rem 1rem;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-tertiary);
 }
 
 .dropzone__file-info svg {
   flex-shrink: 0;
-  color: var(--color-success);
+  color: #4ade80;
 }
 
 .dropzone__file-name {
@@ -175,7 +176,7 @@
 /* Error */
 .share__error {
   font-size: 0.875rem;
-  color: var(--color-error);
+  color: var(--theme-danger);
   text-align: center;
   padding: 0.625rem 1rem;
   background: rgba(239, 68, 68, 0.08);
@@ -183,10 +184,50 @@
   border-radius: var(--radius-md);
 }
 
-/* Responsive */
+/* ==================== Vault card (terminal bar + dropzone) ==================== */
+.image-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(28, 28, 31, 0.92), rgba(20, 20, 23, 0.96));
+  border: 1px solid var(--border-default);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  transition: border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.image-card:focus-within {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+.image-card .dropzone {
+  border: none;
+  border-top: 1px dashed var(--border-default);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.15);
+  min-height: 300px;
+}
+
+.image-card .dropzone--has-file {
+  min-height: 260px;
+}
+
+.image-card .dropzone:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.image-card .dropzone--active {
+  background: rgba(124, 58, 237, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.4);
+}
+
+/* ==================== Responsive ==================== */
 @media (max-width: 768px) {
-  .dropzone {
-    min-height: 220px;
+  .image-card .dropzone {
+    min-height: 240px;
+  }
+
+  .image-card .dropzone--has-file {
+    min-height: 240px;
   }
 
   .dropzone__placeholder {
@@ -196,11 +237,6 @@
   .dropzone__icon {
     width: 60px;
     height: 60px;
-  }
-
-  .dropzone__icon svg {
-    width: 28px;
-    height: 28px;
   }
 
   .dropzone__preview {
@@ -213,8 +249,12 @@
 }
 
 @media (max-width: 480px) {
-  .dropzone {
-    min-height: 180px;
+  .image-card .dropzone {
+    min-height: 200px;
+  }
+
+  .image-card .dropzone--has-file {
+    min-height: 200px;
   }
 
   .dropzone__placeholder {
@@ -225,11 +265,6 @@
   .dropzone__icon {
     width: 52px;
     height: 52px;
-  }
-
-  .dropzone__icon svg {
-    width: 24px;
-    height: 24px;
   }
 
   .dropzone__title {
@@ -248,3 +283,4 @@
     max-height: 220px;
   }
 }
+
