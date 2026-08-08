@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import './LandingPage.css'
 
-// Animated counter component
-const Counter = ({ value, duration = 2 }) => {
+/* ═══════════════════════════════════════════════════════
+   Animated Counter
+   ═══════════════════════════════════════════════════════ */
+const Counter = ({ value, duration = 2, format = (n) => n.toLocaleString() }) => {
   const [display, setDisplay] = useState(0)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-50px' })
@@ -22,659 +24,781 @@ const Counter = ({ value, duration = 2 }) => {
     requestAnimationFrame(step)
   }, [inView, value, duration])
 
-  return <span ref={ref}>{display.toLocaleString()}</span>
+  return <span ref={ref}>{format(display)}</span>
 }
 
-// Animated line graph component
-const UsageGraph = () => {
-  const [data, setData] = useState([20, 35, 28, 45, 38, 55, 48, 65, 58, 75, 68, 85, 78, 95, 88, 100])
-  const [currentIndex, setCurrentIndex] = useState(0)
+const formatCompact = (n) => {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M+`
+  if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K+`
+  return `${n}`
+}
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => {
-        const next = (prev + 1) % data.length
-        return next
-      })
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [data.length])
+/* ═══════════════════════════════════════════════════════
+   Line Icons (clean, professional)
+   ═══════════════════════════════════════════════════════ */
+const UploadIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+)
 
-  const maxVal = 100
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * 100
-    const y = 100 - (val / maxVal) * 100
-    return `${x},${y}`
-  }).join(' ')
+const DownloadIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+)
 
-  const currentPoint = data[currentIndex]
-  const currentX = (currentIndex / (data.length - 1)) * 100
-  const currentY = 100 - (currentPoint / maxVal) * 100
+const ArrowRightIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
+  </svg>
+)
+
+const CodeIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M9 9l-3 3 3 3" />
+    <path d="M15 9l3 3-3 3" />
+  </svg>
+)
+
+const SendIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 2L11 13" />
+    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+  </svg>
+)
+
+const TextIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+)
+
+const ImageIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+)
+
+const PdfIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+)
+
+const FileIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+  </svg>
+)
+
+const CheckIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+
+const ZapIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+)
+
+const LockIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+)
+
+const BanIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+  </svg>
+)
+
+const LayersIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+)
+
+const MenuIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+  </svg>
+)
+
+const CloseIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Navbar
+   ═══════════════════════════════════════════════════════ */
+const NAV_LINKS = [
+  { label: 'Home', type: 'section', id: 'top' },
+  { label: 'How it Works', type: 'section', id: 'how-it-works' },
+  { label: 'Features', type: 'section', id: 'features' },
+  { label: 'Premium', type: 'section', id: 'premium' },
+  { label: 'About', type: 'route', to: '/about' },
+]
+
+const LandingNavbar = () => {
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+
+  const handleSection = (id) => {
+    setOpen(false)
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
-    <div className="landing-graph">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="landing-graph__svg">
-        {/* Grid lines */}
-        {[25, 50, 75].map(y => (
-          <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" strokeDasharray="2,2" />
-        ))}
-        {/* Area fill */}
-        <motion.polygon
-          points={`0,100 ${points} 100,100`}
-          fill="url(#graphGradient)"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          transition={{ duration: 1 }}
-        />
-        {/* Line */}
-        <motion.polyline
-          points={points}
-          fill="none"
-          stroke="var(--theme-primary)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 2, ease: 'easeInOut' }}
-        />
-        {/* Animated dot */}
-        <motion.circle
-          cx={currentX}
-          cy={currentY}
-          r="2"
-          fill="var(--theme-primary-light)"
-          animate={{ cx: currentX, cy: currentY }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-        />
-        <defs>
-          <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--theme-primary)" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="var(--theme-primary)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="landing-graph__labels">
-        <span>Mon</span>
-        <span>Tue</span>
-        <span>Wed</span>
-        <span>Thu</span>
-        <span>Fri</span>
-        <span>Sat</span>
-        <span>Sun</span>
+    <nav className="landing-nav" aria-label="Primary">
+      <Link to="/" className="landing-nav__logo" aria-label="TShare home">
+        <img src="/s2.svg" alt="" width="22" height="22" />
+        <span>TShare</span>
+      </Link>
+
+      <div className="landing-nav__links">
+        {NAV_LINKS.map((link) =>
+          link.type === 'section' ? (
+            <button key={link.label} className="landing-nav__link" onClick={() => handleSection(link.id)}>
+              {link.label}
+            </button>
+          ) : (
+            <Link key={link.label} to={link.to} className="landing-nav__link">
+              {link.label}
+            </Link>
+          )
+        )}
       </div>
-    </div>
+
+      <div className="landing-nav__actions">
+        <button className="landing-nav__cta" onClick={() => navigate('/share')}>
+          Get Started
+          <ArrowRightIcon size={14} />
+        </button>
+        <button
+          className="landing-nav__toggle"
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          {open ? <CloseIcon /> : <MenuIcon />}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="landing-nav__mobile"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {NAV_LINKS.map((link) =>
+              link.type === 'section' ? (
+                <button key={link.label} className="landing-nav__mobile-link" onClick={() => handleSection(link.id)}>
+                  {link.label}
+                </button>
+              ) : (
+                <Link key={link.label} to={link.to} className="landing-nav__mobile-link" onClick={() => setOpen(false)}>
+                  {link.label}
+                </Link>
+              )
+            )}
+            <button
+              className="landing-nav__mobile-cta"
+              onClick={() => {
+                setOpen(false)
+                navigate('/share')
+              }}
+            >
+              Get Started
+              <ArrowRightIcon size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   )
 }
 
-// Share flow animation
-const ShareFlow = () => {
-  const [step, setStep] = useState(0)
-  const steps = [
-    { icon: 'text', label: 'Type Text' },
-    { icon: 'code', label: 'Get 4-Digit Code' },
-    { icon: 'send', label: 'Share Code' },
-  ]
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStep(prev => (prev + 1) % steps.length)
-    }, 2500)
-    return () => clearInterval(interval)
-  }, [steps.length])
+/* ═══════════════════════════════════════════════════════
+   Hero — Send / Receive cards
+   ═══════════════════════════════════════════════════════ */
+const SendReceiveCard = ({ type, delay = 0 }) => {
+  const navigate = useNavigate()
+  const isSend = type === 'send'
+  const title = isSend ? 'Send File' : 'Receive File'
+  const desc = isSend ? 'Generate a unique code and start sharing instantly.' : 'Enter a sharing code to view and download content.'
+  const label = isSend ? 'Start Sharing' : 'Receive Content'
+  const route = isSend ? '/share' : '/receive'
 
   return (
-    <div className="landing-flow landing-flow--share">
-      <div className="landing-flow__header">
-        <span className="landing-flow__badge">Share Flow</span>
-        <h3>Share in 3 Simple Steps</h3>
+    <motion.div
+      className={`landing-card landing-card--${type}`}
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -8 }}
+    >
+      <div className="landing-card__icon">
+        {isSend ? <UploadIcon size={28} /> : <DownloadIcon size={28} />}
       </div>
-      <div className="landing-flow__steps">
-        {steps.map((s, i) => (
-          <React.Fragment key={i}>
-            <motion.div
-              className={`landing-flow__step ${step === i ? 'landing-flow__step--active' : ''} ${step > i ? 'landing-flow__step--done' : ''}`}
-              animate={{
-                scale: step === i ? 1.1 : 1,
-                opacity: step === i ? 1 : step > i ? 0.7 : 0.4,
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="landing-flow__step-icon">
-                {s.icon === 'text' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                  </svg>
-                )}
-                {s.icon === 'code' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 9l-3 3 3 3" />
-                    <path d="M15 9l3 3-3 3" />
-                  </svg>
-                )}
-                {s.icon === 'send' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 2L11 13" />
-                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                  </svg>
-                )}
-              </div>
-              <span className="landing-flow__step-label">{s.label}</span>
-            </motion.div>
-            {i < steps.length - 1 && (
-              <motion.div
-                className="landing-flow__arrow"
-                animate={{ opacity: step >= i ? 1 : 0.3 }}
-                transition={{ duration: 0.3 }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="M12 5l7 7-7 7" />
-                </svg>
-              </motion.div>
-            )}
-          </React.Fragment>
+      <h3 className="landing-card__title">{title}</h3>
+      <p className="landing-card__desc">{desc}</p>
+      <button className="landing-card__btn" onClick={() => navigate(route)}>
+        {label}
+        <ArrowRightIcon size={16} />
+      </button>
+    </motion.div>
+  )
+}
+
+const trustItems = [
+  { icon: ZapIcon, label: 'Instant', desc: 'Share content in seconds.' },
+  { icon: LockIcon, label: 'Anonymous', desc: 'No account or identity required.' },
+  { icon: BanIcon, label: 'No Login', desc: 'Start sharing immediately.' },
+  { icon: LayersIcon, label: 'Multiple Formats', desc: 'Text, images, PDFs and files.' },
+]
+
+const TrustFeatures = () => (
+  <div className="landing-trust">
+    {trustItems.map((item, i) => {
+      const Icon = item.icon
+      return (
+        <motion.div
+          className="landing-trust__item"
+          key={item.label}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.55 + i * 0.08 }}
+        >
+          <span className="landing-trust__icon">
+            <Icon size={15} />
+          </span>
+          <div className="landing-trust__text">
+            <strong>{item.label}</strong>
+            <span>{item.desc}</span>
+          </div>
+        </motion.div>
+      )
+    })}
+  </div>
+)
+
+const HeroSection = () => (
+  <section className="landing-hero" id="top">
+    <motion.div
+      className="landing-hero__badge"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <span className="landing-hero__badge-dot" />
+      Free · Anonymous · No login required
+    </motion.div>
+
+    <motion.h1
+      className="landing-hero__title"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.1 }}
+    >
+      Share anything.
+      <span className="landing-hero__accent">Without an account.</span>
+    </motion.h1>
+
+    <motion.p
+      className="landing-hero__subtitle"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+    >
+      Send text, images, PDFs and files using a simple sharing code. No signup. No email. No credentials.
+    </motion.p>
+
+    <div className="landing-cards">
+      <SendReceiveCard type="send" delay={0.3} />
+      <SendReceiveCard type="receive" delay={0.42} />
+    </div>
+
+    <TrustFeatures />
+  </section>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Stats
+   ═══════════════════════════════════════════════════════ */
+const Stats = ({ stats }) => {
+  const items = [
+    { label: 'Total Shares', value: stats.files_shared },
+    { label: 'Total Received', value: stats.received },
+    { label: 'Visitors', value: stats.visitors },
+    { label: 'Premium Users', value: stats.premium_users },
+  ]
+
+  return (
+    <section className="landing-stats" aria-label="Platform statistics">
+      <div className="landing-stats__grid">
+        {items.map((s, i) => (
+          <motion.div
+            className="landing-stat"
+            key={s.label}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: i * 0.08 }}
+          >
+            <div className="landing-stat__value">
+              <Counter value={s.value} format={formatCompact} />
+            </div>
+            <div className="landing-stat__label">{s.label}</div>
+          </motion.div>
         ))}
       </div>
-      <div className="landing-flow__code">
-        <motion.div
-          className="landing-flow__code-digits"
-          animate={{ opacity: step === 1 ? 1 : 0.3 }}
-          transition={{ duration: 0.3 }}
-        >
-          {['4', '8', '2', '6'].map((d, i) => (
+    </section>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Shared section header
+   ═══════════════════════════════════════════════════════ */
+const SectionHeader = ({ eyebrow, title, subtitle }) => (
+  <motion.div
+    className="landing-section__header"
+    initial={{ opacity: 0, y: 24 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-50px' }}
+    transition={{ duration: 0.5 }}
+  >
+    {eyebrow && <span className="landing-section__eyebrow">{eyebrow}</span>}
+    <h2 className="landing-section__title">{title}</h2>
+    {subtitle && <p className="landing-section__subtitle">{subtitle}</p>}
+  </motion.div>
+)
+
+/* ═══════════════════════════════════════════════════════
+   How It Works
+   ═══════════════════════════════════════════════════════ */
+const steps = [
+  { num: '01', title: 'Upload', desc: 'Add your text, image, PDF or file.', icon: 'upload' },
+  { num: '02', title: 'Get a Code', desc: 'TShare generates a unique sharing code.', icon: 'code' },
+  { num: '03', title: 'Share', desc: 'Send the code to anyone.', icon: 'send' },
+]
+
+const HowItWorks = () => (
+  <section className="landing-section landing-section--how" id="how-it-works">
+    <SectionHeader eyebrow="How it works" title="One code. That's it." subtitle="Share anything in three simple steps." />
+    <div className="landing-steps">
+      {steps.map((s, i) => (
+        <React.Fragment key={s.num}>
+          <motion.div
+            className="landing-step"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, delay: i * 0.12 }}
+          >
+            <div className="landing-step__num">{s.num}</div>
+            <div className="landing-step__icon">
+              {s.icon === 'upload' && <UploadIcon size={22} />}
+              {s.icon === 'code' && <CodeIcon size={22} />}
+              {s.icon === 'send' && <SendIcon size={22} />}
+            </div>
+            <h3>{s.title}</h3>
+            <p>{s.desc}</p>
+          </motion.div>
+          {i < steps.length - 1 && (
+            <motion.div
+              className="landing-step__arrow"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              aria-hidden="true"
+            >
+              <ArrowRightIcon size={18} />
+            </motion.div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  </section>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Code Showcase
+   ═══════════════════════════════════════════════════════ */
+const CodeShowcase = () => {
+  const digits = ['4', '8', '2', '6']
+
+  return (
+    <section className="landing-section landing-section--code">
+      <SectionHeader
+        eyebrow="The code"
+        title="Your content gets a code."
+        subtitle="Share the code. The recipient enters it. Your content appears."
+      />
+      <div className="landing-code">
+        <div className="landing-code__digits">
+          {digits.map((d, i) => (
             <motion.span
               key={i}
-              className="landing-flow__code-digit"
-              animate={{ y: step === 1 ? [0, -4, 0] : 0 }}
+              className="landing-code__digit"
+              style={{ animationDelay: `${i * 0.35}s` }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
             >
               {d}
             </motion.span>
           ))}
-        </motion.div>
-      </div>
-    </div>
-  )
-}
-
-// Receive flow animation
-const ReceiveFlow = () => {
-  const [step, setStep] = useState(0)
-  const steps = [
-    { icon: 'code', label: 'Enter Code' },
-    { icon: 'download', label: 'Fetch Content' },
-    { icon: 'check', label: 'View & Download' },
-  ]
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStep(prev => (prev + 1) % steps.length)
-    }, 2500)
-    return () => clearInterval(interval)
-  }, [steps.length])
-
-  return (
-    <div className="landing-flow landing-flow--receive">
-      <div className="landing-flow__header">
-        <span className="landing-flow__badge landing-flow__badge--green">Receive Flow</span>
-        <h3>Receive in 3 Simple Steps</h3>
-      </div>
-      <div className="landing-flow__steps">
-        {steps.map((s, i) => (
-          <React.Fragment key={i}>
-            <motion.div
-              className={`landing-flow__step ${step === i ? 'landing-flow__step--active' : ''} ${step > i ? 'landing-flow__step--done' : ''}`}
-              animate={{
-                scale: step === i ? 1.1 : 1,
-                opacity: step === i ? 1 : step > i ? 0.7 : 0.4,
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="landing-flow__step-icon landing-flow__step-icon--green">
-                {s.icon === 'code' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 9l-3 3 3 3" />
-                    <path d="M15 9l3 3-3 3" />
-                  </svg>
-                )}
-                {s.icon === 'download' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                )}
-                {s.icon === 'check' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </div>
-              <span className="landing-flow__step-label">{s.label}</span>
-            </motion.div>
-            {i < steps.length - 1 && (
-              <motion.div
-                className="landing-flow__arrow"
-                animate={{ opacity: step >= i ? 1 : 0.3 }}
-                transition={{ duration: 0.3 }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="M12 5l7 7-7 7" />
-                </svg>
-              </motion.div>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="landing-flow__receive-result">
-        <motion.div
-          className="landing-flow__receive-box"
-          animate={{ opacity: step === 2 ? 1 : 0.3 }}
-          transition={{ duration: 0.3 }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          <span>Content received successfully!</span>
-        </motion.div>
-      </div>
-    </div>
-  )
-}
-
-// Public room flow
-const PublicRoomFlow = () => {
-  const [activeUser, setActiveUser] = useState(0)
-  const users = [
-    { name: 'Alice', color: 'var(--theme-primary)' },
-    { name: 'Bob', color: 'var(--theme-success)' },
-    { name: 'Charlie', color: 'var(--theme-warning)' },
-    { name: 'Diana', color: 'var(--theme-info)' },
-  ]
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveUser(prev => (prev + 1) % users.length)
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [users.length])
-
-  return (
-    <div className="landing-flow landing-flow--room">
-      <div className="landing-flow__header">
-        <span className="landing-flow__badge landing-flow__badge--blue">Public Rooms</span>
-        <h3>Join Community Rooms</h3>
-      </div>
-      <div className="landing-flow__room">
-        <div className="landing-flow__room-users">
-          {users.map((u, i) => (
-            <motion.div
-              key={i}
-              className="landing-flow__room-user"
-              animate={{
-                scale: activeUser === i ? 1.15 : 1,
-                opacity: activeUser === i ? 1 : 0.5,
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="landing-flow__room-avatar" style={{ background: u.color }}>
-                {u.name.charAt(0)}
-              </div>
-              <span>{u.name}</span>
-            </motion.div>
-          ))}
         </div>
         <motion.div
-          className="landing-flow__room-message"
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          className="landing-code__flow"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5, delay: 0.45 }}
         >
-          <motion.div
-            key={activeUser}
-            className="landing-flow__room-bubble"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-          >
-            <span style={{ color: users[activeUser].color }}>{users[activeUser].name}:</span> Hey everyone! 👋
-          </motion.div>
+          <span className="landing-code__flow-step">CONTENT</span>
+          <span className="landing-code__flow-arrow">
+            <ArrowRightIcon size={16} />
+          </span>
+          <span className="landing-code__flow-step landing-code__flow-step--accent">4 8 2 6</span>
+          <span className="landing-code__flow-arrow">
+            <ArrowRightIcon size={16} />
+          </span>
+          <span className="landing-code__flow-step">RECIPIENT</span>
         </motion.div>
       </div>
-    </div>
+    </section>
   )
 }
 
-// What can be shared
-const ShareTypes = () => {
-  const types = [
-    {
-      icon: 'text',
-      title: 'Text',
-      desc: 'Share notes, messages, code snippets, and any text instantly.',
-      color: 'var(--theme-primary)',
-    },
-    {
-      icon: 'image',
-      title: 'Images',
-      desc: 'Share photos, screenshots, and graphics with a simple code.',
-      color: 'var(--theme-success)',
-    },
-    {
-      icon: 'file',
-      title: 'Files',
-      desc: 'Share documents, PDFs, and any file type securely.',
-      color: 'var(--theme-warning)',
-    },
-  ]
+/* ═══════════════════════════════════════════════════════
+   What Can You Share
+   ═══════════════════════════════════════════════════════ */
+const shareTypes = [
+  { icon: 'text', title: 'Text', desc: 'Notes, messages, code snippets and more.' },
+  { icon: 'image', title: 'Images', desc: 'Photos, screenshots and graphics.' },
+  { icon: 'pdf', title: 'PDF', desc: 'Documents, reports and presentations.' },
+  { icon: 'file', title: 'Files', desc: 'ZIPs, projects and other files.' },
+]
 
-  return (
+const ShareTypes = () => (
+  <section className="landing-section landing-section--types" id="features">
+    <SectionHeader
+      eyebrow="What can you share"
+      title="Share more than files."
+      subtitle="Text, images, PDFs and any file — all shareable with a simple code."
+    />
     <div className="landing-types">
-      {types.map((t, i) => (
+      {shareTypes.map((t, i) => (
         <motion.div
-          key={i}
-          className="landing-types__card"
-          initial={{ opacity: 0, y: 30 }}
+          className="landing-type-card"
+          key={t.title}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, delay: i * 0.15 }}
-          whileHover={{ y: -5 }}
+          transition={{ duration: 0.5, delay: i * 0.08 }}
         >
-          <div className="landing-types__icon" style={{ background: `${t.color}20`, color: t.color }}>
-            {t.icon === 'text' && (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
-            )}
-            {t.icon === 'image' && (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            )}
-            {t.icon === 'file' && (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-            )}
+          <div className="landing-type-card__icon">
+            {t.icon === 'text' && <TextIcon />}
+            {t.icon === 'image' && <ImageIcon />}
+            {t.icon === 'pdf' && <PdfIcon />}
+            {t.icon === 'file' && <FileIcon />}
           </div>
           <h3>{t.title}</h3>
           <p>{t.desc}</p>
         </motion.div>
       ))}
     </div>
-  )
-}
+  </section>
+)
 
-const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 } }) => {
+/* ═══════════════════════════════════════════════════════
+   Store Your Data (visual mockup)
+   ═══════════════════════════════════════════════════════ */
+const vaultItems = [
+  { icon: 'pdf', name: 'Resume.pdf', meta: '2.4 MB' },
+  { icon: 'image', name: 'Project-Screenshot.png', meta: '1.2 MB' },
+  { icon: 'text', name: 'Important Notes', meta: 'Text' },
+  { icon: 'file', name: 'Project.zip', meta: '18 MB' },
+]
+
+const StorageShowcase = () => (
+  <section className="landing-section landing-section--storage">
+    <SectionHeader
+      eyebrow="Storage"
+      title="Keep what matters."
+      subtitle="Store your important content and access it whenever you need it."
+    />
+    <motion.div
+      className="landing-vault"
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.6 }}
+    >
+      <div className="landing-vault__header">
+        <span>Your Stored Content</span>
+        <span className="landing-vault__badge">Stored</span>
+      </div>
+      <div className="landing-vault__rows">
+        {vaultItems.map((item, i) => (
+          <motion.div
+            className="landing-vault__row"
+            key={item.name}
+            initial={{ opacity: 0, x: -14 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.4, delay: i * 0.08 }}
+          >
+            <div className="landing-vault__row-icon">
+              {item.icon === 'pdf' && <PdfIcon size={18} />}
+              {item.icon === 'image' && <ImageIcon size={18} />}
+              {item.icon === 'text' && <TextIcon size={18} />}
+              {item.icon === 'file' && <FileIcon size={18} />}
+            </div>
+            <div className="landing-vault__row-info">
+              <strong>{item.name}</strong>
+              <span>{item.meta}</span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      <div className="landing-vault__footer">
+        <span>Total: 21.6 MB</span>
+        <span className="landing-vault__footer-dot" />
+        <span>Always accessible</span>
+      </div>
+    </motion.div>
+  </section>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Custom / Memorable Codes
+   ═══════════════════════════════════════════════════════ */
+const exampleCodes = ['1337', '2026', '8080', '4826']
+
+const CustomCodeSection = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="landing">
-      {/* Hero Section */}
-      <section className="landing__hero">
-        <div className="landing__hero-bg">
-          <motion.div
-            className="landing__orb landing__orb--1"
-            animate={{ y: [0, -30, 0], x: [0, 20, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="landing__orb landing__orb--2"
-            animate={{ y: [0, 30, 0], x: [0, -20, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="landing__orb landing__orb--3"
-            animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          />
+    <section className="landing-section landing-section--custom">
+      <SectionHeader
+        eyebrow="Memorable codes"
+        title="Want a code that's yours?"
+        subtitle="Choose a memorable code and make sharing easier."
+      />
+      <motion.div
+        className="landing-custom"
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="landing-custom__code" aria-hidden="true">
+          {['2', '0', '2', '6'].map((d, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.4, delay: 0.1 + i * 0.08 }}
+            >
+              {d}
+            </motion.span>
+          ))}
         </div>
-
-        <div className="landing__hero-content">
-          <motion.div
-            className="landing__hero-badge"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="landing__hero-badge-dot" />
-            Free · No Login Required
-          </motion.div>
-
-          <motion.h1
-            className="landing__hero-title"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Share Anything.
-            <br />
-            <span className="landing__hero-gradient">In Seconds.</span>
-          </motion.h1>
-
-          <motion.p
-            className="landing__hero-subtitle"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            No sign-up. No accounts. Just a 4-digit code.
-            <br />
-            Share text, images, and files instantly with anyone.
-          </motion.p>
-
-          <motion.div
-            className="landing__hero-actions"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <button className="btn btn-primary landing__hero-btn" onClick={() => navigate('/share')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 2L11 13" />
-                <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-              Start Sharing
-            </button>
-            <button className="btn btn-secondary landing__hero-btn" onClick={() => navigate('/receive')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <path d="M7 10l5 5 5-5" />
-                <path d="M12 3v12" />
-              </svg>
-              Receive Content
-            </button>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            className="landing__hero-stats"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <div className="landing__stat">
-              <div className="landing__stat-value">
-                <Counter value={stats.files_shared} />
-              </div>
-              <div className="landing__stat-label">Total Shares</div>
-            </div>
-            <div className="landing__stat-divider" />
-            <div className="landing__stat">
-              <div className="landing__stat-value">
-                <Counter value={stats.received} />
-              </div>
-              <div className="landing__stat-label">Total Received</div>
-            </div>
-            <div className="landing__stat-divider" />
-            <div className="landing__stat">
-              <div className="landing__stat-value">
-                <Counter value={stats.visitors} />
-              </div>
-              <div className="landing__stat-label">Visitors</div>
-            </div>
-            <div className="landing__stat-divider" />
-            <div className="landing__stat">
-              <div className="landing__stat-value">
-                <Counter value={stats.premium_users} />
-              </div>
-              <div className="landing__stat-label">Premium Users</div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Usage Graph */}
-        <motion.div
-          className="landing__graph-card"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-        >
-          <div className="landing__graph-header">
-            <div>
-              <h3>Platform Usage</h3>
-              <p>Daily active shares & receives</p>
-            </div>
-            <span className="landing__graph-live">
-              <span className="landing__graph-live-dot" />
-              Live
+        <div className="landing-custom__examples">
+          <span className="landing-custom__examples-label">Examples:</span>
+          {exampleCodes.map((code) => (
+            <span className="landing-custom__chip" key={code}>
+              {code}
             </span>
-          </div>
-          <UsageGraph />
-        </motion.div>
-      </section>
-
-      {/* Share Flow Section */}
-      <section className="landing__section">
-        <motion.div
-          className="landing__section-header"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>How Sharing Works</h2>
-          <p>Simple, fast, and secure - share anything with a 4-digit code</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <ShareFlow />
-        </motion.div>
-      </section>
-
-      {/* What Can Be Shared */}
-      <section className="landing__section">
-        <motion.div
-          className="landing__section-header"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>What Can You Share?</h2>
-          <p>Everything you need for instant communication</p>
-        </motion.div>
-        <ShareTypes />
-      </section>
-
-      {/* Receive Flow Section */}
-      <section className="landing__section">
-        <motion.div
-          className="landing__section-header"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>Receiving Made Easy</h2>
-          <p>Enter a code and get your content instantly</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <ReceiveFlow />
-        </motion.div>
-      </section>
-
-      {/* Public Rooms Section */}
-      <section className="landing__section">
-        <motion.div
-          className="landing__section-header"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>Join Public Rooms</h2>
-          <p>Connect with the community in real-time</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <PublicRoomFlow />
-        </motion.div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="landing__cta">
-        <motion.div
-          className="landing__cta-card"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>Ready to Start Sharing?</h2>
-          <p>It's free, it's fast, and no login is required</p>
-          <div className="landing__cta-actions">
-            <button className="btn btn-primary landing__cta-btn" onClick={() => navigate('/share')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 2L11 13" />
-                <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-              Share Now
-            </button>
-            <button className="btn btn-secondary landing__cta-btn" onClick={() => navigate('/public-room')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                <path d="M16 3.13a4 4 0 010 7.75" />
-              </svg>
-              Join Public Room
-            </button>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Footer */}
-      <footer className="landing__footer">
-        <div className="landing__footer-links">
-          <Link to="/about">About</Link>
-          <Link to="/contact">Contact</Link>
-          <Link to="/privacy-policy">Privacy</Link>
-          <Link to="/terms-of-service">Terms</Link>
-          <Link to="/admin/panel">Admin</Link>
+          ))}
         </div>
-        <p>© {new Date().getFullYear()} TShare. All rights reserved.</p>
-      </footer>
+        {/* TODO: Replace with dedicated /choose-code route if one is created later.
+            `/buy` currently handles premium/custom code purchase. */}
+        <button className="btn btn-primary landing-custom__cta" onClick={() => navigate('/buy')}>
+          Get Your Code
+          <ArrowRightIcon size={16} />
+        </button>
+      </motion.div>
+    </section>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Premium Membership
+   ═══════════════════════════════════════════════════════ */
+const premiumFeatures = [
+  'More storage',
+  'Longer content availability',
+  'Premium sharing features',
+  'Custom / memorable codes',
+  'Better content management',
+]
+
+const PremiumSection = () => {
+  const navigate = useNavigate()
+
+  return (
+    <section className="landing-section landing-section--premium" id="premium">
+      <motion.div
+        className="landing-premium"
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.6 }}
+      >
+        <span className="landing-premium__badge">Premium</span>
+        <h2>Upgrade your sharing.</h2>
+        <p className="landing-premium__sub">More storage. More control. More possibilities.</p>
+        <ul className="landing-premium__list">
+          {premiumFeatures.map((feature) => (
+            <li key={feature}>
+              <span className="landing-premium__check">
+                <CheckIcon size={13} />
+              </span>
+              {feature}
+            </li>
+          ))}
+        </ul>
+        <button className="btn btn-primary landing-premium__cta" onClick={() => navigate('/buy')}>
+          Go Premium
+          <ArrowRightIcon size={16} />
+        </button>
+      </motion.div>
+    </section>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Anonymous Sharing — strong typographic moment
+   ═══════════════════════════════════════════════════════ */
+const AnonymousSection = () => (
+  <section className="landing-anon" aria-label="Anonymous sharing">
+    <motion.div
+      className="landing-anon__inner"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.7 }}
+    >
+      <h2>
+        <span>No login.</span>
+        <span>No email.</span>
+        <span>No profile.</span>
+        <span className="landing-anon__accent">Just a code.</span>
+      </h2>
+      <p>TShare lets you share content without creating an account or revealing unnecessary personal information.</p>
+    </motion.div>
+  </section>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Final CTA
+   ═══════════════════════════════════════════════════════ */
+const FinalCTA = () => {
+  const navigate = useNavigate()
+
+  return (
+    <section className="landing-section landing-section--final">
+      <motion.div
+        className="landing-final"
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2>
+          Your file is <span>one code</span> away.
+        </h2>
+        <p>Upload something. Get your code. Share it anywhere.</p>
+        <div className="landing-final__actions">
+          <button className="btn btn-primary" onClick={() => navigate('/share')}>
+            Start Sharing
+          </button>
+          <button className="btn btn-secondary" onClick={() => navigate('/receive')}>
+            Receive Content
+          </button>
+        </div>
+        <span className="landing-final__note">No account required.</span>
+      </motion.div>
+    </section>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════════ */
+const Footer = () => (
+  <footer className="landing-footer">
+    <div className="landing-footer__brand">
+      <img src="/s2.svg" alt="" width="18" height="18" />
+      <span>TShare</span>
+    </div>
+    <div className="landing-footer__links">
+      <Link to="/about">About</Link>
+      <Link to="/contact">Contact</Link>
+      <Link to="/privacy-policy">Privacy</Link>
+      <Link to="/terms-of-service">Terms</Link>
+      <Link to="/public-room">Public Room</Link>
+      <Link to="/admin/panel">Admin</Link>
+    </div>
+    <p>© {new Date().getFullYear()} TShare. All rights reserved.</p>
+  </footer>
+)
+
+/* ═══════════════════════════════════════════════════════
+   Landing Page
+   ═══════════════════════════════════════════════════════ */
+const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 } }) => {
+  return (
+    <div className="landing">
+      <div className="landing__glow" aria-hidden="true" />
+      <LandingNavbar />
+      <main className="landing__main">
+        <HeroSection />
+        <Stats stats={stats} />
+        <HowItWorks />
+        <CodeShowcase />
+        <ShareTypes />
+        <StorageShowcase />
+        <CustomCodeSection />
+        <PremiumSection />
+        <AnonymousSection />
+        <FinalCTA />
+      </main>
+      <Footer />
     </div>
   )
 }
