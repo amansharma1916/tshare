@@ -73,17 +73,16 @@ const PremiumLogin = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Logo/Icon Section */}
+        {/* Vault Header */}
         <div className="premium-login-header">
           <motion.div 
-            className="premium-login-icon"
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="premium-login-badge"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
+            <span className="premium-login-badge-dot" />
+            Premium
           </motion.div>
           <motion.h1 
             className="premium-login-title"
@@ -91,7 +90,7 @@ const PremiumLogin = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            Premium Login
+            <span className="premium-login-title-gradient">Premium</span> Access
           </motion.h1>
           <motion.p 
             className="premium-login-subtitle"
@@ -99,9 +98,21 @@ const PremiumLogin = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            Access your premium dashboard
+            Manage your premium codes and features
           </motion.p>
         </div>
+
+        {/* Logo/Icon */}
+        <motion.div 
+          className="premium-login-icon-wrap"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, type: 'spring', stiffness: 200 }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </motion.div>
 
         {/* Login Form */}
         <motion.form 
