@@ -192,8 +192,44 @@ const SharePage = () => {
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
               </svg>
             </div>
-            <h1 className="share__title">Share Text</h1>
-            <p className="share__desc">Paste or type the text you want to share instantly with a 4-digit code.</p>
+            <span className="share__badge">
+              <span className="share__badge-dot" />
+              Text · Instant &amp; free · No account
+            </span>
+            <h1 className="share__title">
+              Drop text behind a <span className="share__title-grad">4-digit key</span>
+            </h1>
+            <p className="share__desc">
+              Paste or type anything — a note, a link, a password. We lock it behind a short
+              code you can share anywhere, and anyone can open it on any device, anytime.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="share__steps"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="share__step">
+              <span className="share__step-num">1</span>
+              <span className="share__step-txt"><strong>Type</strong> your text</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            <div className="share__step">
+              <span className="share__step-num">2</span>
+              <span className="share__step-txt"><strong>Lock</strong> it behind a code</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            <div className="share__step">
+              <span className="share__step-num">3</span>
+              <span className="share__step-txt"><strong>Share</strong> the 4-digit key</span>
+            </div>
+            <span className="share__step-line" aria-hidden="true" />
+            {/* <div className="share__step">
+              <span className="share__step-num">4</span>
+              <span className="share__step-txt"><strong>Unlock</strong> anytime, any device</span>
+            </div> */}
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -265,6 +301,20 @@ const SharePage = () => {
                 <p className="code-reveal__hint">
                   {copied ? 'Copied to clipboard!' : 'Click the code to copy it'}
                 </p>
+                <div className="code-reveal__meta">
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    Stored &amp; reusable
+                  </span>
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></svg>
+                    Open on any device
+                  </span>
+                  <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                    No account needed
+                  </span>
+                </div>
                 <button className="code-reveal__share-another" onClick={handleShareAnother}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 5v14" />
@@ -284,6 +334,11 @@ const SharePage = () => {
               >
                 <div className="editor-wrapper">
                   <div className="editor-textarea-wrapper">
+                    <div className="editor-bar">
+                      <span className="editor-bar__dots" aria-hidden="true"><i /><i /><i /></span>
+                      <span className="editor-bar__label">tshare / text</span>
+                      <span className="editor-bar__live"><span className="editor-bar__pulse" /> stored &amp; reusable</span>
+                    </div>
                     <textarea
                       ref={textareaRef}
                       className="editor-textarea"

@@ -527,20 +527,12 @@ const RecievePage = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              style={{
-                background: 'linear-gradient(90deg, #d4af37, #f59e0b)',
-                color: '#000',
-                padding: '10px 16px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                marginBottom: '20px',
-                fontSize: '14px',
-                boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
-              }}
+              className="receive__premium-badge"
             >
-              👑 Content shared by Premium User: <strong>{receivedContent.displayName || 'Premium User'}</strong>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2Z" />
+              </svg>
+              Content shared by Premium User: <strong>{receivedContent.displayName || 'Premium User'}</strong>
             </motion.div>
           )}
 
@@ -549,19 +541,16 @@ const RecievePage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            style={passwordRequired ? { 
-              color: '#fff',
-              background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '1px solid rgba(212, 175, 55, 0.3)'
-            } : undefined}
           >
             <div className={getTypeIconClass()}>
               {getTypeIcon()}
             </div>
-            <h1 className="share__title" style={passwordRequired ? { color: '#fff' } : undefined}>{getTitle()}</h1>
-            <p className="share__desc" style={passwordRequired ? { color: '#fff' } : undefined}>{getDesc()}</p>
+            <span className="share__badge">
+              <span className="share__badge-dot" />
+              Receive · Instant & free · No account
+            </span>
+            <h1 className="share__title">{getTitle()}</h1>
+            <p className="share__desc">{getDesc()}</p>
           </motion.div>
 
           {/* Password Protection Overlay - Blurred Content */}
@@ -569,53 +558,21 @@ const RecievePage = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{
-                position: 'relative',
-                marginBottom: '20px',
-                padding: '30px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%)',
-                border: '2px solid #d4af37',
-                boxShadow: '0 20px 60px rgba(212, 175, 55, 0.3)',
-                textAlign: 'center'
-              }}
+              className="receive__lock-overlay"
             >
               {/* Lock Icon */}
-              <div style={{
-                width: '80px',
-                height: '80px',
-                margin: '0 auto 20px auto',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(212, 175, 55, 0.5)'
-              }}>
+              <div className="receive__lock-icon">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0110 0v4" />
                 </svg>
               </div>
 
-              <h2 style={{
-                fontSize: '28px',
-                fontWeight: 700,
-                margin: '0 0 10px 0',
-                background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
+              <h2 className="receive__lock-title">
                 Premium Protected Content
               </h2>
               
-              <p style={{
-                color: '#b0b0b0',
-                fontSize: '14px',
-                margin: '0 0 25px 0',
-                lineHeight: '1.6'
-              }}>
+              <p className="receive__lock-desc">
                 This content is password protected. Enter the password to unlock premium content.
               </p>
 
@@ -623,15 +580,7 @@ const RecievePage = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    marginBottom: '20px',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: '#ef4444',
-                    fontSize: '13px'
-                  }}
+                  className="receive__lock-error"
                 >
                   {passwordError}
                 </motion.div>
@@ -648,25 +597,11 @@ const RecievePage = () => {
                   onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
                   placeholder="Enter password to unlock"
                   autoFocus
-                  style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: '2px solid #d4af37',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    color: '#fff',
-                    fontSize: '16px',
-                    textAlign: 'center',
-                    letterSpacing: '3px',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    transition: 'all 0.3s'
-                  }}
+                  className="receive__lock-input"
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <div className="receive__lock-actions">
                 <button
                   onClick={() => {
                     setPasswordRequired(false);
@@ -675,39 +610,17 @@ const RecievePage = () => {
                     setPasswordError('');
                   }}
                   disabled={passwordSubmitting}
-                  style={{
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    border: '1px solid #555',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    color: '#b0b0b0',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    cursor: passwordSubmitting ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s'
-                  }}
+                  className="receive__lock-btn-cancel"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePasswordSubmit}
                   disabled={passwordSubmitting}
-                  style={{
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
-                    color: '#000',
-                    fontSize: '15px',
-                    fontWeight: 700,
-                    cursor: passwordSubmitting ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 8px 24px rgba(212, 175, 55, 0.4)',
-                    transition: 'all 0.2s'
-                  }}
+                  className="receive__lock-btn-unlock"
                 >
                   {passwordSubmitting ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className="btn__spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: '#000', borderTopColor: 'transparent' }}></span>
+                    <span className="receive__lock-spinner">
                       Verifying...
                     </span>
                   ) : (
@@ -718,42 +631,49 @@ const RecievePage = () => {
             </motion.div>
           )}
 
-          <div className="toggle-container" style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div className="toggle-container">
             <button
               type="button"
               onClick={() => handleToggleMode(4)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: segmentCount === 4 ? '1px solid #d4af37' : '1px solid var(--border-default)',
-                background: segmentCount === 4 ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
-                color: segmentCount === 4 ? '#f59e0b' : 'var(--text-muted)',
-                transition: 'all 0.2s'
-              }}
+              className={`toggle-btn ${segmentCount === 4 ? 'toggle-btn--active' : ''}`}
             >
               4 Digits Mode
             </button>
             <button
               type="button"
               onClick={() => handleToggleMode(6)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: segmentCount === 6 ? '1px solid #d4af37' : '1px solid var(--border-default)',
-                background: segmentCount === 6 ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
-                color: segmentCount === 6 ? '#f59e0b' : 'var(--text-muted)',
-                transition: 'all 0.2s'
-              }}
+              className={`toggle-btn ${segmentCount === 6 ? 'toggle-btn--active' : ''}`}
             >
               6 Digits Mode
             </button>
           </div>
+
+          <motion.div
+                      className="share__steps"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <div className="share__step">
+                        <span className="share__step-num">1</span>
+                        <span className="share__step-txt"><strong>Enter</strong> the code</span>
+                      </div>
+                      <span className="share__step-line" aria-hidden="true" />
+                      <div className="share__step">
+                        <span className="share__step-num">2</span>
+                        <span className="share__step-txt"><strong>Receive</strong> from the store</span>
+                      </div>
+                      <span className="share__step-line" aria-hidden="true" />
+                      <div className="share__step">
+                        <span className="share__step-num">3</span>
+                        <span className="share__step-txt"><strong>Download</strong> the file</span>
+                      </div>
+                      <span className="share__step-line" aria-hidden="true" />
+                      {/* <div className="share__step">
+                        <span className="share__step-num">4</span>
+                        <span className="share__step-txt"><strong>Open</strong> &amp; download anytime</span>
+                      </div> */}
+                    </motion.div>
 
           <motion.div
             className="receive__code-input"
@@ -789,7 +709,7 @@ const RecievePage = () => {
                 Clear
               </button>
               <button
-                className="btn btn--primary receive__go-btn"
+                className="btn btn--primary editor-share-btn"
                 onClick={handleReceive}
                 disabled={isReceiving || getCode().length !== segmentCount}
               >
