@@ -22,6 +22,11 @@ import AppLayout from './components/layout/AppLayout.jsx'
 import BuyPremium from './components/premium/BuyPremium.jsx'
 import PremiumLogin from './components/premium/PremiumLogin.jsx'
 import PremiumDashboard from './components/premium/PremiumDashboard.jsx'
+import OrgLayout from './components/org/OrgLayout.jsx'
+import OrgAuth from './components/org/OrgAuth.jsx'
+import OrgDashboard from './components/org-preview/OrgDashboard.jsx'
+import OrgSubmitPage from './components/org/OrgSubmitPage.jsx'
+import OrgUploadPage from './components/org/OrgUploadPage.jsx'
 
 // Layout wrapper for routes that need the sidebar/topbar
 const LayoutRoute = ({ children }) => {
@@ -37,7 +42,7 @@ const RefreshRedirect = () => {
     const navigationEntries = performance.getEntriesByType('navigation')
     const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload'
 
-    if (isRefresh && window.location.pathname !== '/') {
+    if (isRefresh && window.location.pathname !== '/' && !window.location.pathname.startsWith('/org/')) {
       navigate('/', { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,6 +123,13 @@ function App() {
         <Route path='/terms-of-service' element={<LayoutRoute><TermsOfService /></LayoutRoute>} />
         <Route path='/about' element={<LayoutRoute><About /></LayoutRoute>} />
         <Route path='/contact' element={<LayoutRoute><Contact /></LayoutRoute>} />
+
+        {/* Org module: unified auth page (same AppLayout as other pages) */}
+        <Route path='/org/register' element={<LayoutRoute><OrgAuth /></LayoutRoute>} />
+        <Route path='/org/login' element={<LayoutRoute><OrgAuth /></LayoutRoute>} />
+        <Route path='/org/dashboard' element={<OrgLayout><OrgDashboard /></OrgLayout>} />
+        <Route path='/org/submit/:code' element={<OrgSubmitPage />} />
+        <Route path='/org/upload/:code' element={<OrgUploadPage />} />
 
         {/* Redirect old routes to unified receive page */}
         <Route path='/sharePage' element={<Navigate to="/share" replace />} />

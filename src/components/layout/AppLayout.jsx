@@ -6,6 +6,8 @@ import TopBar from './TopBar'
 import TabBar from './TabBar'
 import { LayoutProvider } from './LayoutContext'
 import { endpoints } from '../../api/api'
+import JoinOrgForm from './JoinOrgForm'
+import sidebarSections from './sidebarData'
 import './AppLayout.css'
 
 const AppLayout = ({ children }) => {
@@ -24,7 +26,11 @@ const AppLayout = ({ children }) => {
 
   const username = localStorage.getItem('tshare_username') || ''
   const isAdmin = sessionStorage.getItem('adminAuthenticated') === 'true'
-  const isNotAdminPage = !location.pathname.startsWith('/admin')
+  // Stats/recent-purchases + premium marquee are only relevant on the shared
+  // app pages. Exclude /admin (existing) and /org (org module keeps its own
+  // data) so org-page navigation doesn't fire the stats API.
+  const isNotAdminPage =
+    !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/org')
 
   useEffect(() => {
     if (isNotAdminPage) {
@@ -54,74 +60,10 @@ const AppLayout = ({ children }) => {
     }
   };
 
-  // Use same sidebar sections as desktop
-  const sidebarSections = [
-    {
-      label: 'Main',
-      items: [
-        { label: 'Dashboard', icon: 'layout-dashboard', path: '/dashboard' },
-        { label: 'Buy Code', icon: 'credit-card', path: '/buy' },
-      ],
-    },
-    {
-      label: 'Share',
-      items: [
-        { label: 'Share Text', icon: 'message-square', path: '/share' },
-        { label: 'Share Image', icon: 'image', path: '/share-image' },
-        { label: 'Share File', icon: 'file', path: '/share-file' },
-      ],
-    },
-    {
-      label: 'Receive',
-      items: [
-        { label: 'Receive Text', icon: 'download', path: '/receive-text' },
-        { label: 'Receive Image', icon: 'image', path: '/receive-image' },
-        { label: 'Receive File', icon: 'file', path: '/receive-file' },
-      ],
-    },
-    {
-      label: 'Community',
-      items: [
-        { label: 'Public Rooms', icon: 'users', path: '/public-room' },
-      ],
-    },
-    {
-      label: 'Management',
-      items: [
-        { label: 'Admin Panel', icon: 'shield', path: '/admin/panel' },
-      ],
-    },
-    ...(isAdmin ? [{
-      label: 'Admin',
-      items: [
-        { label: 'Texts', icon: 'message-square', path: '/admin/panel?tab=texts' },
-        { label: 'Images', icon: 'image', path: '/admin/panel?tab=images' },
-        { label: 'Files', icon: 'file', path: '/admin/panel?tab=files' },
-        { label: 'Public Rooms', icon: 'users', path: '/admin/panel?tab=public-rooms' },
-        { label: 'Users', icon: 'user', path: '/admin/panel?tab=users' },
-        { label: 'Premium Codes', icon: 'credit-card', path: '/admin/panel?tab=premium-codes' },
-        { label: 'Premium Users', icon: 'user-check', path: '/admin/panel?tab=premium-users' },
-        { label: 'Settings', icon: 'settings', path: '/admin/panel?tab=settings' },
-      ],
-    }] : []),
-    {
-      label: 'More',
-      items: [
-        { label: 'About', icon: 'info', path: '/about' },
-        { label: 'Contact', icon: 'mail', path: '/contact' },
-        { label: 'Privacy Policy', icon: 'file-text', path: '/privacy-policy' },
-        { label: 'Terms of Service', icon: 'file-text', path: '/terms-of-service' },
-      ],
-    },
-  ]
-
   const isActive = (path) => {
     if (path === '/share') return location.pathname === '/share'
     if (path === '/share-image') return location.pathname === '/share-image'
     if (path === '/share-file') return location.pathname === '/share-file'
-    if (path === '/receive-text') return location.pathname === '/receive-text'
-    if (path === '/receive-image') return location.pathname === '/receive-image'
-    if (path === '/receive-file') return location.pathname === '/receive-file'
     if (path === '/receive') return location.pathname === '/receive'
     if (path === '/dashboard') return location.pathname === '/dashboard'
     if (path === '/admin/panel') return location.pathname === '/admin/panel' && !location.search
@@ -230,16 +172,18 @@ const AppLayout = ({ children }) => {
             <div className="mobile-sidebar-content">
               {sidebarSections.map((section) => (
                 <div key={section.label} className="mobile-section">
-                  <div className="mobile-section-label">{section.label}</div>
-                  {section.items.map((item) => (
-                    <button
-                      key={item.path}
-                      className={`mobile-sidebar-item ${isActive(item.path) ? 'active' : ''}`}
-                      onClick={() => {
-                        handleNav(item.path)
-                        setMobileMenuOpen(false)
-                      }}
-                    >
+                  {section.label === 'Admin' && !isAdmin ? null : (
+                    <>
+                      <div className="mobile-section-label">{section.label}</div>
+                      {section.items.map((item) => (
+                        <button
+                          key={item.path}
+                          className={`mobile-sidebar-item ${isActive(item.path) ? 'active' : ''}`}
+                          onClick={() => {
+                            handleNav(item.path)
+                            setMobileMenuOpen(false)
+                          }}
+                        >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         {item.icon === 'layout-dashboard' && (
                           <>
@@ -333,8 +277,13 @@ const AppLayout = ({ children }) => {
                       <span>{item.label}</span>
                     </button>
                   ))}
-                </div>
-              ))}
+                  {section.label === 'Organization' && (
+                    <JoinOrgForm onNavigate={handleNav} />
+                  )}
+                </>
+              )}
+            </div>
+          ))}
               
               {/* Logout Section */}
               {username && (
