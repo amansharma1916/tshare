@@ -1,0 +1,172 @@
+/* ============================================================
+   Org Dashboard — enhanced file preview styles
+   (extends the base OrgDashboard.css from the org/ directory)
+   ============================================================ */
+
+/* Keep the preview pane at a consistent width while giving the submissions list more room */
+.org-dash__split {
+  grid-template-columns: minmax(400px, 1fr) minmax(880px, 920px) !important;
+}
+
+/* Reduce preview pane padding so iframe fills more of the available width */
+.org-dash__preview {
+  padding: 1rem !important;
+}
+
+/* Type-aware preview container */
+.org-dash__file-preview-area {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Inline iframe for PDF / text / Google Docs Viewer */
+.org-dash__preview-iframe {
+  width: 100%;
+  height: 640px;
+  max-height: 640px;
+  border: none;
+  display: block;
+  border-radius: var(--radius-lg);
+  background: #f8fafc;
+}
+
+/* Fallback icon container (larger than the info-panel icon) */
+.org-dash__file-icon {
+  color: #f59e0b;
+}
+
+/* Meta row below the preview */
+.org-dash__file-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  .org-dash__preview-iframe {
+    height: 320px;
+    max-height: 320px;
+  }
+
+  .org-dash__split {
+    grid-template-columns: 1fr 2fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .org-dash__preview-iframe {
+    height: 260px;
+    max-height: 260px;
+  }
+
+  .org-dash__split {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Client-rendered .docx preview */
+.org-dash__docx {
+  width: 100%;
+  min-height: 320px;
+  max-height: 520px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.org-dash__docx-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 1rem;
+}
+
+.org-dash__docx-status--error {
+  color: #b91c1c;
+}
+
+.org-dash__docx-body {
+  min-height: 320px;
+}
+
+/* .docx toolbar (PDF-like) */
+.org-dash__docx-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.org-dash__docx-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+
+.org-dash__docx-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.org-dash__docx-toolbar .org-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.org-dash__docx-toolbar .org-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* .docx preview — keep within the window */
+.org-dash__split > *,
+.org-dash__preview,
+.org-dash__preview-card {
+  min-width: 0; /* let the preview column shrink below its content width */
+}
+
+.org-dash__docx {
+  max-width: 100%;
+}
+
+/* docx-preview pages use a fixed page width (~794px) which can overflow a narrow
+   column; cap and centre them so the preview stays consistent inside the card. */
+.org-dash__docx .docx-wrapper,
+.org-dash__docx .docx {
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}

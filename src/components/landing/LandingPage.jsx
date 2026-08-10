@@ -409,6 +409,7 @@ const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, prem
           <Link to="/contact">Contact</Link>
           <Link to="/privacy-policy">Privacy</Link>
           <Link to="/terms-of-service">Terms</Link>
+          <Link to="/org/register">For Businesses</Link>
           <Link to="/admin/panel">Admin</Link>
         </div>
         <p>© {new Date().getFullYear()} TShare · One key, anything inside.</p>
