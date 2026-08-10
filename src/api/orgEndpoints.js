@@ -10,6 +10,8 @@ export const orgEndpoints = {
   qr: `${baseUrl}/org/qr`,
   deleteData: (id) => `${baseUrl}/org/data/${id}`,
   previewData: (id) => `${baseUrl}/org/preview/${id}`,
+  previewDataRaw: (id) => `${baseUrl}/org/preview/${id}?raw=1`,
+  downloadData: (id) => `${baseUrl}/org/download/${id}`,
   submitText: (code) => `${baseUrl}/org/submit/${code}`,
   uploadFile: (code) => `${baseUrl}/org/upload/${code}`,
 };

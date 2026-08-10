@@ -32,13 +32,13 @@ const sidebarSections = [
       { label: 'Admin Panel', icon: 'shield', path: '/admin/panel' },
     ],
   },
-  {
-    label: 'Organization',
-    items: [
-      { label: 'Login as Org', icon: 'shield', path: '/org/login' },
-      { label: 'Register as Org', icon: 'user', path: '/org/register' },
-    ],
-  },
+  // {
+  //   label: 'Organization',
+  //   items: [
+  //     { label: 'Login as Org', icon: 'shield', path: '/org/login' },
+  //     { label: 'Register as Org', icon: 'user', path: '/org/register' },
+  //   ],
+  // },
   {
     label: 'Admin',
     items: [

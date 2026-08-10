@@ -172,8 +172,9 @@ const renderFilePreview = (file) => {
 
   switch (type) {
     case 'image':
-      // Images work fine with direct URLs — browsers don't force-download them.
-      return <img src={file.url} alt="Preview" className="org-dash__preview-img" />;
+      // Images live in a private R2 bucket, so load via the backend proxy. The
+      // proxy renders JPEG/PNG as a PDF and other formats as the raw image.
+      return <iframe src={orgEndpoints.previewData(file.id)} title="Image Preview" className="org-dash__preview-iframe" />;
 
     case 'pdf':
     case 'text':
@@ -292,6 +293,29 @@ const OrgDashboard = () => {
     setError('');
     try {
       const res = await fetch(orgEndpoints.previewData(selectedItem.id), {
+        headers: { ...orgAuthHeaders(token) },
+      });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = selectedItem.originalName || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!selectedItem?.id) return;
+    setError('');
+    try {
+      // Download the ORIGINAL image file via the dedicated download endpoint.
+      const res = await fetch(orgEndpoints.downloadData(selectedItem.id), {
         headers: { ...orgAuthHeaders(token) },
       });
       if (!res.ok) throw new Error('Download failed');
@@ -479,8 +503,8 @@ const OrgDashboard = () => {
                       </span>
 
                       <div className="org-dash__item-primary" title={preview(item)}>
-                        {item.dataType === 'image' && item.url ? (
-                          <img src={item.url} alt="" className="org-dash__thumb" />
+                        {item.dataType === 'image' && item.id ? (
+                          <img src={orgEndpoints.previewDataRaw(item.id)} alt="" className="org-dash__thumb" />
                         ) : item.dataType === 'file' ? (
                           <span className="org-dash__file-icon"><Icon name="file" size={18} /></span>
                         ) : (
@@ -528,8 +552,8 @@ const OrgDashboard = () => {
                   {selectedItem.dataType}
                 </span>
                 <div className="org-dash__preview-actions">
-                  {(selectedItem.dataType === 'image' || selectedItem.dataType === 'file') && selectedItem.url && (
-                    <a className="org-btn org-btn--ghost" href={selectedItem.url} target="_blank" rel="noreferrer">
+                  {(selectedItem.dataType === 'image' || selectedItem.dataType === 'file') && selectedItem.id && (
+                    <a className="org-btn org-btn--ghost" href={orgEndpoints.previewData(selectedItem.id)} target="_blank" rel="noreferrer">
                       <Icon name="external" size={14} /> Open
                     </a>
                   )}
@@ -551,8 +575,24 @@ const OrgDashboard = () => {
                     {selectedItem.text || 'No content'}
                   </div>
                 )}
-                {selectedItem.dataType === 'image' && selectedItem.url && (
-                  <img src={selectedItem.url} alt="Preview" className="org-dash__preview-img" />
+                {selectedItem.dataType === 'image' && (
+                  <div className="org-dash__preview-file">
+                    <div className="org-dash__file-preview-area">
+                      {renderFilePreview(selectedItem)}
+                    </div>
+                    <div className="org-dash__file-meta-row">
+                      <div className="org-dash__file-name">{selectedItem.originalName || 'Image'}</div>
+                      <div className="org-dash__file-meta">
+                        {selectedItem.size && <span>{(selectedItem.size / 1024).toFixed(1)} KB </span>}
+                        {selectedItem.senderName && <><span>· </span><span className="org-dash__sender">{selectedItem.senderName}</span></>}
+                      </div>
+                    </div>
+                    {selectedItem.url && (
+                      <button className="org-btn org-btn--ghost" onClick={handleDownloadImage} type="button">
+                        <Icon name="download" size={16} /> Download
+                      </button>
+                    )}
+                  </div>
                 )}
                 {selectedItem.dataType === 'file' && (
                   <div className="org-dash__preview-file">
