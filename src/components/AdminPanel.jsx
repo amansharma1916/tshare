@@ -272,6 +272,16 @@ const AdminPanel = () => {
     const [showTextViewModal, setShowTextViewModal] = useState(false);
     const [viewingText, setViewingText] = useState(null);
 
+    // Delete-by-Date-Range Modal State
+    const [showRangeDeleteModal, setShowRangeDeleteModal] = useState(false);
+    const [rangeType, setRangeType] = useState('all');
+    const [rangeFrom, setRangeFrom] = useState('');
+    const [rangeTo, setRangeTo] = useState('');
+    const [rangeCount, setRangeCount] = useState(null);
+    const [rangePreviewLoading, setRangePreviewLoading] = useState(false);
+    const [rangeDeleting, setRangeDeleting] = useState(false);
+    const [rangeError, setRangeError] = useState('');
+
     useEffect(() => {
         const isAuthenticated = sessionStorage.getItem('adminAuthenticated') === 'true';
         if (!isAuthenticated) {
@@ -1310,6 +1320,95 @@ const AdminPanel = () => {
         }
     };
 
+    // ─── Delete by Date Range Handlers ───
+    const openRangeDeleteModal = () => {
+        setShowRangeDeleteModal(true);
+        setRangeError('');
+        setRangeCount(null);
+    };
+
+    const closeRangeDeleteModal = () => {
+        setShowRangeDeleteModal(false);
+        setRangeError('');
+        setRangeCount(null);
+        setRangeFrom('');
+        setRangeTo('');
+    };
+
+    const buildRangeParams = () => {
+        const params = new URLSearchParams();
+        if (rangeType) params.set('dataType', rangeType);
+        if (rangeFrom) params.set('from', rangeFrom);
+        if (rangeTo) params.set('to', rangeTo);
+        return params;
+    };
+
+    const handlePreviewRange = async () => {
+        setRangeError('');
+        if (!rangeFrom && !rangeTo) {
+            setRangeError('Please select a "from" and/or "to" date.');
+            return;
+        }
+        if (rangeFrom && rangeTo && rangeFrom > rangeTo) {
+            setRangeError('"From" cannot be later than "To".');
+            return;
+        }
+        setRangePreviewLoading(true);
+        try {
+            const response = await fetch(`${endpoints.adminRangeCount}?${buildRangeParams()}`, {
+                headers: getAuthHeaders(),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setRangeCount(data.count);
+            } else {
+                setRangeError(data.message || 'Failed to preview count');
+                setRangeCount(null);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setRangeError('Failed to connect to server');
+            setRangeCount(null);
+        } finally {
+            setRangePreviewLoading(false);
+        }
+    };
+
+    const handleDeleteRange = async () => {
+        setRangeError('');
+        if (rangeCount === null) {
+            setRangeError('Please preview the count first.');
+            return;
+        }
+        if (rangeCount === 0) {
+            setRangeError('No records match the selected range.');
+            return;
+        }
+        if (!window.confirm(`Delete ${rangeCount} record(s) in this range? This action cannot be undone.`)) {
+            return;
+        }
+        setRangeDeleting(true);
+        try {
+            const response = await fetch(`${endpoints.adminRangeDelete}?${buildRangeParams()}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage(`Deleted ${data.deletedCount} record(s)`, 'success');
+                closeRangeDeleteModal();
+                refreshAll();
+            } else {
+                setRangeError(data.message || 'Failed to delete data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setRangeError('Failed to connect to server');
+        } finally {
+            setRangeDeleting(false);
+        }
+    };
+
     const handleEditFileCode = (file) => {
         setEditingFile(file);
         setNewFileCode(file.id.toString());
@@ -1546,6 +1645,14 @@ const AdminPanel = () => {
                             >
                                 Delete All Texts
                             </motion.button>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={openRangeDeleteModal}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete by Date Range
+                            </motion.button>
                         </div>
 
                         <div className="search-bar">
@@ -1657,6 +1764,14 @@ const AdminPanel = () => {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 Delete All Images
+                            </motion.button>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={openRangeDeleteModal}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete by Date Range
                             </motion.button>
                         </div>
 
@@ -1773,6 +1888,14 @@ const AdminPanel = () => {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 Delete All Files
+                            </motion.button>
+                            <motion.button
+                                className="Btn delete-all"
+                                onClick={openRangeDeleteModal}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Delete by Date Range
                             </motion.button>
                         </div>
 
@@ -2878,6 +3001,99 @@ const AdminPanel = () => {
                                 >
                                     Close
                                 </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete-by-Date-Range Modal */}
+            <AnimatePresence>
+                {showRangeDeleteModal && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={closeRangeDeleteModal}
+                    >
+                        <motion.div
+                            className="modal"
+                            onClick={(e) => e.stopPropagation()}
+                            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        >
+                            <h2>Delete Data by Date Range</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: 6, color: 'var(--text-secondary)', fontSize: 13 }}>Type</label>
+                                    <select
+                                        value={rangeType}
+                                        onChange={(e) => { setRangeType(e.target.value); setRangeCount(null); setRangeError(''); }}
+                                        style={{ width: '100%', padding: '0.6rem 0.9rem', background: '#0f0f12', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 10 }}
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="text">Text</option>
+                                        <option value="image">Image</option>
+                                        <option value="file">File</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, color: 'var(--text-secondary)', fontSize: 13 }}>From</label>
+                                        <input
+                                            type="date"
+                                            value={rangeFrom}
+                                            onChange={(e) => { setRangeFrom(e.target.value); setRangeCount(null); setRangeError(''); }}
+                                            style={{ width: '100%', padding: '0.6rem 0.9rem', background: '#0f0f12', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 10, colorScheme: 'dark' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, color: 'var(--text-secondary)', fontSize: 13 }}>To</label>
+                                        <input
+                                            type="date"
+                                            value={rangeTo}
+                                            onChange={(e) => { setRangeTo(e.target.value); setRangeCount(null); setRangeError(''); }}
+                                            style={{ width: '100%', padding: '0.6rem 0.9rem', background: '#0f0f12', color: 'var(--text-primary)', border: '1px solid var(--border-default)', borderRadius: 10, colorScheme: 'dark' }}
+                                        />
+                                    </div>
+                                </div>
+                                {rangeError && <div className="error-message" style={{ marginTop: 4 }}>{rangeError}</div>}
+                                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <motion.button
+                                        className="Btn save"
+                                        onClick={handlePreviewRange}
+                                        disabled={rangePreviewLoading}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        {rangePreviewLoading ? 'Previewing...' : 'Preview Count'}
+                                    </motion.button>
+                                    {rangeCount !== null && (
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{rangeCount} record(s) match</span>
+                                    )}
+                                </div>
+                                <div className="modal-buttons">
+                                    <motion.button
+                                        className="Btn cancel"
+                                        onClick={closeRangeDeleteModal}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Cancel
+                                    </motion.button>
+                                    <motion.button
+                                        className="Btn delete-all"
+                                        onClick={handleDeleteRange}
+                                        disabled={rangeDeleting || rangeCount === null || rangeCount === 0}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        {rangeDeleting ? 'Deleting...' : `Delete ${rangeCount ?? 0} Records`}
+                                    </motion.button>
+                                </div>
+
                             </div>
                         </motion.div>
                     </motion.div>
