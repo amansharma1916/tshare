@@ -201,6 +201,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  position: relative;
+  /* Reserve a top strip so the corner action button doesn't cover content */
+  padding-top: 44px;
 }
 
 .receive__text-content {
@@ -343,7 +346,13 @@
 }
 
 .receive__action-btn {
-  align-self: flex-start;
+  /* Pin the action button (Copy / Download) to the top-right of the window */
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 5;
+  align-self: auto;
+  margin: 0;
 }
 /* Toggle mode buttons */
 .toggle-container {
