@@ -68,6 +68,8 @@ export const endpoints = {
     adminPremiumCodes: `${API_URL}/admin/premium-codes`,
     adminDeletePremiumCode: (code) => `${API_URL}/admin/premium-codes/${code}`,
     adminPremiumUsers: `${API_URL}/admin/premium-users`,
+    adminRangeCount: `${API_URL}/admin/data/range/count`,
+    adminRangeDelete: `${API_URL}/admin/data/range`,
     pricingSettings: `${API_URL}/api/pricing`,
     adminGetPricing: `${API_URL}/admin/pricing`,
     adminUpdatePricing: `${API_URL}/admin/pricing`,
