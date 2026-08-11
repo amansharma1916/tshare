@@ -1637,22 +1637,24 @@ const AdminPanel = () => {
                     <div>
                         <div className="tab-header">
                             <h1>Text Management</h1>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={handleDeleteAllTexts}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete All Texts
-                            </motion.button>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={openRangeDeleteModal}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete by Date Range
-                            </motion.button>
+                            <div className="tab-header-actions">
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={handleDeleteAllTexts}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete All Texts
+                                </motion.button>
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={openRangeDeleteModal}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete by Date Range
+                                </motion.button>
+                            </div>
                         </div>
 
                         <div className="search-bar">
@@ -1757,22 +1759,24 @@ const AdminPanel = () => {
                     <div>
                         <div className="tab-header">
                             <h1>Image Management</h1>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={handleDeleteAllImages}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete All Images
-                            </motion.button>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={openRangeDeleteModal}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete by Date Range
-                            </motion.button>
+                            <div className="tab-header-actions">
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={handleDeleteAllImages}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete All Images
+                                </motion.button>
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={openRangeDeleteModal}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete by Date Range
+                                </motion.button>
+                            </div>
                         </div>
 
                         <div className="search-bar">
@@ -1881,22 +1885,24 @@ const AdminPanel = () => {
                     <div>
                         <div className="tab-header">
                             <h1>File Management</h1>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={handleDeleteAllFiles}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete All Files
-                            </motion.button>
-                            <motion.button
-                                className="Btn delete-all"
-                                onClick={openRangeDeleteModal}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Delete by Date Range
-                            </motion.button>
+                            <div className="tab-header-actions">
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={handleDeleteAllFiles}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete All Files
+                                </motion.button>
+                                <motion.button
+                                    className="Btn delete-all"
+                                    onClick={openRangeDeleteModal}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Delete by Date Range
+                                </motion.button>
+                            </div>
                         </div>
 
                         <div className="search-bar">
