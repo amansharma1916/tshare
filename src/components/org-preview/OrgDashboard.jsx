@@ -4,7 +4,6 @@ import { orgEndpoints } from '../../api/orgEndpoints';
 import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth';
 import '../org/OrgDashboard.css';
 import './OrgDashboardPreview.css';
-import DocxPreview from './DocxPreview';
 
 const ease = [0.16, 1, 0.3, 1];
 
@@ -140,26 +139,6 @@ const getFilePreviewType = (originalName, mimeType) => {
   return 'other';
 };
 
-// Builds a third-party Office viewer URL for previewing MS Office documents
-// (.doc/.docx/.xls/.xlsx/.ppt/.pptx) and other document files (.odt/.ods/.odp/.rtf).
-// Uses the Microsoft Office Online viewer, which reliably renders .docx etc. and
-// provides a built-in Print button. The src points at the backend preview proxy
-// (same-origin, inline, stable) when an id exists — external viewers fetch a
-// consistent endpoint instead of hitting Cloudinary directly — and falls back to
-// the raw file URL otherwise.
-const getOfficePreviewUrl = (file) => {
-  const src = file?.id ? orgEndpoints.previewData(file.id) : (file?.url || '');
-  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}`;
-};
-
-// True when the file is a Word .docx (default ~= the MS Office Open XML word format).
-// These are rendered client-side with DocxPreview because they're the common case
-// for orgs (xerox/shops) and reliable everywhere, unlike third-party viewers.
-const DOCX_RE = /\.docx$/i;
-const isDocxFile = (file) =>
-  DOCX_RE.test(file?.originalName || '') ||
-  /wordprocessingml/.test(file?.mimeType || '');
-
 // Renders an inline preview for a file item in the org dashboard preview pane.
 // Uses the backend proxy endpoint (like RecievePage does) which sets
 // Content-Disposition: inline so the browser renders PDFs instead of downloading them.
@@ -188,15 +167,17 @@ const renderFilePreview = (file) => {
         />
       );
 
-    case 'document': {
-      // .docx renders client-side (works offline / localhost — no third-party fetch).
-      if (isDocxFile(file)) {
-        return <DocxPreview file={file} />;
-      }
-      // Other office docs (xls/xlsx/ppt/pptx/odt/rtf): best-effort via Microsoft
-      // Office Online viewer.
-      return <iframe src={getOfficePreviewUrl(file)} title="Document Preview" className="org-dash__preview-iframe" />;
-    }
+    case 'document':
+      // Convert office docs (doc/docx/ppt/pptx/xls/xlsx/odt/ods/odp/rtf) to PDF
+      // server-side (LibreOffice) and render via the browser's native PDF viewer —
+      // the same UX as the image-to-PDF preview.
+      return (
+        <iframe
+          src={file?.id ? orgEndpoints.previewDataPdf(file.id) : (file?.url || '')}
+          title="Document Preview"
+          className="org-dash__preview-iframe"
+        />
+      );
 
     default:
       // Unsupported binary types — show icon only; download button is separate.
