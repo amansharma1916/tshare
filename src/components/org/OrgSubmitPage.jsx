@@ -32,7 +32,7 @@ const OrgSubmitPage = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Could not send');
-      setDone({ orgName: data.orgName });
+      setDone({ orgName: data.orgName, submissionCode: data.submissionCode });
       setText('');
     } catch (err) {
       setError(err.message);
@@ -59,7 +59,7 @@ const OrgSubmitPage = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Could not send');
-      setDone({ orgName: data.orgName });
+      setDone({ orgName: data.orgName, submissionCode: data.submissionCode });
       setFile(null);
       setFileName('');
     } catch (err) {
@@ -93,6 +93,11 @@ const OrgSubmitPage = () => {
                 </div>
                 <h2>Thank you!</h2>
                 <p>Your content has reached {done.orgName ? `the ${done.orgName}` : 'the organization'}.</p>
+                {done.submissionCode && (
+                  <p className="orgkiosk__code-display">
+                    Your reference code: <strong>{done.submissionCode}</strong>
+                  </p>
+                )}
                 <button className="orgkiosk__btn" style={{ maxWidth: 280 }} onClick={() => setDone(null)} type="button">
                   Send another
                 </button>

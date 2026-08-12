@@ -220,27 +220,44 @@ const OrgDashboard = () => {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [stats, setStats] = useState({ total: 0, text: 0, image: 0, file: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchMode, setSearchMode] = useState(false);
+  const searchDebounceRef = useRef(null);
+  const searchQueryRef = useRef(searchQuery);
+  useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
 
   const cursorRef = useRef(cursor);
   useEffect(() => { cursorRef.current = cursor; }, [cursor]);
 
-  const load = useCallback(async (loadMore = false) => {
+  const [searchCursor, setSearchCursor] = useState(null);
+  const searchCursorRef = useRef(null);
+  useEffect(() => { searchCursorRef.current = searchCursor; }, [searchCursor]);
+
+  const load = useCallback(async (loadMore = false, isSearch = false) => {
     if (loadMore) {
       setLoadingMore(true);
     } else {
       setLoading(true);
-      setCursor(null);
+      if (isSearch) {
+        setSearchCursor(null);
+      } else {
+        setCursor(null);
+      }
     }
     setError('');
     try {
       const headers = { ...orgAuthHeaders(token) };
       const params = new URLSearchParams();
       params.set('limit', '10');
-      if (loadMore && cursorRef.current) params.set('cursor', cursorRef.current);
+      const activeCursor = isSearch ? searchCursorRef.current : cursorRef.current;
+      if (loadMore && activeCursor) params.set('cursor', activeCursor);
       if (filter !== 'all') params.set('type', filter);
+      if (isSearch && searchQueryRef.current.trim()) params.set('q', searchQueryRef.current.trim());
 
+      const endpoint = isSearch ? orgEndpoints.searchDashboard : orgEndpoints.dashboard;
       const [res, qrRes] = await Promise.all([
-        fetch(`${orgEndpoints.dashboard}?${params.toString()}`, { headers }),
+        fetch(`${endpoint}?${params.toString()}`, { headers }),
         fetch(orgEndpoints.qr, { headers }),
       ]);
 
@@ -251,12 +268,23 @@ const OrgDashboard = () => {
 
       const data = await res.json();
       if (data.success) {
-        if (loadMore) {
-          setItems((prev) => [...prev, ...(data.items || [])]);
+        if (isSearch) {
+          setSearchMode(true);
+          if (loadMore) {
+            setSearchResults((prev) => [...prev, ...(data.items || [])]);
+          } else {
+            setSearchResults(data.items || []);
+          }
+          setSearchCursor(data.nextCursor);
         } else {
-          setItems(data.items || []);
+          if (loadMore) {
+            setItems((prev) => [...prev, ...(data.items || [])]);
+          } else {
+            setItems(data.items || []);
+          }
+          setCursor(data.nextCursor);
+          setSearchMode(false);
         }
-        setCursor(data.nextCursor);
         setHasMore(data.hasMore);
         setStats(data.stats || { total: 0, text: 0, image: 0, file: 0 });
       } else {
@@ -274,10 +302,50 @@ const OrgDashboard = () => {
     }
   }, [token, filter]);
 
+  const loadSearch = useCallback((loadMore = false) => load(loadMore, true), [load]);
+
   useEffect(() => {
-    if (token) load();
+    if (!token) return;
+    if (searchQueryRef.current.trim()) {
+      loadSearch(false); // filter change while searching
+    } else {
+      load(false);
+    }
+    // Not depending on searchQuery: typing is handled by handleSearchInput's
+    // debounce to avoid double requests and stale-closure fetches.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, filter]);
+
+  const handleSearchInput = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    searchQueryRef.current = val;
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (val.trim()) {
+      searchDebounceRef.current = setTimeout(() => {
+        setSearchCursor(null);
+        loadSearch(false);
+      }, 300);
+    } else {
+      setSearchMode(false);
+      setSearchResults([]);
+      load(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    searchQueryRef.current = '';
+    setSearchMode(false);
+    setSearchResults([]);
+    setSearchCursor(null);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    load(false);
+  };
+
+  const handleSearchLoadMore = () => {
+    loadSearch(true);
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -423,6 +491,18 @@ const OrgDashboard = () => {
           >
             <Icon name="qr" size={18} />
           </button>
+          <div className="org-dash__search-wrap">
+            <input
+              className="org-dash__search-input"
+              type="text"
+              placeholder="Search by name or code…"
+              value={searchQuery}
+              onChange={handleSearchInput}
+            />
+            {searchQuery && (
+              <button className="org-dash__search-clear" onClick={clearSearch} type="button" aria-label="Clear search">×</button>
+            )}
+          </div>
           <button className="org-dash__refresh" onClick={handleRefresh} disabled={refreshing || loading} type="button">
             <Icon name="refresh" size={16} />
             {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -467,9 +547,14 @@ const OrgDashboard = () => {
           <motion.div className="org-card org-dash__list-card" {...fadeUp(0.18)}>
             <div className="org-dash__list-head">
               <div>
-                <h2 className="org-card__title">Incoming submissions</h2>
+                <h2 className="org-card__title">
+                  {searchMode ? 'Search results' : 'Incoming submissions'}
+                </h2>
                 <p className="org-card__desc">
-                  {filter === 'all' ? 'Newest first' : `Only ${filter}`} · {stats.total} item{stats.total === 1 ? '' : 's'}
+                  {searchMode
+                    ? `Found ${stats.total} result${stats.total === 1 ? '' : 's'} for "${searchQuery}"`
+                    : (filter === 'all' ? 'Newest first' : `Only ${filter}`) + ` · ${stats.total} item${stats.total === 1 ? '' : 's'}`
+                  }
                 </p>
               </div>
             </div>
@@ -479,16 +564,25 @@ const OrgDashboard = () => {
                 <div className="org-dash__spinner" />
                 <p>Loading submissions…</p>
               </div>
-            ) : items.length === 0 ? (
+            ) : (searchMode ? searchResults : items).length === 0 ? (
               <div className="org-dash__empty">
-                <Icon name="text" size={32} />
-                <p>Nothing here yet.</p>
-                <span>Share your QR and submissions will show up here.</span>
+                <Icon name={searchMode ? 'file' : 'text'} size={32} />
+                {searchMode ? (
+                  <>
+                    <p>No matches for "{searchQuery}".</p>
+                    <span>Try a different file name or 4-digit reference code.</span>
+                  </>
+                ) : (
+                  <>
+                    <p>Nothing here yet.</p>
+                    <span>Share your QR and submissions will show up here.</span>
+                  </>
+                )}
               </div>
             ) : (
               <>
                 <div className="org-dash__list">
-                  {items.map((item) => (
+                  {(searchMode ? searchResults : items).map((item) => (
                     <motion.div
                       key={item.id}
                       className={`org-dash__item ${selectedId === item.id ? 'org-dash__item--selected' : ''}`}
@@ -513,6 +607,7 @@ const OrgDashboard = () => {
                         <div className="org-dash__item-text">
                           <div className="org-dash__item-title">{preview(item)}</div>
                           <div className="org-dash__item-meta">
+                            {item.submissionCode && <span className="org-dash__refcode">#{item.submissionCode}</span>}
                             <>{formatTime(item.createdAt)} {item.senderName && <><span>· </span><span className="org-dash__sender">{item.senderName}</span></>}</>
                             {' '}{(item.dataType === 'image' || item.dataType === 'file') && item.size ? <span>· {(item.size / 1024).toFixed(1)} KB</span> : ''}
                           </div>
@@ -522,10 +617,10 @@ const OrgDashboard = () => {
                   ))}
                 </div>
 
-                {hasMore && (
+                {(searchMode ? searchResults.length < stats.total : hasMore) && (
                   <button
                     className="org-dash__load-more"
-                    onClick={() => load(true)}
+                    onClick={() => searchMode ? handleSearchLoadMore() : load(true)}
                     disabled={loadingMore}
                     type="button"
                   >

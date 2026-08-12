@@ -14,6 +14,7 @@ export const orgEndpoints = {
   downloadData: (id) => `${baseUrl}/org/download/${id}`,
   submitText: (code) => `${baseUrl}/org/submit/${code}`,
   uploadFile: (code) => `${baseUrl}/org/upload/${code}`,
+  searchDashboard: `${baseUrl}/org/dashboard/search`,
 };
 
 export default { orgEndpoints };
