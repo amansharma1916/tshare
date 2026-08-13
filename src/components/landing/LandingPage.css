@@ -362,6 +362,56 @@
   color: var(--text-tertiary);
 }
 
+/* stats section labels — separate Today from All-time */
+.landing__today-head,
+.landing__alltime-head {
+  display: flex;
+  justify-content: center;
+  margin-top: 44px;
+}
+
+.landing__today-tag,
+.landing__alltime-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.landing__today-tag {
+  background: linear-gradient(120deg, rgba(124, 58, 237, 0.16), rgba(236, 72, 153, 0.16));
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.08), 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.landing__today-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--theme-success);
+  box-shadow: 0 0 10px var(--theme-success);
+  animation: landingPulse 2.2s infinite;
+}
+
+.landing__alltime-tag {
+  background: rgba(24, 24, 27, 0.6);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* ribbons sit just under their labels */
+.landing__hero-stats--today,
+.landing__hero-stats--alltime {
+  margin-top: 18px;
+}
+
 /* ------------------------------ SLIDE 2 — SHOWCASE ------------------------------ */
 
 .landing__show {

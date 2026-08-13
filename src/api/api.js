@@ -77,6 +77,7 @@ export const endpoints = {
     premiumCodesForSale: `${API_URL}/api/codes-for-sale`,
     stats: `${API_URL}/api/stats`,
     adminStats: `${API_URL}/admin/stats`,
+    adminStatsToday: `${API_URL}/admin/stats/today`,
     setCodePassword: `${API_URL}/api/set-code-password`,
     verifyCodePassword: `${API_URL}/api/verify-code-password`,
   };

@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { orgEndpoints } from '../../api/orgEndpoints';
-import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth';
+import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth.js';
 import '../org/OrgDashboard.css';
 import './OrgDashboardPreview.css';
-import DocxPreview from './DocxPreview';
 
 const ease = [0.16, 1, 0.3, 1];
 
@@ -140,26 +139,6 @@ const getFilePreviewType = (originalName, mimeType) => {
   return 'other';
 };
 
-// Builds a third-party Office viewer URL for previewing MS Office documents
-// (.doc/.docx/.xls/.xlsx/.ppt/.pptx) and other document files (.odt/.ods/.odp/.rtf).
-// Uses the Microsoft Office Online viewer, which reliably renders .docx etc. and
-// provides a built-in Print button. The src points at the backend preview proxy
-// (same-origin, inline, stable) when an id exists — external viewers fetch a
-// consistent endpoint instead of hitting Cloudinary directly — and falls back to
-// the raw file URL otherwise.
-const getOfficePreviewUrl = (file) => {
-  const src = file?.id ? orgEndpoints.previewData(file.id) : (file?.url || '');
-  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}`;
-};
-
-// True when the file is a Word .docx (default ~= the MS Office Open XML word format).
-// These are rendered client-side with DocxPreview because they're the common case
-// for orgs (xerox/shops) and reliable everywhere, unlike third-party viewers.
-const DOCX_RE = /\.docx$/i;
-const isDocxFile = (file) =>
-  DOCX_RE.test(file?.originalName || '') ||
-  /wordprocessingml/.test(file?.mimeType || '');
-
 // Renders an inline preview for a file item in the org dashboard preview pane.
 // Uses the backend proxy endpoint (like RecievePage does) which sets
 // Content-Disposition: inline so the browser renders PDFs instead of downloading them.
@@ -188,15 +167,17 @@ const renderFilePreview = (file) => {
         />
       );
 
-    case 'document': {
-      // .docx renders client-side (works offline / localhost — no third-party fetch).
-      if (isDocxFile(file)) {
-        return <DocxPreview file={file} />;
-      }
-      // Other office docs (xls/xlsx/ppt/pptx/odt/rtf): best-effort via Microsoft
-      // Office Online viewer.
-      return <iframe src={getOfficePreviewUrl(file)} title="Document Preview" className="org-dash__preview-iframe" />;
-    }
+    case 'document':
+      // Convert office docs (doc/docx/ppt/pptx/xls/xlsx/odt/ods/odp/rtf) to PDF
+      // server-side (LibreOffice) and render via the browser's native PDF viewer —
+      // the same UX as the image-to-PDF preview.
+      return (
+        <iframe
+          src={file?.id ? orgEndpoints.previewDataPdf(file.id) : (file?.url || '')}
+          title="Document Preview"
+          className="org-dash__preview-iframe"
+        />
+      );
 
     default:
       // Unsupported binary types — show icon only; download button is separate.
@@ -220,27 +201,48 @@ const OrgDashboard = () => {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [stats, setStats] = useState({ total: 0, text: 0, image: 0, file: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchMode, setSearchMode] = useState(false);
+  const searchDebounceRef = useRef(null);
+  const searchQueryRef = useRef(searchQuery);
+  useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
 
   const cursorRef = useRef(cursor);
   useEffect(() => { cursorRef.current = cursor; }, [cursor]);
 
-  const load = useCallback(async (loadMore = false) => {
+  const [searchCursor, setSearchCursor] = useState(null);
+  const searchCursorRef = useRef(null);
+  useEffect(() => { searchCursorRef.current = searchCursor; }, [searchCursor]);
+
+  // Preview conversion status for the selected item ('pending' / 'ready' / ...).
+  const [previewStatus, setPreviewStatus] = useState('na');
+  const previewPollRef = useRef(null);
+
+  const load = useCallback(async (loadMore = false, isSearch = false) => {
     if (loadMore) {
       setLoadingMore(true);
     } else {
       setLoading(true);
-      setCursor(null);
+      if (isSearch) {
+        setSearchCursor(null);
+      } else {
+        setCursor(null);
+      }
     }
     setError('');
     try {
       const headers = { ...orgAuthHeaders(token) };
       const params = new URLSearchParams();
       params.set('limit', '10');
-      if (loadMore && cursorRef.current) params.set('cursor', cursorRef.current);
+      const activeCursor = isSearch ? searchCursorRef.current : cursorRef.current;
+      if (loadMore && activeCursor) params.set('cursor', activeCursor);
       if (filter !== 'all') params.set('type', filter);
+      if (isSearch && searchQueryRef.current.trim()) params.set('q', searchQueryRef.current.trim());
 
+      const endpoint = isSearch ? orgEndpoints.searchDashboard : orgEndpoints.dashboard;
       const [res, qrRes] = await Promise.all([
-        fetch(`${orgEndpoints.dashboard}?${params.toString()}`, { headers }),
+        fetch(`${endpoint}?${params.toString()}`, { headers }),
         fetch(orgEndpoints.qr, { headers }),
       ]);
 
@@ -251,12 +253,23 @@ const OrgDashboard = () => {
 
       const data = await res.json();
       if (data.success) {
-        if (loadMore) {
-          setItems((prev) => [...prev, ...(data.items || [])]);
+        if (isSearch) {
+          setSearchMode(true);
+          if (loadMore) {
+            setSearchResults((prev) => [...prev, ...(data.items || [])]);
+          } else {
+            setSearchResults(data.items || []);
+          }
+          setSearchCursor(data.nextCursor);
         } else {
-          setItems(data.items || []);
+          if (loadMore) {
+            setItems((prev) => [...prev, ...(data.items || [])]);
+          } else {
+            setItems(data.items || []);
+          }
+          setCursor(data.nextCursor);
+          setSearchMode(false);
         }
-        setCursor(data.nextCursor);
         setHasMore(data.hasMore);
         setStats(data.stats || { total: 0, text: 0, image: 0, file: 0 });
       } else {
@@ -274,10 +287,50 @@ const OrgDashboard = () => {
     }
   }, [token, filter]);
 
+  const loadSearch = useCallback((loadMore = false) => load(loadMore, true), [load]);
+
   useEffect(() => {
-    if (token) load();
+    if (!token) return;
+    if (searchQueryRef.current.trim()) {
+      loadSearch(false); // filter change while searching
+    } else {
+      load(false);
+    }
+    // Not depending on searchQuery: typing is handled by handleSearchInput's
+    // debounce to avoid double requests and stale-closure fetches.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, filter]);
+
+  const handleSearchInput = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    searchQueryRef.current = val;
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (val.trim()) {
+      searchDebounceRef.current = setTimeout(() => {
+        setSearchCursor(null);
+        loadSearch(false);
+      }, 300);
+    } else {
+      setSearchMode(false);
+      setSearchResults([]);
+      load(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    searchQueryRef.current = '';
+    setSearchMode(false);
+    setSearchResults([]);
+    setSearchCursor(null);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    load(false);
+  };
+
+  const handleSearchLoadMore = () => {
+    loadSearch(true);
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -387,6 +440,34 @@ const OrgDashboard = () => {
     [items, selectedId],
   );
 
+  // Poll the preview conversion status for the selected image/file. Start polling
+  // whenever the item is pending (or a legacy 'na' that will lazy-backfill), stop
+  // once it reaches 'ready' / 'failed' / still-'na' (non-convertible).
+  useEffect(() => {
+    if (previewPollRef.current) { clearTimeout(previewPollRef.current); previewPollRef.current = null; }
+    setPreviewStatus(selectedItem?.pdfStatus || 'na');
+    if (!selectedItem || selectedItem.dataType === 'text' || !selectedItem.id) return undefined;
+
+    const doPoll = async () => {
+      try {
+        const res = await fetch(orgEndpoints.previewStatus(selectedItem.id), { headers: orgAuthHeaders(token) });
+        const data = await res.json();
+        const s = (data && data.pdfStatus) || 'na';
+        setPreviewStatus(s);
+        if (s === 'pending') previewPollRef.current = setTimeout(doPoll, 2000);
+      } catch (err) {
+        previewPollRef.current = setTimeout(doPoll, 3000);
+      }
+    };
+
+    const s0 = selectedItem.pdfStatus || 'na';
+    // 'pending' = converting; 'na' = maybe legacy that /status will backfill.
+    if (s0 === 'pending' || s0 === 'na') previewPollRef.current = setTimeout(doPoll, 400);
+
+    return () => { if (previewPollRef.current) clearTimeout(previewPollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem?.id, selectedItem?.pdfStatus]);
+
   if (!token) {
     return (
       <div className="org-shell__inner">
@@ -423,6 +504,18 @@ const OrgDashboard = () => {
           >
             <Icon name="qr" size={18} />
           </button>
+          <div className="org-dash__search-wrap">
+            <input
+              className="org-dash__search-input"
+              type="text"
+              placeholder="Search by name or code…"
+              value={searchQuery}
+              onChange={handleSearchInput}
+            />
+            {searchQuery && (
+              <button className="org-dash__search-clear" onClick={clearSearch} type="button" aria-label="Clear search">×</button>
+            )}
+          </div>
           <button className="org-dash__refresh" onClick={handleRefresh} disabled={refreshing || loading} type="button">
             <Icon name="refresh" size={16} />
             {refreshing ? 'Refreshing…' : 'Refresh'}
@@ -467,9 +560,14 @@ const OrgDashboard = () => {
           <motion.div className="org-card org-dash__list-card" {...fadeUp(0.18)}>
             <div className="org-dash__list-head">
               <div>
-                <h2 className="org-card__title">Incoming submissions</h2>
+                <h2 className="org-card__title">
+                  {searchMode ? 'Search results' : 'Incoming submissions'}
+                </h2>
                 <p className="org-card__desc">
-                  {filter === 'all' ? 'Newest first' : `Only ${filter}`} · {stats.total} item{stats.total === 1 ? '' : 's'}
+                  {searchMode
+                    ? `Found ${stats.total} result${stats.total === 1 ? '' : 's'} for "${searchQuery}"`
+                    : (filter === 'all' ? 'Newest first' : `Only ${filter}`) + ` · ${stats.total} item${stats.total === 1 ? '' : 's'}`
+                  }
                 </p>
               </div>
             </div>
@@ -479,16 +577,25 @@ const OrgDashboard = () => {
                 <div className="org-dash__spinner" />
                 <p>Loading submissions…</p>
               </div>
-            ) : items.length === 0 ? (
+            ) : (searchMode ? searchResults : items).length === 0 ? (
               <div className="org-dash__empty">
-                <Icon name="text" size={32} />
-                <p>Nothing here yet.</p>
-                <span>Share your QR and submissions will show up here.</span>
+                <Icon name={searchMode ? 'file' : 'text'} size={32} />
+                {searchMode ? (
+                  <>
+                    <p>No matches for "{searchQuery}".</p>
+                    <span>Try a different file name or 4-digit reference code.</span>
+                  </>
+                ) : (
+                  <>
+                    <p>Nothing here yet.</p>
+                    <span>Share your QR and submissions will show up here.</span>
+                  </>
+                )}
               </div>
             ) : (
               <>
                 <div className="org-dash__list">
-                  {items.map((item) => (
+                  {(searchMode ? searchResults : items).map((item) => (
                     <motion.div
                       key={item.id}
                       className={`org-dash__item ${selectedId === item.id ? 'org-dash__item--selected' : ''}`}
@@ -503,9 +610,9 @@ const OrgDashboard = () => {
                       </span>
 
                       <div className="org-dash__item-primary" title={preview(item)}>
-                        {item.dataType === 'image' && item.id ? (
+                        {item.dataType === 'image' && item.id && item.pdfStatus !== 'ready' ? (
                           <img src={orgEndpoints.previewDataRaw(item.id)} alt="" className="org-dash__thumb" />
-                        ) : item.dataType === 'file' ? (
+                        ) : item.dataType === 'file' || (item.dataType === 'image' && item.pdfStatus === 'ready') ? (
                           <span className="org-dash__file-icon"><Icon name="file" size={18} /></span>
                         ) : (
                           <span className="org-dash__text-icon"><Icon name="text" size={18} /></span>
@@ -513,6 +620,7 @@ const OrgDashboard = () => {
                         <div className="org-dash__item-text">
                           <div className="org-dash__item-title">{preview(item)}</div>
                           <div className="org-dash__item-meta">
+                            {item.submissionCode && <span className="org-dash__refcode">#{item.submissionCode}</span>}
                             <>{formatTime(item.createdAt)} {item.senderName && <><span>· </span><span className="org-dash__sender">{item.senderName}</span></>}</>
                             {' '}{(item.dataType === 'image' || item.dataType === 'file') && item.size ? <span>· {(item.size / 1024).toFixed(1)} KB</span> : ''}
                           </div>
@@ -522,10 +630,10 @@ const OrgDashboard = () => {
                   ))}
                 </div>
 
-                {hasMore && (
+                {(searchMode ? searchResults.length < stats.total : hasMore) && (
                   <button
                     className="org-dash__load-more"
-                    onClick={() => load(true)}
+                    onClick={() => searchMode ? handleSearchLoadMore() : load(true)}
                     disabled={loadingMore}
                     type="button"
                   >
@@ -578,7 +686,12 @@ const OrgDashboard = () => {
                 {selectedItem.dataType === 'image' && (
                   <div className="org-dash__preview-file">
                     <div className="org-dash__file-preview-area">
-                      {renderFilePreview(selectedItem)}
+                      {previewStatus === 'pending' ? (
+                        <div className="org-dash__converting">
+                          <span className="org-dash__spinner" />
+                          <p>Converting to PDF…</p>
+                        </div>
+                      ) : renderFilePreview(selectedItem)}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'Image'}</div>
@@ -597,7 +710,12 @@ const OrgDashboard = () => {
                 {selectedItem.dataType === 'file' && (
                   <div className="org-dash__preview-file">
                     <div className="org-dash__file-preview-area">
-                      {renderFilePreview(selectedItem)}
+                      {previewStatus === 'pending' ? (
+                        <div className="org-dash__converting">
+                          <span className="org-dash__spinner" />
+                          <p>Converting to PDF…</p>
+                        </div>
+                      ) : renderFilePreview(selectedItem)}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'File'}</div>

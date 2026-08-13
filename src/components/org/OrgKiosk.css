@@ -297,6 +297,19 @@
   max-width: 380px;
 }
 
+.orgkiosk__code-display {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.orgkiosk__code-display strong {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  color: var(--theme-primary);
+}
+
 @media (max-width: 640px) {
   .orgkiosk__main {
     padding: 1.75rem 1rem 1.5rem;

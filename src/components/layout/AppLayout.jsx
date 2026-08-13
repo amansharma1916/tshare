@@ -21,6 +21,13 @@ const AppLayout = ({ children }) => {
     received: 0,
     premium_users: 0,
   })
+  const [todayStats, setTodayStats] = useState({
+    visitors: 0,
+    files_shared: 0,
+    received: 0,
+    premium_users: 0,
+    date: '',
+  })
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -52,6 +59,15 @@ const AppLayout = ({ children }) => {
             files_shared: data.stats.files_shared || 0,
             received: data.stats.received || 0,
             premium_users: data.stats.premium_users || 0,
+          });
+        }
+        if (data.todayStats) {
+          setTodayStats({
+            visitors: data.todayStats.visitors || 0,
+            files_shared: data.todayStats.files_shared || 0,
+            received: data.todayStats.received || 0,
+            premium_users: data.todayStats.premium_users || 0,
+            date: data.todayStats.date || '',
           });
         }
       }
@@ -145,7 +161,7 @@ const AppLayout = ({ children }) => {
             </div>
           )}
           <LayoutProvider>
-            {React.cloneElement(children, { stats })}
+            {React.cloneElement(children, { stats, todayStats })}
           </LayoutProvider>
         </div>
       </div>

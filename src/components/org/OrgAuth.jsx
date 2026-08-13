@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { orgEndpoints } from '../../api/orgEndpoints';
-import { setOrgAuth } from './orgAuth';
+import { setOrgAuth } from './orgAuth.js';
 import './OrgAuth.css';
 
 const ease = [0.16, 1, 0.3, 1];
