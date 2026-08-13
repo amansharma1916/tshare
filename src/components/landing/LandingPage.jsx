@@ -185,7 +185,10 @@ const fadeUp = (delay = 0) => ({
 })
 
 
-const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 } }) => {
+const LandingPage = ({
+  stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 },
+  todayStats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0, date: '' },
+}) => {
   const navigate = useNavigate()
 
   const statItems = [
@@ -193,6 +196,13 @@ const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, prem
     { label: 'Codes opened', value: stats.received },
     { label: 'Visitors', value: stats.visitors },
     { label: 'Premium Users', value: stats.premium_users },
+  ]
+
+  const todayStatItems = [
+    { label: 'Shared today', value: todayStats.files_shared },
+    { label: 'Opened today', value: todayStats.received },
+    { label: 'Visitors today', value: todayStats.visitors },
+    { label: 'Upgraded today', value: todayStats.premium_users },
   ]
 
   const shareTypes = [
@@ -295,8 +305,47 @@ const LandingPage = ({ stats = { visitors: 0, files_shared: 0, received: 0, prem
           </motion.div>
         </div>
 
+        <div className="landing__today-head">
+          <motion.span
+            className="landing__today-tag"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.42, ease }}
+          >
+            <span className="landing__today-tag-dot" aria-hidden="true" />
+            Today
+          </motion.span>
+        </div>
+
         <motion.div
-          className="landing__hero-stats"
+          className="landing__hero-stats landing__hero-stats--today"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.45, ease }}
+        >
+          {todayStatItems.map((s) => (
+            <div className="landing__stat" key={s.label}>
+              <div className="landing__stat-value">
+                <Counter value={s.value} />
+              </div>
+              <div className="landing__stat-label">{s.label}</div>
+            </div>
+          ))}
+        </motion.div>
+
+        <div className="landing__alltime-head">
+          <motion.span
+            className="landing__alltime-tag"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.47, ease }}
+          >
+            All-time
+          </motion.span>
+        </div>
+
+        <motion.div
+          className="landing__hero-stats landing__hero-stats--alltime"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease }}
