@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ActivityBar from './ActivityBar'
 import Sidebar from './Sidebar'
@@ -28,6 +28,10 @@ const AppLayout = ({ children }) => {
     premium_users: 0,
     date: '',
   })
+  // True until the first stats fetch resolves, so children (e.g. LandingPage)
+  // can show skeleton placeholders instead of zeroed counters.
+  const [statsLoading, setStatsLoading] = useState(true)
+  const statsFetchedRef = useRef(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -73,6 +77,13 @@ const AppLayout = ({ children }) => {
       }
     } catch (err) {
       console.error('Error fetching recent purchases:', err);
+    } finally {
+      // Only lift the skeleton on the very first fetch so the periodic 25s poll
+      // (below) never causes the placeholders to flash back in.
+      if (!statsFetchedRef.current) {
+        statsFetchedRef.current = true
+        setStatsLoading(false)
+      }
     }
   };
 
@@ -161,7 +172,7 @@ const AppLayout = ({ children }) => {
             </div>
           )}
           <LayoutProvider>
-            {React.cloneElement(children, { stats, todayStats })}
+            {React.cloneElement(children, { stats, todayStats, statsLoading })}
           </LayoutProvider>
         </div>
       </div>

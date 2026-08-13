@@ -362,6 +362,27 @@
   color: var(--text-tertiary);
 }
 
+/* Stat skeleton shimmer (shown while stats are still loading) */
+.landing__hero-stats--loading .landing__stat-skeleton {
+  display: inline-block;
+  width: 68px;
+  height: 26px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-skeleton-base) 25%, var(--color-skeleton-highlight) 50%, var(--color-skeleton-base) 75%);
+  background-size: 200% 100%;
+  animation: landing-skeleton-shimmer 1.5s infinite;
+  filter: blur(2px);
+}
+
+@keyframes landing-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* stats section labels — separate Today from All-time */
 .landing__today-head,
 .landing__alltime-head {

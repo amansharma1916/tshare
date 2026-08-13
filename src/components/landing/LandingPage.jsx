@@ -188,6 +188,7 @@ const fadeUp = (delay = 0) => ({
 const LandingPage = ({
   stats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0 },
   todayStats = { visitors: 0, files_shared: 0, received: 0, premium_users: 0, date: '' },
+  statsLoading = false,
 }) => {
   const navigate = useNavigate()
 
@@ -318,7 +319,7 @@ const LandingPage = ({
         </div>
 
         <motion.div
-          className="landing__hero-stats landing__hero-stats--today"
+          className={`landing__hero-stats landing__hero-stats--today${statsLoading ? ' landing__hero-stats--loading' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.45, ease }}
@@ -326,7 +327,11 @@ const LandingPage = ({
           {todayStatItems.map((s) => (
             <div className="landing__stat" key={s.label}>
               <div className="landing__stat-value">
-                <Counter value={s.value} />
+                {statsLoading ? (
+                  <span className="landing__stat-skeleton" aria-hidden="true" />
+                ) : (
+                  <Counter value={s.value} />
+                )}
               </div>
               <div className="landing__stat-label">{s.label}</div>
             </div>
@@ -345,7 +350,7 @@ const LandingPage = ({
         </div>
 
         <motion.div
-          className="landing__hero-stats landing__hero-stats--alltime"
+          className={`landing__hero-stats landing__hero-stats--alltime${statsLoading ? ' landing__hero-stats--loading' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease }}
@@ -353,7 +358,11 @@ const LandingPage = ({
           {statItems.map((s) => (
             <div className="landing__stat" key={s.label}>
               <div className="landing__stat-value">
-                <Counter value={s.value} />
+                {statsLoading ? (
+                  <span className="landing__stat-skeleton" aria-hidden="true" />
+                ) : (
+                  <Counter value={s.value} />
+                )}
               </div>
               <div className="landing__stat-label">{s.label}</div>
             </div>
