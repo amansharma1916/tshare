@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
-import './LandingPage.css'// Animated counter component
+import './LandingPage.css'
+
+// Format numbers with commas (e.g., 1,234,567)
+const format = (num) => {
+  return num.toLocaleString('en-US')
+}
+
+// Animated counter component
 const Counter = ({ value, duration = 2 }) => {
   const [display, setDisplay] = useState(0)
   const ref = useRef(null)
