@@ -208,6 +208,15 @@ const AdminPanel = () => {
     });
     const [statsLoading, setStatsLoading] = useState(false);
     const [statsError, setStatsError] = useState('');
+    const [todayStats, setTodayStats] = useState({
+        visitors: 0,
+        files_shared: 0,
+        received: 0,
+        premium_users: 0,
+        date: ''
+    });
+    const [todayStatsLoading, setTodayStatsLoading] = useState(false);
+    const [todayStatsError, setTodayStatsError] = useState('');
 
     // ─── Pagination State ───
     // Page Size
@@ -375,6 +384,7 @@ const AdminPanel = () => {
         if (activeTab === 'settings') {
             fetchPricingSettings();
             fetchStats();
+            fetchTodayStats();
         }
     }, [activeTab]);
 
@@ -521,6 +531,66 @@ const AdminPanel = () => {
                 showActionMessage(data.message || 'Failed to update stats', 'error');
             }
         } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const fetchTodayStats = async () => {
+        setTodayStatsLoading(true);
+        setTodayStatsError('');
+        try {
+            const response = await fetch(endpoints.adminStatsToday, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success && data.stats) {
+                const s = data.stats;
+                setTodayStats({
+                    visitors: s.visitors || 0,
+                    files_shared: s.files_shared || 0,
+                    received: s.received || 0,
+                    premium_users: s.premium_users || 0,
+                    date: s.date || ''
+                });
+            } else {
+                setTodayStatsError('Failed to fetch today\'s stats');
+            }
+        } catch {
+            setTodayStatsError('Failed to connect to server');
+        } finally {
+            setTodayStatsLoading(false);
+        }
+    };
+
+    const handleUpdateTodayStats = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(endpoints.adminStatsToday, {
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    visitors: Number(todayStats.visitors),
+                    files_shared: Number(todayStats.files_shared),
+                    received: Number(todayStats.received),
+                    premium_users: Number(todayStats.premium_users)
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                const s = data.stats;
+                setTodayStats({
+                    visitors: s.visitors || 0,
+                    files_shared: s.files_shared || 0,
+                    received: s.received || 0,
+                    premium_users: s.premium_users || 0,
+                    date: s.date || ''
+                });
+                showActionMessage('Today\'s stats updated successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to update today\'s stats', 'error');
+            }
+        } catch {
             showActionMessage('Failed to connect to server', 'error');
         }
     };
@@ -2455,6 +2525,87 @@ const AdminPanel = () => {
                                 </form>
                             </div>
 
+<div className="settings-field" style={{ display: 'block', padding: '20px' }}>
+                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Update Today's Stats</h3>
+                                {todayStats.date && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>date: {todayStats.date}</div>}
+                                {todayStatsError && <div className="error-message">{todayStatsError}</div>}
+                                <form onSubmit={handleUpdateTodayStats} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Visitors</label>
+                                        <input
+                                            type="number"
+                                            value={todayStats.visitors}
+                                            onChange={(e) => setTodayStats({...todayStats, visitors: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Files Shared</label>
+                                        <input
+                                            type="number"
+                                            value={todayStats.files_shared}
+                                            onChange={(e) => setTodayStats({...todayStats, files_shared: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Received</label>
+                                        <input
+                                            type="number"
+                                            value={todayStats.received}
+                                            onChange={(e) => setTodayStats({...todayStats, received: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Premium Users</label>
+                                        <input
+                                            type="number"
+                                            value={todayStats.premium_users}
+                                            onChange={(e) => setTodayStats({...todayStats, premium_users: e.target.value})}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <motion.button
+                                        type="submit"
+                                        className="Btn change-password"
+                                        style={{ height: '38px' }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Update Today's Stats
+                                    </motion.button>
+                                </form>
+                            </div>
+
                             <div className="settings-field">
                                 <div>
                                     <div className="field-label">Change Password</div>
@@ -2469,7 +2620,7 @@ const AdminPanel = () => {
                                     Change Password
                                 </motion.button>
                             </div>
-                            <div className="settings-field">
+<div className="settings-field">
                                 <div>
                                     <div className="field-label">Logout</div>
                                     <div className="field-value">Sign out of the admin panel</div>
