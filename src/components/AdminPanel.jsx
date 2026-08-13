@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
+import { Skeleton } from './common/Skeleton';
 
 const PAGE_SIZE = 10;
 
@@ -217,6 +218,8 @@ const AdminPanel = () => {
     });
     const [todayStatsLoading, setTodayStatsLoading] = useState(false);
     const [todayStatsError, setTodayStatsError] = useState('');
+    // Unified loading flag for the Settings tab (pricing + stats + today's stats)
+    const [settingsLoading, setSettingsLoading] = useState(false);
 
     // ─── Pagination State ───
     // Page Size
@@ -382,9 +385,10 @@ const AdminPanel = () => {
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'settings') {
-            fetchPricingSettings();
-            fetchStats();
-            fetchTodayStats();
+            setSettingsLoading(true);
+            Promise.all([fetchPricingSettings(), fetchStats(), fetchTodayStats()])
+                .catch(() => {})
+                .finally(() => setSettingsLoading(false));
         }
     }, [activeTab]);
 
@@ -2350,6 +2354,37 @@ const AdminPanel = () => {
                     <div>
                         <h1>Admin Settings</h1>
                         <div className="settings-section">
+                            {settingsLoading ? (
+                                <div className="settings-skeleton" aria-busy="true">
+                                    <div className="settings-skeleton__block">
+                                        <Skeleton className="settings-skeleton__title" />
+                                        <div className="settings-skeleton__row">
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__btn" />
+                                        </div>
+                                    </div>
+                                    <div className="settings-skeleton__block">
+                                        <Skeleton className="settings-skeleton__title" />
+                                        <div className="settings-skeleton__row">
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__btn" />
+                                        </div>
+                                    </div>
+                                    <div className="settings-skeleton__block">
+                                        <Skeleton className="settings-skeleton__title" />
+                                        <div className="settings-skeleton__row">
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__input" />
+                                            <Skeleton className="settings-skeleton__btn" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
                             <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
                                 <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
                                 <form onSubmit={handleUpdatePricing} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
@@ -2606,6 +2641,8 @@ const AdminPanel = () => {
                                     </motion.button>
                                 </form>
                             </div>
+                                </>
+                            )}
 
                             <div className="settings-field">
                                 <div>

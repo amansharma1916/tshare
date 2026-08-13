@@ -565,6 +565,44 @@
   margin-top: 2px;
 }
 
+/* ── Settings tab skeleton ── */
+.settings-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.settings-skeleton__block {
+  padding: 20px;
+  border: 1px solid #1e1e21;
+  border-radius: 12px;
+  background: var(--layout-bg);
+}
+
+.settings-skeleton__title {
+  height: 16px;
+  width: 180px;
+  margin-bottom: 18px;
+}
+
+.settings-skeleton__row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.settings-skeleton__input {
+  height: 36px;
+  width: 140px;
+}
+
+.settings-skeleton__btn {
+  height: 38px;
+  width: 130px;
+}
+
 /* ── Modals ── */
 .modal-overlay {
   position: fixed;
