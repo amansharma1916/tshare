@@ -170,3 +170,21 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Converting placeholder shown while the background PDF job runs */
+.org-dash__converting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: #666;
+  text-align: center;
+}
+
+.org-dash__converting p {
+  font-size: 13.5px;
+  color: #888;
+  margin: 0;
+}

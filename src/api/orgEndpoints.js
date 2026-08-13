@@ -12,6 +12,7 @@ export const orgEndpoints = {
   previewData: (id) => `${baseUrl}/org/preview/${id}`,
   previewDataRaw: (id) => `${baseUrl}/org/preview/${id}?raw=1`,
   previewDataPdf: (id) => `${baseUrl}/org/preview/${id}?pdf=1`,
+  previewStatus: (id) => `${baseUrl}/org/preview/${id}/status`,
   downloadData: (id) => `${baseUrl}/org/download/${id}`,
   submitText: (code) => `${baseUrl}/org/submit/${code}`,
   uploadFile: (code) => `${baseUrl}/org/upload/${code}`,

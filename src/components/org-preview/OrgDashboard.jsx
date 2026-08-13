@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { orgEndpoints } from '../../api/orgEndpoints';
-import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth';
+import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth.js';
 import '../org/OrgDashboard.css';
 import './OrgDashboardPreview.css';
 
@@ -214,6 +214,10 @@ const OrgDashboard = () => {
   const [searchCursor, setSearchCursor] = useState(null);
   const searchCursorRef = useRef(null);
   useEffect(() => { searchCursorRef.current = searchCursor; }, [searchCursor]);
+
+  // Preview conversion status for the selected item ('pending' / 'ready' / ...).
+  const [previewStatus, setPreviewStatus] = useState('na');
+  const previewPollRef = useRef(null);
 
   const load = useCallback(async (loadMore = false, isSearch = false) => {
     if (loadMore) {
@@ -436,6 +440,34 @@ const OrgDashboard = () => {
     [items, selectedId],
   );
 
+  // Poll the preview conversion status for the selected image/file. Start polling
+  // whenever the item is pending (or a legacy 'na' that will lazy-backfill), stop
+  // once it reaches 'ready' / 'failed' / still-'na' (non-convertible).
+  useEffect(() => {
+    if (previewPollRef.current) { clearTimeout(previewPollRef.current); previewPollRef.current = null; }
+    setPreviewStatus(selectedItem?.pdfStatus || 'na');
+    if (!selectedItem || selectedItem.dataType === 'text' || !selectedItem.id) return undefined;
+
+    const doPoll = async () => {
+      try {
+        const res = await fetch(orgEndpoints.previewStatus(selectedItem.id), { headers: orgAuthHeaders(token) });
+        const data = await res.json();
+        const s = (data && data.pdfStatus) || 'na';
+        setPreviewStatus(s);
+        if (s === 'pending') previewPollRef.current = setTimeout(doPoll, 2000);
+      } catch (err) {
+        previewPollRef.current = setTimeout(doPoll, 3000);
+      }
+    };
+
+    const s0 = selectedItem.pdfStatus || 'na';
+    // 'pending' = converting; 'na' = maybe legacy that /status will backfill.
+    if (s0 === 'pending' || s0 === 'na') previewPollRef.current = setTimeout(doPoll, 400);
+
+    return () => { if (previewPollRef.current) clearTimeout(previewPollRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem?.id, selectedItem?.pdfStatus]);
+
   if (!token) {
     return (
       <div className="org-shell__inner">
@@ -578,9 +610,9 @@ const OrgDashboard = () => {
                       </span>
 
                       <div className="org-dash__item-primary" title={preview(item)}>
-                        {item.dataType === 'image' && item.id ? (
+                        {item.dataType === 'image' && item.id && item.pdfStatus !== 'ready' ? (
                           <img src={orgEndpoints.previewDataRaw(item.id)} alt="" className="org-dash__thumb" />
-                        ) : item.dataType === 'file' ? (
+                        ) : item.dataType === 'file' || (item.dataType === 'image' && item.pdfStatus === 'ready') ? (
                           <span className="org-dash__file-icon"><Icon name="file" size={18} /></span>
                         ) : (
                           <span className="org-dash__text-icon"><Icon name="text" size={18} /></span>
@@ -654,7 +686,12 @@ const OrgDashboard = () => {
                 {selectedItem.dataType === 'image' && (
                   <div className="org-dash__preview-file">
                     <div className="org-dash__file-preview-area">
-                      {renderFilePreview(selectedItem)}
+                      {previewStatus === 'pending' ? (
+                        <div className="org-dash__converting">
+                          <span className="org-dash__spinner" />
+                          <p>Converting to PDF…</p>
+                        </div>
+                      ) : renderFilePreview(selectedItem)}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'Image'}</div>
@@ -673,7 +710,12 @@ const OrgDashboard = () => {
                 {selectedItem.dataType === 'file' && (
                   <div className="org-dash__preview-file">
                     <div className="org-dash__file-preview-area">
-                      {renderFilePreview(selectedItem)}
+                      {previewStatus === 'pending' ? (
+                        <div className="org-dash__converting">
+                          <span className="org-dash__spinner" />
+                          <p>Converting to PDF…</p>
+                        </div>
+                      ) : renderFilePreview(selectedItem)}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'File'}</div>
