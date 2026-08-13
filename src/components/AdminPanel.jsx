@@ -2525,7 +2525,7 @@ const AdminPanel = () => {
                                 </form>
                             </div>
 
-<div className="settings-field" style={{ display: 'block', padding: '20px' }}>
+                            <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
                                 <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Update Today's Stats</h3>
                                 {todayStats.date && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>date: {todayStats.date}</div>}
                                 {todayStatsError && <div className="error-message">{todayStatsError}</div>}
@@ -2598,6 +2598,7 @@ const AdminPanel = () => {
                                         type="submit"
                                         className="Btn change-password"
                                         style={{ height: '38px' }}
+                                        disabled={todayStatsLoading}
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                     >
@@ -2620,7 +2621,7 @@ const AdminPanel = () => {
                                     Change Password
                                 </motion.button>
                             </div>
-<div className="settings-field">
+                            <div className="settings-field">
                                 <div>
                                     <div className="field-label">Logout</div>
                                     <div className="field-value">Sign out of the admin panel</div>
