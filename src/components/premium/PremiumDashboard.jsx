@@ -13,6 +13,7 @@ const PremiumDashboard = () => {
   const [selectedCode, setSelectedCode] = useState(null)
   const [loadingCodes, setLoadingCodes] = useState(true)
   const [loadingUpdate, setLoadingUpdate] = useState(false)
+  const [savingSettings, setSavingSettings] = useState(false)
   
   // Update state
   const [activeTab, setActiveTab] = useState('text') // 'text' | 'image' | 'file'
@@ -221,6 +222,53 @@ const PremiumDashboard = () => {
       setErrorMessage('Network error while updating content')
     } finally {
       setLoadingUpdate(false)
+    }
+  }
+
+  // Save display name & visibility without re-uploading content
+  const handleSaveSettings = async () => {
+    if (!selectedCode || savingSettings) return
+
+    setErrorMessage('')
+    setSuccessMessage('')
+    setSavingSettings(true)
+
+    const formData = new FormData()
+    formData.append('username', username)
+    formData.append('code', selectedCode.code)
+    formData.append('dataType', activeTab)
+    formData.append('displayName', displayNameInput)
+    formData.append('isPublic', isPublic)
+    // Only append file if user has selected one
+    if (activeTab !== 'text' && fileInput) {
+      formData.append('file', fileInput)
+    }
+    // For text, preserve current text
+    if (activeTab === 'text') {
+      formData.append('text', textInput)
+    }
+    try {
+      const res = await fetch(endpoints.updatePremiumCode, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders()
+        },
+        body: formData
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSuccessMessage('Settings updated successfully!')
+        const updatedCodes = codes.map(c => c.code === selectedCode.code ? data.premiumCode : c)
+        setCodes(updatedCodes)
+        setSelectedCode(data.premiumCode)
+      } else {
+        setErrorMessage(data.message || 'Failed to update settings')
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Network error while updating settings')
+    } finally {
+      setSavingSettings(false)
     }
   }
 
@@ -454,47 +502,18 @@ const PremiumDashboard = () => {
                   <button
                     type="button"
                     className="btn-settings-save"
-                    onClick={async () => {
-                      setErrorMessage('')
-                      setSuccessMessage('')
-                      const formData = new FormData()
-                      formData.append('username', username)
-                      formData.append('code', selectedCode.code)
-                      formData.append('dataType', activeTab)
-                      formData.append('displayName', displayNameInput)
-                      formData.append('isPublic', isPublic)
-                      // Only append file if user has selected one
-                      if (activeTab !== 'text' && fileInput) {
-                        formData.append('file', fileInput)
-                      }
-                      // For text, preserve current text
-                      if (activeTab === 'text') {
-                        formData.append('text', textInput)
-                      }
-                      try {
-                        const res = await fetch(endpoints.updatePremiumCode, {
-                          method: 'POST',
-                          headers: {
-                            ...getAuthHeaders()
-                          },
-                          body: formData
-                        })
-                        const data = await res.json()
-                        if (res.ok) {
-                          setSuccessMessage('Settings updated successfully!')
-                          const updatedCodes = codes.map(c => c.code === selectedCode.code ? data.premiumCode : c)
-                          setCodes(updatedCodes)
-                          setSelectedCode(data.premiumCode)
-                        } else {
-                          setErrorMessage(data.message || 'Failed to update settings')
-                        }
-                      } catch (err) {
-                        setErrorMessage('Network error while updating settings')
-                      }
-                    }}
-                    style={{ marginBottom: '20px' , background: 'linear-gradient(135deg, var(--theme-primary-light), var(--theme-primary))', color: '#fff', fontWeight: 600, padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+                    onClick={handleSaveSettings}
+                    disabled={savingSettings}
+                    style={{ marginBottom: '20px' , background: 'linear-gradient(135deg, var(--theme-primary-light), var(--theme-primary))', color: '#fff', fontWeight: 600, padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: savingSettings ? 'not-allowed' : 'pointer', opacity: savingSettings ? 0.7 : 1 }}
                   >
-                    Save Display Name & Visibility
+                    {savingSettings ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="btn__spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></span>
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Display Name & Visibility'
+                    )}
                   </button>
 
                   {/* DataType Tabs */}

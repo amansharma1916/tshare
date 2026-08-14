@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './SharePage.css';
 import { endpoints, baseUrl } from '../api/api';
 import io from 'socket.io-client';
-import UsernamePopup from './auth/UsernamePopup';
+import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 
@@ -17,10 +17,7 @@ const SharePage = () => {
   const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
   const [showCode, setShowCode] = useState(false);
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [pendingText, setPendingText] = useState('');
-  const [popupError, setPopupError] = useState('');
-  const [popupSubmitting, setPopupSubmitting] = useState(false);
+  const [shareError, setShareError] = useState('');
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -41,19 +38,14 @@ const SharePage = () => {
     }
 
     const username = localStorage.getItem('tshare_username');
-    if (!username) {
-      setPendingText(text);
-      setPopupError('');
-      setPopupOpen(true);
-      return;
-    }
-
-    doSaveText(text, username);
+    setShareError('');
+    doSaveText(text, username || '');
   };
 
   const doSaveText = (textToSave, username) => {
     setLoading(true);
     setShowCode(false);
+    setShareError('');
 
     return fetch(endpoints.save, {
       method: 'POST',
@@ -83,31 +75,11 @@ const SharePage = () => {
       })
       .catch(error => {
         console.error('Error:', error);
-        throw error;
+        setShareError(error.message || 'Failed to save text');
       })
       .finally(() => {
         setLoading(false);
       });
-  };
-
-  const handleUsernameSubmit = (username) => {
-    setPopupError('');
-    setPopupSubmitting(true);
-    doSaveText(pendingText, username)
-      .then(() => {
-        setPopupOpen(false);
-      })
-      .catch(error => {
-        setPopupError(error.message || 'Something went wrong');
-      })
-      .finally(() => {
-        setPopupSubmitting(false);
-      });
-  };
-
-  const handleAnonymous = () => {
-    setPopupOpen(false);
-    doSaveText(pendingText, '');
   };
 
   const copyCode = () => {
@@ -168,16 +140,6 @@ const SharePage = () => {
           </div>
         </motion.nav>
       )}
-
-    <UsernamePopup
-      isOpen={popupOpen}
-      onClose={() => { setPopupOpen(false); setPopupError(''); }}
-      onUsernameSubmit={handleUsernameSubmit}
-      onAnonymous={handleAnonymous}
-      submitError={popupError}
-      onClearSubmitError={() => setPopupError('')}
-      submitting={popupSubmitting}
-    />
 
     <main className="share">
         <div className="share__container">
@@ -355,6 +317,7 @@ const SharePage = () => {
                     </div>
                   </div>
                   <div className="editor-actions">
+                    <UsernameMapper />
                     <button
                       className="editor-clear-btn"
                       onClick={() => { setText(''); textareaRef.current?.focus() }}
@@ -395,6 +358,15 @@ const SharePage = () => {
                       )}
                     </button>
                   </div>
+                  {shareError && (
+                    <motion.p
+                      className="share__error"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      {shareError}
+                    </motion.p>
+                  )}
                 </div>
               </motion.div>
             )}

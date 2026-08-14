@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
-import UsernamePopup from './auth/UsernamePopup';
+import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 
@@ -22,11 +22,6 @@ const RecievePage = () => {
   // Unified receive state — holds whatever type the API returns
   const [receivedContent, setReceivedContent] = useState(null); // { dataType, id, text/image/file, createdAt }
   const [showContent, setShowContent] = useState(false);
-
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [pendingCode, setPendingCode] = useState('');
-  const [popupError, setPopupError] = useState('');
-  const [popupSubmitting, setPopupSubmitting] = useState(false);
 
   // Password protection state
   const [passwordRequired, setPasswordRequired] = useState(false);
@@ -138,38 +133,11 @@ const RecievePage = () => {
     }
 
     const username = localStorage.getItem('tshare_username');
-    if (!username) {
-      setPendingCode(code);
-      setPopupError('');
-      setPopupOpen(true);
-      return;
-    }
-
-    doReceive(code, username);
+    doReceive(code, username || '');
   };
 
   const doReceive = (code, username) => {
     return receiveData(code, username);
-  };
-
-  const handleUsernameSubmit = (username) => {
-    setPopupError('');
-    setPopupSubmitting(true);
-    doReceive(pendingCode, username)
-      .then(() => {
-        setPopupOpen(false);
-      })
-      .catch(error => {
-        setPopupError(error.message || 'Something went wrong');
-      })
-      .finally(() => {
-        setPopupSubmitting(false);
-      });
-  };
-
-  const handleAnonymous = () => {
-    setPopupOpen(false);
-    doReceive(pendingCode, '');
   };
 
   const handlePasswordSubmit = async () => {
@@ -292,7 +260,6 @@ const RecievePage = () => {
       }
     } catch (err) {
       setError(err.message || 'Failed to retrieve data');
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -511,16 +478,6 @@ const RecievePage = () => {
         </motion.nav>
       )}
 
-      <UsernamePopup
-        isOpen={popupOpen}
-        onClose={() => { setPopupOpen(false); setPopupError(''); }}
-        onUsernameSubmit={handleUsernameSubmit}
-        onAnonymous={handleAnonymous}
-        submitError={popupError}
-        onClearSubmitError={() => setPopupError('')}
-        submitting={popupSubmitting}
-      />
-
       <main className="receive">
         <div className="receive__container">
           {receivedContent?.isPremium && !passwordRequired && !passwordRequired && (
@@ -701,6 +658,7 @@ const RecievePage = () => {
             </div>
 
             <div className="receive__actions-row">
+              <UsernameMapper />
               <button className="editor-clear-btn" onClick={clearAll} type="button" disabled={isReceiving}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18" />

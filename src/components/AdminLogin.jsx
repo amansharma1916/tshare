@@ -35,7 +35,7 @@ const AdminLogin = () => {
             if (data.success) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
                 sessionStorage.setItem('adminToken', data.token);
-                navigate('/admin/panel');
+                navigate('/admin/panel?tab=dashboard');
             } else {
                 setError(data.message || 'Invalid password');
             }

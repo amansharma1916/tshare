@@ -1,0 +1,181 @@
+/* ============================================================
+   Inline username mapping widget
+   A very small "Map" button that expands an inline input beside
+   it — no modal. Mapped username is stored in localStorage.
+   ============================================================ */
+
+.umapper {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Closed: the small map button ──────────────────────────── */
+.umapper__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: rgba(24, 24, 27, 0.6);
+  border: 1px solid var(--border-default);
+  transition: color 0.18s var(--ease-out), border-color 0.18s var(--ease-out),
+    background 0.18s var(--ease-out);
+}
+
+.umapper__btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.umapper__btn-label {
+  line-height: 1;
+}
+
+/* ── Mapped pill: shows the linked username ────────────────── */
+.umapper__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 8px 0 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-primary-light);
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+}
+
+.umapper__pill svg {
+  flex-shrink: 0;
+  color: var(--theme-primary-light);
+}
+
+.umapper__pill-name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.umapper__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  transition: color 0.15s var(--ease-out), background 0.15s var(--ease-out);
+}
+
+.umapper__icon-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.umapper__pill .umapper__icon-btn:hover {
+  color: var(--theme-primary-light);
+}
+
+/* ── Open: inline input row ────────────────────────────────── */
+.umapper__form {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(24, 24, 27, 0.85);
+  border: 1px solid var(--border-strong);
+  animation: umapperIn 0.18s var(--ease-out);
+}
+
+.umapper__input {
+  width: 150px;
+  min-height: 32px;
+  padding: 0 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+}
+
+.umapper__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.umapper__input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+}
+
+.umapper__submit {
+  color: var(--theme-success);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.umapper__submit:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(34, 197, 94, 0.35);
+}
+
+.umapper__submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.umapper__cancel:hover {
+  color: var(--theme-danger);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.umapper__error {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-left: 4px;
+}
+
+.umapper__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes umapperIn {
+  from { opacity: 0; transform: translateX(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .umapper__form {
+    width: 100%;
+  }
+
+  .umapper__input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .umapper__error {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
+}

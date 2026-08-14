@@ -42,6 +42,7 @@ const sidebarSections = [
   {
     label: 'Admin',
     items: [
+      { label: 'Analytics', icon: 'layout-dashboard', path: '/admin/panel?tab=dashboard' },
       { label: 'Texts', icon: 'message-square', path: '/admin/panel?tab=texts' },
       { label: 'Images', icon: 'image', path: '/admin/panel?tab=images' },
       { label: 'Files', icon: 'file', path: '/admin/panel?tab=files' },
