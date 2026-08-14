@@ -63,6 +63,7 @@ export const endpoints = {
     verifyPayment: `${API_URL}/api/verify-payment`,
     checkPremiumCode: (code) => `${API_URL}/api/check-premium-code/${code}`,
     premiumLogin: `${API_URL}/api/premium-login`,
+    changePremiumPassword: `${API_URL}/api/change-premium-password`,
     myCodes: `${API_URL}/api/my-codes`,
     updatePremiumCode: `${API_URL}/api/update-premium-code`,
     adminPremiumCodes: `${API_URL}/admin/premium-codes`,

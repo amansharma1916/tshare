@@ -34,6 +34,15 @@ const PremiumDashboard = () => {
   const [codePassword, setCodePassword] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' })
+
+  // Change account password state
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changePasswordLoading, setChangePasswordLoading] = useState(false)
+  const [changePasswordError, setChangePasswordError] = useState('')
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState('')
   
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -321,6 +330,69 @@ const PremiumDashboard = () => {
     navigate('/premium/login')
   }
 
+  const openChangePasswordModal = () => {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setChangePasswordError('')
+    setChangePasswordSuccess('')
+    setShowChangePasswordModal(true)
+  }
+
+  const closeChangePasswordModal = () => {
+    if (changePasswordLoading) return
+    setShowChangePasswordModal(false)
+    setChangePasswordError('')
+    setChangePasswordSuccess('')
+  }
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (changePasswordLoading) return
+
+    setChangePasswordError('')
+    setChangePasswordSuccess('')
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setChangePasswordError('Please fill in all password fields')
+      return
+    }
+    if (newPassword.length < 6) {
+      setChangePasswordError('New password must be at least 6 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setChangePasswordError('New passwords do not match')
+      return
+    }
+
+    setChangePasswordLoading(true)
+    try {
+      const res = await fetch(endpoints.changePremiumPassword, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setChangePasswordSuccess(data.message || 'Password changed successfully')
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      } else {
+        setChangePasswordError(data.message || 'Failed to change password')
+      }
+    } catch (err) {
+      console.error(err)
+      setChangePasswordError('Network error while changing password')
+    } finally {
+      setChangePasswordLoading(false)
+    }
+  }
+
   if (loadingCodes) {
     return (
       <div className="premium-container">
@@ -344,7 +416,10 @@ const PremiumDashboard = () => {
             </h1>
             <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>Logged in as: <strong style={{ color: 'var(--theme-primary-light)' }}>{username}</strong></p>
           </div>
-          <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button className="btn btn-secondary" onClick={openChangePasswordModal}>Change Password</button>
+            <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
+          </div>
         </div>
 
         {codes.length === 0 ? (
@@ -758,6 +833,118 @@ const PremiumDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div className="premium-modal-overlay" onClick={closeChangePasswordModal}>
+          <div
+            className="premium-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="change-password-title"
+          >
+            <div className="premium-modal__head">
+              <h2 id="change-password-title">Change Password</h2>
+              <button
+                type="button"
+                className="premium-modal__close"
+                onClick={closeChangePasswordModal}
+                aria-label="Close"
+                disabled={changePasswordLoading}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="premium-modal__desc">
+              Update the password used to log in to your premium account.
+            </p>
+
+            <form onSubmit={handleChangePassword} className="premium-modal__form">
+              {changePasswordError && (
+                <div className="premium-modal__alert premium-modal__alert--error" role="alert">
+                  {changePasswordError}
+                </div>
+              )}
+              {changePasswordSuccess && (
+                <div className="premium-modal__alert premium-modal__alert--success">
+                  {changePasswordSuccess}
+                </div>
+              )}
+
+              <label className="section-label">Current Password</label>
+              <input
+                type="password"
+                className="custom-amount-input"
+                placeholder="Enter current password"
+                style={{ paddingLeft: '14px', boxSizing: 'border-box', width: '100%' }}
+                value={currentPassword}
+                onChange={(e) => { setCurrentPassword(e.target.value); setChangePasswordError(''); setChangePasswordSuccess('') }}
+                autoFocus
+              />
+
+              <label className="section-label" style={{ marginTop: '14px' }}>New Password</label>
+              <input
+                type="password"
+                className="custom-amount-input"
+                placeholder="Minimum 6 characters"
+                style={{ paddingLeft: '14px', boxSizing: 'border-box', width: '100%' }}
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setChangePasswordError(''); setChangePasswordSuccess('') }}
+              />
+
+              <label className="section-label" style={{ marginTop: '14px' }}>Confirm New Password</label>
+              <input
+                type="password"
+                className="custom-amount-input"
+                placeholder="Re-enter new password"
+                style={{ paddingLeft: '14px', boxSizing: 'border-box', width: '100%' }}
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setChangePasswordError(''); setChangePasswordSuccess('') }}
+              />
+
+              <div className="premium-modal__actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeChangePasswordModal}
+                  disabled={changePasswordLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-settings-save"
+                  disabled={changePasswordLoading}
+                  style={{
+                    background: 'linear-gradient(135deg, #d4af37, #f59e0b)',
+                    color: '#000',
+                    fontWeight: 600,
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: changePasswordLoading ? 'not-allowed' : 'pointer',
+                    opacity: changePasswordLoading ? 0.7 : 1
+                  }}
+                >
+                  {changePasswordLoading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="btn__spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></span>
+                      Saving...
+                    </span>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
