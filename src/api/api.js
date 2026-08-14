@@ -3,22 +3,28 @@ if (!API_URL) {
     throw new Error('Missing VITE_BACKEND_URL. Set it in your frontend .env file.');
 }
 
+// Lambda function URL for share create + retrieve.
+// Falls back to the backend when not set (e.g. local dev).
+const LAMBDA_URL = import.meta.env.VITE_LAMBDA_URL || API_URL;
+
 export const baseUrl = API_URL;
+
+export const lambdaBaseUrl = LAMBDA_URL;
 
 export const endpoints = {
     wakeServer: `${API_URL}/wake-server`,
     visit: `${API_URL}/visit`,
-    save: `${API_URL}/save`,
+    save: `${LAMBDA_URL}/save`,
     get: (id) => `${API_URL}/get/${id}`,
-    uploadImage: `${API_URL}/image/upload`,
+    uploadImage: `${LAMBDA_URL}/image/upload`,
     getImage: (id) => `${API_URL}/image/${id}`,
     downloadImage: (id) => `${API_URL}/image/download/${id}`,
     uploadPdf: `${API_URL}/pdf/upload`,
     getPdf: (id) => `${API_URL}/pdf/${id}`,
     previewPdf: (id) => `${API_URL}/pdf/preview/${id}`,
     downloadPdf: (id) => `${API_URL}/pdf/download/${id}`,
-    getData: (id) => `${API_URL}/data/${id}`,
-    uploadFile: `${API_URL}/file/upload`,
+    getData: (id) => `${LAMBDA_URL}/data/${id}`,
+    uploadFile: `${LAMBDA_URL}/file/upload`,
     getFile: (id) => `${API_URL}/file/${id}`,
     previewFile: (id) => `${API_URL}/file/preview/${id}`,
     downloadFile: (id) => `${API_URL}/file/download/${id}`,
@@ -87,5 +93,6 @@ export const endpoints = {
 export default {
     API_URL,
     baseUrl,
+    lambdaBaseUrl,
     endpoints,
 };
