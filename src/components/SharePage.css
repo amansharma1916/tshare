@@ -361,6 +361,17 @@
 
 .editor-share-btn { flex: 1; }
 
+/* Inline error (share/file/image pages) */
+.share__error {
+  font-size: 0.875rem;
+  color: var(--theme-danger);
+  text-align: center;
+  padding: 0.625rem 1rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-md);
+}
+
 /* generic buttons */
 .btn {
   display: inline-flex;

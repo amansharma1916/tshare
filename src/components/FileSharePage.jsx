@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './FileSharePage.css';
 import { endpoints } from '../api/api';
-import UsernamePopup from './auth/UsernamePopup';
+import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 
 const FileSharePage = () => {
@@ -17,9 +17,6 @@ const FileSharePage = () => {
   const [fileError, setFileError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [popupOpen, setPopupOpen] = useState(false);
-  const [popupError, setPopupError] = useState('');
-  const [popupSubmitting, setPopupSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   const getFileIcon = (file) => {
@@ -100,13 +97,7 @@ const FileSharePage = () => {
     }
 
     const username = localStorage.getItem('tshare_username');
-    if (!username) {
-      setPopupError('');
-      setPopupOpen(true);
-      return;
-    }
-
-    doUploadFile(username);
+    doUploadFile(username || '');
   };
 
   const doUploadFile = (username) => {
@@ -138,31 +129,10 @@ const FileSharePage = () => {
       .catch(error => {
         console.error('Error:', error);
         setFileError(error.message || 'Failed to upload file');
-        throw error;
       })
       .finally(() => {
         setFileLoading(false);
       });
-  };
-
-  const handleUsernameSubmit = (username) => {
-    setPopupError('');
-    setPopupSubmitting(true);
-    doUploadFile(username)
-      .then(() => {
-        setPopupOpen(false);
-      })
-      .catch(error => {
-        setPopupError(error.message || 'Something went wrong');
-      })
-      .finally(() => {
-        setPopupSubmitting(false);
-      });
-  };
-
-  const handleAnonymous = () => {
-    setPopupOpen(false);
-    doUploadFile('');
   };
 
   const copyFileCode = () => {
@@ -219,16 +189,6 @@ const FileSharePage = () => {
           </div>
         </motion.nav>
       )}
-
-    <UsernamePopup
-      isOpen={popupOpen}
-      onClose={() => { setPopupOpen(false); setPopupError(''); }}
-      onUsernameSubmit={handleUsernameSubmit}
-      onAnonymous={handleAnonymous}
-      submitError={popupError}
-      onClearSubmitError={() => setPopupError('')}
-      submitting={popupSubmitting}
-    />
 
     <main className="share">
         <div className="share__container">
@@ -504,6 +464,7 @@ const FileSharePage = () => {
                   )}
 
                   <div className="editor-actions">
+                    <UsernameMapper />
                     <button
                       className="editor-clear-btn"
                       onClick={handleClear}
