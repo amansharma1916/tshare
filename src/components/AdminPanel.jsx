@@ -2,11 +2,98 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminPanel.css';
+import AdminDashboard from './AdminDashboard';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 import { Skeleton } from './common/Skeleton';
 
 const PAGE_SIZE = 10;
+
+// Admin panel internal navigation tabs
+const ADMIN_TABS = [
+    { key: 'dashboard', label: 'Analytics', icon: 'analytics' },
+    { key: 'texts', label: 'Texts', icon: 'text' },
+    { key: 'images', label: 'Images', icon: 'image' },
+    { key: 'files', label: 'Files', icon: 'file' },
+    { key: 'public-rooms', label: 'Rooms', icon: 'rooms' },
+    { key: 'users', label: 'Users', icon: 'users' },
+    { key: 'premium-codes', label: 'Premium Codes', icon: 'codes' },
+    { key: 'premium-users', label: 'Premium Users', icon: 'premium' },
+    { key: 'settings', label: 'Settings', icon: 'settings' },
+];
+
+const AdminTabIcon = ({ name }) => {
+    const props = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+    switch (name) {
+        case 'analytics':
+            return (
+                <svg {...props}>
+                    <path d="M3 3v18h18" />
+                    <path d="M7 16l4-4 3 3 5-6" />
+                </svg>
+            );
+        case 'text':
+            return (
+                <svg {...props}>
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+            );
+        case 'image':
+            return (
+                <svg {...props}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                </svg>
+            );
+        case 'file':
+            return (
+                <svg {...props}>
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+            );
+        case 'rooms':
+            return (
+                <svg {...props}>
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+            );
+        case 'users':
+            return (
+                <svg {...props}>
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+            );
+        case 'codes':
+            return (
+                <svg {...props}>
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+            );
+        case 'premium':
+            return (
+                <svg {...props}>
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+            );
+        default:
+            return (
+                <svg {...props}>
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+            );
+    }
+};
 
 // Truncate text to a maximum number of words, appending an ellipsis
 const truncateText = (text, maxWords = 50) => {
@@ -272,7 +359,8 @@ const AdminPanel = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [actionMessage, setActionMessage] = useState({ text: '', type: '' });
-    const [activeTab, setActiveTab] = useState('texts');
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
     const [showPublicRoomModal, setShowPublicRoomModal] = useState(false);
     const [publicRoomName, setPublicRoomName] = useState('');
     
@@ -302,7 +390,7 @@ const AdminPanel = () => {
         // Read tab from query params
         const params = new URLSearchParams(location.search);
         const tab = params.get('tab');
-        if (tab && ['texts', 'images', 'files', 'public-rooms', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
+        if (tab && ['dashboard', 'texts', 'images', 'files', 'public-rooms', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
             setActiveTab(tab);
         }
     }, [location.search]);
@@ -394,6 +482,9 @@ const AdminPanel = () => {
 
     const refreshAll = () => {
         switch (activeTab) {
+            case 'dashboard':
+                setDashboardRefreshKey(k => k + 1);
+                break;
             case 'texts':
                 fetchTexts(textsPage, textsSearchTerm);
                 break;
@@ -1608,6 +1699,11 @@ const AdminPanel = () => {
         navigate('/admin/login');
     };
 
+    const handleAdminTabClick = (key) => {
+        setActiveTab(key);
+        navigate(`/admin/panel?tab=${key}`);
+    };
+
     const handlePageSizeChange = (newSize) => {
         setPageSize(newSize);
         // Reset all pages to 1 when page size changes
@@ -1707,6 +1803,24 @@ const AdminPanel = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
+                <nav className="admin-tabs" aria-label="Admin sections">
+                    {ADMIN_TABS.map((t) => (
+                        <button
+                            key={t.key}
+                            type="button"
+                            className={`tab-btn ${activeTab === t.key ? 'tab-btn--active' : ''}`}
+                            onClick={() => handleAdminTabClick(t.key)}
+                            aria-current={activeTab === t.key ? 'page' : undefined}
+                        >
+                            <AdminTabIcon name={t.icon} />
+                            <span>{t.label}</span>
+                        </button>
+                    ))}
+                </nav>
+
+                {activeTab === 'dashboard' && (
+                    <AdminDashboard getAuthHeaders={getAuthHeaders} refreshKey={dashboardRefreshKey} />
+                )}
                 {activeTab === 'texts' && (
                     <div>
                         <div className="tab-header">

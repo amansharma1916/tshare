@@ -78,6 +78,7 @@ export const endpoints = {
     stats: `${API_URL}/api/stats`,
     adminStats: `${API_URL}/admin/stats`,
     adminStatsToday: `${API_URL}/admin/stats/today`,
+    adminDashboard: (params) => `${API_URL}/admin/dashboard?${params}`,
     setCodePassword: `${API_URL}/api/set-code-password`,
     verifyCodePassword: `${API_URL}/api/verify-code-password`,
   };

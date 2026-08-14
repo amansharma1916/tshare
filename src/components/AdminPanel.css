@@ -75,6 +75,48 @@
   letter-spacing: -0.02em;
 }
 
+/* ── Admin internal tab bar ── */
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 4px;
+  background: #101012;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #e4e4e7;
+  background: #1c1c1f;
+}
+
+.tab-btn--active {
+  color: #fff;
+  background: #27272a;
+}
+
+.tab-btn--active svg {
+  color: #a78bfa;
+}
+
 /* ── Tab Header ── */
 .tab-header {
   display: flex;
@@ -885,13 +927,15 @@
   }
 
   .admin-tabs {
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .tab-btn {
-    width: 100%;
-    text-align: center;
+    flex-shrink: 0;
   }
 
   .modal {
