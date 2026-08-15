@@ -7,8 +7,8 @@ const About = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "About TShare - Instant File Sharing Platform",
-    "description": "Learn about TShare, a fast and secure file sharing platform created by Aman Sharma. Share text, images, and files instantly using 4-digit codes.",
+    "name": "About TShare - One 4-digit key. Anything inside.",
+    "description": "Learn about TShare, the sharing platform built on one idea: one 4-digit key, anything inside. Share text, images, and files instantly using 4-digit codes.",
     "mainEntity": {
       "@type": "Person",
       "name": "Aman Sharma",
@@ -31,43 +31,43 @@ const About = () => {
           </div>
           <span className="page__badge">
             <span className="page__badge-dot" />
-            About · Open source · Made with care
+            About · One 4-digit key · Anything inside
           </span>
           <h1 className="page__title">
             About <span className="page__title-gradient">TShare</span>
           </h1>
           <p className="page__subtitle">
-            Fast, secure, and user-friendly content sharing without registration
+            One 4-digit key. Anything inside. Sharing without registration, without friction.
           </p>
         </div>
         <div className="page__content">
           <section className="page__section">
             <h2>About the Owner</h2>
             <p>
-              TShare was created by <strong>Aman Sharma</strong>, a passionate full-stack developer who believes in making technology accessible to everyone. 
-              With a vision to simplify file sharing and remove barriers like complex registrations and lengthy processes, 
-              Aman built TShare to provide instant, secure, and user-friendly content sharing for everyone.
+              TShare was created by <strong>Aman Sharma</strong>, a full-stack developer who believes sharing
+              should be instant. No accounts, no setup, no friction — just a 4-digit key that opens anything.
+              With that idea, Aman built TShare to make sharing text, images and files as easy as sending a message.
             </p>
             <p>
-              The platform reflects a commitment to simplicity, privacy, and exceptional user experience. 
-              Every feature is designed with the user in mind, ensuring that sharing content is as easy as possible.
+              The platform reflects a commitment to simplicity, privacy, and a clean user experience.
+              Every feature exists to answer one question: what is the fastest way to get content from A to B?
             </p>
           </section>
 
           <section className="page__section">
             <h2>Our Mission</h2>
             <p>
-              TShare was created with a simple mission: to make file sharing as effortless as possible. 
-              We believe that sharing files shouldn't require accounts, complex setups, or lengthy processes. 
-              Our goal is to provide a fast, secure, and user-friendly platform for instant content sharing.
+              One 4-digit key. Anything inside. That is the whole idea behind TShare — every piece of content,
+              from a password to a document, can be locked behind a short key that works on any device,
+              with no registration required.
             </p>
           </section>
 
           <section className="page__section">
             <h2>What We Offer</h2>
             <p>
-              TShare enables you to share text, images, and files instantly using a unique 4-digit code. 
-              No sign-up required, no accounts to manage, and no complicated interfaces. Just generate a code, 
+              TShare lets you share text, images, and files instantly using a 4-digit code.
+              No sign-up, no accounts to manage, no complicated interfaces — generate a code,
               share it with your recipient, and they can access your content immediately.
             </p>
           </section>
@@ -75,76 +75,67 @@ const About = () => {
           <section className="page__section">
             <h2>Complete Feature List</h2>
             <p>
-              TShare offers a comprehensive set of features designed to make content sharing fast, secure, and convenient. 
-              Here's everything you can do with TShare:
+              Here's everything you can do with TShare today:
             </p>
             <ul>
-              <li><strong>Instant Text Sharing:</strong> Share text content instantly with a unique 4-digit code. Perfect for quick notes, messages, or any text-based content.</li>
-              
-              <li><strong>Image Sharing:</strong> Upload and share images securely. Recipients can view images immediately using the share code.</li>
-              
-              <li><strong>File Sharing:</strong> Support for multiple file formats including documents, PDFs, videos, audio files, and more. Share any file type with ease.</li>
-              
-              <li><strong>4-Digit Code System:</strong> Simple and memorable 4-digit codes for easy sharing. No complex URLs or long links to remember.</li>
-              
-              <li><strong>Public Chat Rooms:</strong> Create or join public chat rooms using room codes. Perfect for group discussions, team collaboration, or casual conversations.</li>
-              
-              <li><strong>Real-time Messaging:</strong> Instant message delivery with WebSocket technology. See messages appear in real-time without refreshing.</li>
-              
-              <li><strong>Emoji Support:</strong> Express yourself with a built-in emoji picker. Add fun and personality to your messages.</li>
-              
-              <li><strong>Copy Message:</strong> One-click copy button on every message for quick copying of text content.</li>
-              
-              <li><strong>User Presence:</strong> See who's online in chat rooms with real-time user count and presence indicators.</li>
-              
-              <li><strong>Typing Indicators:</strong> Know when someone is typing a message with animated typing indicators.</li>
-              
-              <li><strong>Secure and Private:</strong> Temporary storage with automatic deletion. Your data is not stored permanently for privacy.</li>
-              
-              <li><strong>No Registration Required:</strong> Start sharing immediately without creating accounts. Optional username for personalization.</li>
-              
-              <li><strong>Fully Responsive:</strong> Works seamlessly on desktop, tablet, and mobile devices. Share on the go.</li>
-              
-              <li><strong>Modern UI/UX:</strong> Beautiful, intuitive interface with smooth animations and glassmorphism design.</li>
-              
-              <li><strong>Real-time Notifications:</strong> Get notified when users join or leave rooms with system messages.</li>
-              
-              <li><strong>Premium Codes:</strong> Purchase exclusive premium codes with golden branding, custom display names, and advanced features.</li>
-              
-              <li><strong>Password Protection:</strong> Secure your premium content with optional password protection. Recipients must enter the password to access protected content.</li>
-              
-              <li><strong>Content Management Dashboard:</strong> Premium users get a dedicated dashboard to manage their codes, update content, and track activity.</li>
-              
-              <li><strong>Public Marquee:</strong> Premium users can choose to display their codes and display names in a public showcase.</li>
-              
-              <li><strong>6-Digit Codes:</strong> Extended code length option for even more unique and memorable codes.</li>
-              
-              <li><strong>Admin Panel:</strong> Comprehensive admin dashboard to manage all shared content, users, and public rooms.</li>
-              
-              <li><strong>Auto-reconnection:</strong> Smart socket reconnection handling ensures you stay connected even with network issues.</li>
+              <li><strong>Instant Text Sharing:</strong> Share text content instantly with a unique 4-digit code — notes, links, passwords, anything.</li>
+
+              <li><strong>Image Sharing:</strong> Upload and share images (up to 5 MB). Recipients view them immediately with the share code.</li>
+
+              <li><strong>File Sharing:</strong> Share common file formats up to 50 MB — PDFs, documents, spreadsheets, code files and more.</li>
+
+              <li><strong>4-Digit Code System:</strong> Simple, memorable 4-digit codes. No long URLs to remember or retype.</li>
+
+              <li><strong>Validity Controls:</strong> Choose how long a share lives — No limit (default), viewable only once (1-time), or valid for 6 hours. Expired or consumed shares are removed from our servers automatically.</li>
+
+              <li><strong>Public Chat Rooms:</strong> Join public chat rooms with a 4-digit room code. Real-time group conversations, no account needed.</li>
+
+              <li><strong>Real-time Messaging:</strong> Instant message delivery with WebSocket technology — messages appear live without refreshing.</li>
+
+              <li><strong>Emoji Support:</strong> Express yourself with a built-in emoji picker in chat rooms.</li>
+
+              <li><strong>Copy Message:</strong> One-click copy button on every chat message.</li>
+
+              <li><strong>User Presence & Typing Indicators:</strong> See who's online in a room and when someone is typing.</li>
+
+              <li><strong>No Registration Required:</strong> Start sharing immediately. An optional username is only for personalizing your sharing history.</li>
+
+              <li><strong>Premium Codes:</strong> Purchase exclusive premium codes with custom 4 or 6 character keys, display names, password protection and a content dashboard.</li>
+
+              <li><strong>Password Protection:</strong> Protect premium content with a password — recipients must enter it to view.</li>
+
+              <li><strong>Premium Dashboard:</strong> Manage your premium codes — update content, control visibility, protect with passwords, and renew before expiry.</li>
+
+              <li><strong>Renewable Premium:</strong> Premium codes are valid for 30 days and can be renewed — renewing adds another 30 days, and an expired code can be repurchased.</li>
+
+              <li><strong>Public Marquee:</strong> Premium users can show their codes and display names in a public showcase.</li>
+
+              <li><strong>Organization Module:</strong> Businesses can register an organization, get a public code and QR, and let customers hand over files and messages without accounts.</li>
+
+              <li><strong>Admin Panel:</strong> Full admin dashboard to manage shared content, users, public rooms, premium codes and site stats.</li>
             </ul>
           </section>
 
           <section className="page__section">
             <h2>How It Works</h2>
             <p>
-              Using TShare is simple and straightforward. Follow these three easy steps to start sharing:
+              Using TShare is simple. Follow these three steps:
             </p>
             <div className="how-it-works">
               <div className="step">
                 <div className="step__number">1</div>
                 <h3>Create</h3>
-                <p>Choose what you want to share - text, image, or file. Upload or type your content.</p>
+                <p>Choose what you want to share — text, image, or file. Optionally set a validity (1-time or 6 hours).</p>
               </div>
               <div className="step">
                 <div className="step__number">2</div>
                 <h3>Share</h3>
-                <p>Get a unique 4-digit code. Share it with your recipient via any messaging platform.</p>
+                <p>Get a unique 4-digit code and share it anywhere — any messaging platform works.</p>
               </div>
               <div className="step">
                 <div className="step__number">3</div>
                 <h3>Access</h3>
-                <p>Recipient enters the code on TShare and instantly accesses your shared content.</p>
+                <p>The recipient enters the code on TShare and instantly sees your shared content.</p>
               </div>
             </div>
           </section>
@@ -152,29 +143,30 @@ const About = () => {
           <section className="page__section">
             <h2>Our Values</h2>
             <p>
-              We prioritize simplicity, privacy, and user experience. We believe technology should make life easier, 
-              not more complicated. That's why we've designed TShare to be intuitive, fast, and respectful of your privacy.
+              We prioritize simplicity, privacy, and user experience. We believe technology should make life easier,
+              not more complicated — which is why TShare has no sign-up wall and keeps sharing instant.
             </p>
           </section>
 
           <section className="page__section">
             <h2>Technology Stack</h2>
             <p>
-              TShare is built using modern web technologies including React, Node.js, Express, and Socket.io for real-time communication. 
-              We focus on performance, reliability, and scalability to ensure the best possible experience for our users.
+              TShare is built on a modern stack: a React frontend with a Node.js + Express backend,
+              Socket.io for real-time chat, MongoDB for data, Cloudflare R2 for file storage,
+              Redis/Valkey for caching, and Razorpay for premium payments.
             </p>
           </section>
 
           <section className="page__section">
             <h2>Contact Us</h2>
             <p>
-              Have questions, suggestions, or feedback? We'd love to hear from you! 
+              Have questions, suggestions, or feedback? We'd love to hear from you!
               Please visit our <Link to="/contact" className="page__link">Contact page</Link> to get in touch.
             </p>
           </section>
         </div>
       </div>
-      
+
       {/* Structured Data for SEO */}
       <script type="application/ld+json">
         {JSON.stringify(structuredData)}
