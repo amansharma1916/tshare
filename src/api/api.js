@@ -3,12 +3,7 @@ if (!API_URL) {
     throw new Error('Missing VITE_BACKEND_URL. Set it in your frontend .env file.');
 }
 
-// Lambda function URL for share create + retrieve.
-// Falls back to the backend when not set (e.g. local dev).
-const API_URL = import.meta.env.VITE_API_URL || API_URL;
-
-
-
+export const baseUrl = API_URL;
 
 export const endpoints = {
     wakeServer: `${API_URL}/wake-server`,
@@ -81,5 +76,6 @@ export const endpoints = {
 
 export default {
     API_URL,
+    baseUrl,
     endpoints,
 };
