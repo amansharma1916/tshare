@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /premium/dashboard
+Disallow: /org/dashboard
 
 # Allow AI crawlers and bots for better indexing
 User-agent: GPTBot

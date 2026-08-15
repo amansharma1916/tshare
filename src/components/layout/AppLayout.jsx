@@ -34,6 +34,8 @@ const AppLayout = ({ children }) => {
   const statsFetchedRef = useRef(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const marqueeRef = useRef(null)
+  const [marqueeDuration, setMarqueeDuration] = useState(30)
 
   const username = localStorage.getItem('tshare_username') || ''
   const isAdmin = sessionStorage.getItem('adminAuthenticated') === 'true'
@@ -50,6 +52,19 @@ const AppLayout = ({ children }) => {
       return () => clearInterval(interval);
     }
   }, [location.pathname]);
+
+  // Keep marquee speed constant regardless of how many purchases are shown.
+  // The CSS animates translateX(-50%) — a distance equal to the content width —
+  // so the duration must scale with that width to hold a fixed px/sec speed.
+  useEffect(() => {
+    const el = marqueeRef.current;
+    if (!el || recentPurchases.length === 0) return;
+    const width = el.scrollWidth;
+    if (width > 0) {
+      // 60 px/sec — duration = one-copy width / speed
+      setMarqueeDuration(Math.max(10, width / 2 / 60));
+    }
+  }, [recentPurchases]);
 
   const fetchRecentPurchases = async () => {
     try {
@@ -162,7 +177,7 @@ const AppLayout = ({ children }) => {
         <div className="content-area">
           {isNotAdminPage && recentPurchases.length > 0 && (
             <div className="premium-marquee-container">
-              <div className="premium-marquee-text">
+              <div className="premium-marquee-text" ref={marqueeRef} style={{ animationDuration: `${marqueeDuration}s` }}>
                 {[...recentPurchases, ...recentPurchases].map((purchase, index) => (
                   <span key={index}>
                     👑 <strong>{purchase.displayName || 'Anonymous'}</strong> purchased Premium Code {purchase.code ? <strong>{purchase.code.toUpperCase()}</strong> : <strong>🔒</strong>}!

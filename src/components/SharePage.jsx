@@ -5,6 +5,7 @@ import './SharePage.css';
 import { endpoints, baseUrl } from '../api/api';
 import io from 'socket.io-client';
 import UsernameMapper from './auth/UsernameMapper';
+import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 
@@ -16,6 +17,7 @@ const SharePage = () => {
   const [copied, setCopied] = useState(false);
   const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
+  const [validity, setValidity] = useState('none');
   const [showCode, setShowCode] = useState(false);
   const [shareError, setShareError] = useState('');
   const textareaRef = useRef(null);
@@ -50,7 +52,7 @@ const SharePage = () => {
     return fetch(endpoints.save, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: textToSave, username }),
+      body: JSON.stringify({ text: textToSave, username, validity }),
     })
       .then(res => {
         if (!res.ok) {
@@ -95,6 +97,7 @@ const SharePage = () => {
   const handleShareAnother = () => {
     setShowCode(false);
     setCode('');
+    setValidity('none');
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
@@ -299,6 +302,7 @@ const SharePage = () => {
                     <div className="editor-bar">
                       <span className="editor-bar__dots" aria-hidden="true"><i /><i /><i /></span>
                       <span className="editor-bar__label">tshare / text</span>
+                      <ValiditySelector value={validity} onChange={setValidity} />
                       <span className="editor-bar__live"><span className="editor-bar__pulse" /> stored &amp; reusable</span>
                     </div>
                     <textarea

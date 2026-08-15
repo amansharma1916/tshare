@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { endpoints } from '../../api/api'
 import { Skeleton } from '../common/Skeleton'
@@ -106,13 +106,17 @@ const Stepper = ({ activeStep }) => {
 
 const BuyPremium = () => {
   const navigate = useNavigate()
-  const [code, setCode] = useState('')
-  const [codeLength, setCodeLength] = useState(4) // 4 or 6
+  const [searchParams] = useSearchParams()
+  const [code, setCode] = useState(() => (searchParams.get('code') || '').toUpperCase())
+  const [codeLength, setCodeLength] = useState(() => {
+    const c = searchParams.get('code') || ''
+    return c.length === 6 ? 6 : 4
+  })
   const [isChecking, setIsChecking] = useState(false)
   const [codeStatus, setCodeStatus] = useState(null) // 'available' | 'unavailable' | null
   const [codeMessage, setCodeMessage] = useState('')
 
-  const [usernameInput, setUsernameInput] = useState('')
+  const [usernameInput, setUsernameInput] = useState(() => searchParams.get('username') || '')
   const [passwordInput, setPasswordInput] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -246,12 +250,14 @@ const BuyPremium = () => {
     setCodeMessage('')
 
     try {
-      const res = await fetch(endpoints.checkPremiumCode(cleanCode))
+      const username = usernameInput.trim()
+      // Pass ?username= so the owner of an existing code can renew it
+      const res = await fetch(`${endpoints.checkPremiumCode(cleanCode)}${username ? `?username=${encodeURIComponent(username)}` : ''}`)
       const data = await res.json()
       if (res.ok) {
         if (data.isAvailable) {
           setCodeStatus('available')
-          setCodeMessage('This code is available!')
+          setCodeMessage(data.renewal ? 'Your code — renewal available' : 'This code is available!')
         } else {
           // Check if this is one of our own for-sale codes
           const isListedForSale = forSaleCodes.some(c => c.code.toUpperCase() === cleanCode.toUpperCase())
@@ -285,7 +291,7 @@ const BuyPremium = () => {
       setCodeStatus(null)
       setCodeMessage('')
     }
-  }, [code, codeLength])
+  }, [code, codeLength, usernameInput])
 
   // Determine active stepper step from current form progress
   const activeStep = useMemo(() => {

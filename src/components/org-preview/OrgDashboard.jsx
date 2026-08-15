@@ -310,7 +310,7 @@ const OrgDashboard = () => {
       searchDebounceRef.current = setTimeout(() => {
         setSearchCursor(null);
         loadSearch(false);
-      }, 300);
+      }, 600);
     } else {
       setSearchMode(false);
       setSearchResults([]);
@@ -436,8 +436,11 @@ const OrgDashboard = () => {
   }, [showQrModal]);
 
   const selectedItem = useMemo(
-    () => items.find((i) => i.id === selectedId) || null,
-    [items, selectedId],
+    () =>
+      items.find((i) => i.id === selectedId) ||
+      searchResults.find((i) => i.id === selectedId) ||
+      null,
+    [items, searchResults, selectedId],
   );
 
   // Poll the preview conversion status for the selected image/file. Start polling
