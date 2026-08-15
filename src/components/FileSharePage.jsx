@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './FileSharePage.css';
 import { endpoints } from '../api/api';
 import UsernameMapper from './auth/UsernameMapper';
+import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 
 const FileSharePage = () => {
@@ -17,6 +18,7 @@ const FileSharePage = () => {
   const [fileError, setFileError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [validity, setValidity] = useState('none');
   const fileInputRef = useRef(null);
 
   const getFileIcon = (file) => {
@@ -104,6 +106,7 @@ const FileSharePage = () => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('username', username);
+    formData.append('validity', validity);
 
     setFileLoading(true);
     setFileError('');
@@ -150,6 +153,7 @@ const FileSharePage = () => {
     setFileCode('');
     setFile(null);
     setFilePreview('');
+    setValidity('none');
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
@@ -339,6 +343,7 @@ const FileSharePage = () => {
                     <div className="editor-bar">
                       <span className="editor-bar__dots" aria-hidden="true"><i /><i /><i /></span>
                       <span className="editor-bar__label">tshare / file</span>
+                      <ValiditySelector value={validity} onChange={setValidity} />
                       <span className="editor-bar__live"><span className="editor-bar__pulse" /> up to 50MB</span>
                     </div>
                     <div

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './ImageSharePage.css';
 import { endpoints } from '../api/api';
 import UsernameMapper from './auth/UsernameMapper';
+import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 
 const ImageSharePage = () => {
@@ -17,6 +18,7 @@ const ImageSharePage = () => {
   const [imageError, setImageError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [validity, setValidity] = useState('none');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -81,6 +83,7 @@ const ImageSharePage = () => {
     const formData = new FormData();
     formData.append('image', imageFile);
     formData.append('username', username);
+    formData.append('validity', validity);
 
     setImageLoading(true);
     setImageError('');
@@ -127,6 +130,7 @@ const ImageSharePage = () => {
     setImageCode('');
     setImageFile(null);
     setImagePreview('');
+    setValidity('none');
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
@@ -315,6 +319,7 @@ const ImageSharePage = () => {
                     <div className="editor-bar">
                       <span className="editor-bar__dots" aria-hidden="true"><i /><i /><i /></span>
                       <span className="editor-bar__label">tshare / image</span>
+                      <ValiditySelector value={validity} onChange={setValidity} />
                       <span className="editor-bar__live"><span className="editor-bar__pulse" /> up to 5MB</span>
                     </div>
                     <div
