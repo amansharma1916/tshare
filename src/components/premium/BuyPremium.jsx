@@ -124,6 +124,8 @@ const BuyPremium = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const [transactionDetails, setTransactionDetails] = useState(null)
   const [pricingLoading, setPricingLoading] = useState(true)
+  const [showNewUserConfirm, setShowNewUserConfirm] = useState(false)
+  const [checkingAccount, setCheckingAccount] = useState(false)
 
   // Fetch Pricing & Codes for Sale
   useEffect(() => {
@@ -327,6 +329,60 @@ const BuyPremium = () => {
       return
     }
 
+    setCheckingAccount(true)
+
+    try {
+      const checkRes = await fetch(endpoints.checkAccount, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: usernameInput.trim(),
+          password: passwordInput
+        })
+      })
+      const checkData = await checkRes.json()
+
+      if (!checkData.success) {
+        throw new Error(checkData.message || 'Failed to verify account credentials')
+      }
+
+      // Existing user with wrong password → block payment
+      if (checkData.exists && checkData.passwordMatch === false) {
+        setErrorMessage(checkData.message || 'Username already exists and password does not match')
+        return
+      }
+
+      // New user → confirm before opening the payment window
+      if (!checkData.exists) {
+        setShowNewUserConfirm(true)
+        return
+      }
+
+      // Existing user with matching password → proceed
+      await openPaymentWindow(amountInPaise, finalAmountInRs)
+    } catch (err) {
+      console.error('Error checking account:', err)
+      setErrorMessage(err.message || 'Could not verify account credentials. Please try again.')
+    } finally {
+      setCheckingAccount(false)
+    }
+  }
+
+  const handleNewUserConfirm = async () => {
+    setShowNewUserConfirm(false)
+
+    const finalAmountInRs = parseFloat(amount)
+    const amountInPaise = Math.round(finalAmountInRs * 100)
+
+    try {
+      await openPaymentWindow(amountInPaise, finalAmountInRs)
+    } catch (err) {
+      console.error('Error starting checkout:', err)
+      setErrorMessage(err.message || 'Could not initiate checkout. Please try again.')
+    }
+  }
+
+  const openPaymentWindow = async (amountInPaise, finalAmountInRs) => {
     setLoading(true)
 
     try {
@@ -451,7 +507,7 @@ const BuyPremium = () => {
       ? 'var(--theme-danger)'
       : 'var(--text-muted)'
 
-  const payEnabled = !loading && paymentStatus !== 'success' && codeStatus === 'available' && code && usernameInput.trim() && passwordInput.trim()
+  const payEnabled = !loading && !checkingAccount && paymentStatus !== 'success' && codeStatus === 'available' && code && usernameInput.trim() && passwordInput.trim()
 
   return (
     <div className="bp-page">
@@ -779,6 +835,59 @@ const BuyPremium = () => {
         </>
         )}
       </motion.div>
+
+      {/* New user confirmation modal */}
+      <AnimatePresence>
+        {showNewUserConfirm && (
+          <motion.div
+            className="bp-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowNewUserConfirm(false)}
+          >
+            <motion.div
+              className="bp-modal"
+              initial={{ scale: 0.92, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bp-modal__icon">
+                <IconSparkle size={22} />
+              </div>
+              <h3 className="bp-modal__title">New Account Purchase</h3>
+              <p className="bp-modal__text">
+                <strong>{usernameInput.trim()}</strong> isn't registered yet. You're about to purchase
+                code <strong className="bp-code-pill">{code}</strong> on a brand-new account.
+              </p>
+              <p className="bp-modal__text bp-modal__text--muted">
+                This will create a new premium account with these credentials. Make sure the username
+                and password are correct.
+              </p>
+              <div className="bp-modal__actions">
+                <motion.button
+                  type="button"
+                  className="bp-modal__btn bp-modal__btn--ghost"
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => setShowNewUserConfirm(false)}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  type="button"
+                  className="bp-modal__btn bp-modal__btn--confirm"
+                  whileHover={{ scale: 1.02 }}
+                  onClick={handleNewUserConfirm}
+                >
+                  Continue to Payment
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

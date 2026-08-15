@@ -817,6 +817,90 @@
   color: var(--color-premium);
 }
 
+/* ── New account confirmation modal ── */
+.bp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 5, 10, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.bp-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface, #16161c);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.bp-modal__icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-premium), var(--color-premium-light));
+  color: #0a0a0f;
+}
+
+.bp-modal__title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-premium-light);
+}
+
+.bp-modal__text {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-primary, #f5f5f7);
+}
+
+.bp-modal__text--muted {
+  color: var(--text-tertiary, #9a9aa2);
+  font-size: 13px;
+}
+
+.bp-modal__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.bp-modal__btn {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 160ms ease-out;
+}
+
+.bp-modal__btn--ghost {
+  background: transparent;
+  color: var(--text-tertiary, #9a9aa2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.bp-modal__btn--confirm {
+  background: linear-gradient(135deg, var(--color-premium), var(--color-premium-light));
+  color: #0a0a0f;
+}
+
 /* ════════════════════════════════════════════════════════════
    RESPONSIVE
    ════════════════════════════════════════════════════════════ */

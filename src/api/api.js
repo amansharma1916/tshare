@@ -66,6 +66,7 @@ export const endpoints = {
     userItems: (username) => `${API_URL}/user/${username}/items`,
     userHistory: (username) => `${API_URL}/user/${username}/history`,
     createOrder: `${API_URL}/api/create-order`,
+    checkAccount: `${API_URL}/api/check-account`,
     verifyPayment: `${API_URL}/api/verify-payment`,
     checkPremiumCode: (code) => `${API_URL}/api/check-premium-code/${code}`,
     premiumLogin: `${API_URL}/api/premium-login`,
