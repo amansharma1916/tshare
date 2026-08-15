@@ -48,6 +48,7 @@ export const endpoints = {
     register: `${API_URL}/register`,
     login: `${API_URL}/login`,
     userHistory: (username) => `${API_URL}/user/${username}/history`,
+    deleteAccount: (username) => `${API_URL}/user/${username}`,
     createOrder: `${API_URL}/api/create-order`,
     checkAccount: `${API_URL}/api/check-account`,
     verifyPayment: `${API_URL}/api/verify-payment`,

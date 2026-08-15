@@ -1,16 +1,73 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import JoinOrgForm from './JoinOrgForm'
 import sidebarSections from './sidebarData'
+import { endpoints } from '../../api/api'
 
 const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const isAdmin = sessionStorage.getItem('adminAuthenticated') === 'true'
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
   const handleNav = (path) => {
     if (onNavigate) onNavigate(path)
     navigate(path)
+  }
+
+  const openDeleteModal = () => {
+    document.getElementById('sidebar-user-menu')?.classList.remove('open')
+    setDeleteConfirm('')
+    setDeleteError('')
+    setShowDeleteModal(true)
+  }
+
+  const closeDeleteModal = () => {
+    if (deleting) return
+    setShowDeleteModal(false)
+    setDeleteConfirm('')
+    setDeleteError('')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleting) return
+    if (deleteConfirm.trim() !== (username || '')) {
+      setDeleteError('Type your username exactly to confirm deletion')
+      return
+    }
+    if (!username) return
+
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const res = await fetch(endpoints.deleteAccount(username), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (res.status === 401 && data.message && /premium/i.test(data.message)) {
+          setDeleteError('This is a premium account. Delete it from the Premium Dashboard instead.')
+        } else {
+          setDeleteError(data.message || 'Failed to delete account')
+        }
+        setDeleting(false)
+        return
+      }
+      localStorage.removeItem('tshare_username')
+      setShowDeleteModal(false)
+      setDeleting(false)
+      navigate('/')
+    } catch (err) {
+      console.error(err)
+      setDeleteError('Network error. Please try again.')
+      setDeleting(false)
+    }
   }
 
   const isActive = (path) => {
@@ -207,6 +264,16 @@ const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
                   </svg>
                   Sign Out
                 </button>
+                <button className="dropdown-item danger" onClick={openDeleteModal}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                  Delete Account
+                </button>
               </>
             ) : (
               <>
@@ -238,6 +305,74 @@ const Sidebar = ({ collapsed, onToggleCollapse, username, onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* ── Delete Account Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div className="delete-account-overlay" onClick={closeDeleteModal}>
+          <div
+            className="delete-account-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+          >
+            <div className="delete-account-modal__head">
+              <h2 id="delete-account-title">Delete Account</h2>
+              <button type="button" className="delete-account-modal__close" onClick={closeDeleteModal} aria-label="Close" disabled={deleting}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="delete-account-modal__desc">
+              This will permanently delete your account, your history and — if applicable — your
+              premium codes, files and payment records. Shared texts, images and files stay live.
+              This action <strong>cannot be undone</strong>.
+            </p>
+
+            {deleteError && (
+              <div className="delete-account-modal__error" role="alert">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <label className="delete-account-modal__label" htmlFor="delete-account-confirm">
+              Type <strong>{username}</strong> to confirm
+            </label>
+            <input
+              id="delete-account-confirm"
+              type="text"
+              className="delete-account-modal__input"
+              placeholder={username || 'Your username'}
+              value={deleteConfirm}
+              onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError('') }}
+              autoFocus
+              disabled={deleting}
+            />
+
+            <div className="delete-account-modal__actions">
+              <button type="button" className="btn" onClick={closeDeleteModal} disabled={deleting}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteConfirm.trim() !== (username || '')}
+              >
+                {deleting ? 'Deleting...' : 'Delete My Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
