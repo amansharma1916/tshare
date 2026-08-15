@@ -69,6 +69,13 @@ const PremiumDashboard = () => {
   const [changePasswordLoading, setChangePasswordLoading] = useState(false)
   const [changePasswordError, setChangePasswordError] = useState('')
   const [changePasswordSuccess, setChangePasswordSuccess] = useState('')
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -356,6 +363,66 @@ const PremiumDashboard = () => {
     navigate('/premium/login')
   }
 
+  const openDeleteModal = () => {
+    setDeletePassword('')
+    setDeleteConfirm('')
+    setDeleteError('')
+    setShowDeleteModal(true)
+  }
+
+  const closeDeleteModal = () => {
+    if (deleteLoading) return
+    setShowDeleteModal(false)
+    setDeletePassword('')
+    setDeleteConfirm('')
+    setDeleteError('')
+  }
+
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault()
+    if (deleteLoading) return
+
+    setDeleteError('')
+    if (deleteConfirm.trim() !== username) {
+      setDeleteError('Type your username exactly to confirm deletion')
+      return
+    }
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm')
+      return
+    }
+
+    setDeleteLoading(true)
+    try {
+      const res = await fetch(endpoints.deleteAccount(username), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ password: deletePassword })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDeleteError(data.message || 'Failed to delete account')
+        setDeleteLoading(false)
+        return
+      }
+      localStorage.removeItem('tshare_premium_token')
+      localStorage.removeItem('tshare_premium_username')
+      if (localStorage.getItem('tshare_username') === username) {
+        localStorage.removeItem('tshare_username')
+      }
+      setShowDeleteModal(false)
+      setDeleteLoading(false)
+      navigate('/premium/login')
+    } catch (err) {
+      console.error(err)
+      setDeleteError('Network error. Please try again.')
+      setDeleteLoading(false)
+    }
+  }
+
   const openChangePasswordModal = () => {
     setCurrentPassword('')
     setNewPassword('')
@@ -466,6 +533,9 @@ const PremiumDashboard = () => {
           <div className="pd-header__actions">
             <button className="pd-btn pd-btn--ghost" onClick={openChangePasswordModal}>
               <Icon name="key" size={15} /> Change Password
+            </button>
+            <button className="pd-btn pd-btn--danger" onClick={openDeleteModal}>
+              <Icon name="alert" size={15} /> Delete Account
             </button>
             <button className="pd-btn pd-btn--ghost" onClick={handleLogout}>
               <Icon name="logout" size={15} /> Logout
@@ -962,6 +1032,89 @@ const PremiumDashboard = () => {
                     <><span className="pd-spinner pd-spinner--dark" /> Saving...</>
                   ) : (
                     'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Account Modal ── */}
+      {showDeleteModal && (
+        <div className="pd-modal-overlay" onClick={closeDeleteModal}>
+          <div
+            className="pd-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+          >
+            <div className="pd-modal__head">
+              <h2 id="delete-account-title">Delete Account</h2>
+              <button
+                type="button"
+                className="pd-modal__close"
+                onClick={closeDeleteModal}
+                aria-label="Close"
+                disabled={deleteLoading}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="pd-modal__desc">
+              This permanently deletes your premium account, all your purchased codes, their uploaded
+              files and your payment records. Your codes will become available for purchase by others.
+              This action <strong>cannot be undone</strong>.
+            </p>
+
+            <form onSubmit={handleDeleteAccount} className="pd-modal__form">
+              {deleteError && (
+                <div className="pd-alert pd-alert--error" role="alert">
+                  <Icon name="alert" size={14} /><span>{deleteError}</span>
+                </div>
+              )}
+
+              <label className="pd-field__label" htmlFor="pd-del-pass">Password</label>
+              <input
+                id="pd-del-pass"
+                type="password"
+                className="pd-input"
+                placeholder="Enter your current password"
+                value={deletePassword}
+                onChange={(e) => { setDeletePassword(e.target.value); setDeleteError('') }}
+                autoFocus
+                disabled={deleteLoading}
+              />
+
+              <label className="pd-field__label" htmlFor="pd-del-confirm">Type <strong>{username}</strong> to confirm</label>
+              <input
+                id="pd-del-confirm"
+                type="text"
+                className="pd-input"
+                placeholder={username}
+                value={deleteConfirm}
+                onChange={(e) => { setDeleteConfirm(e.target.value); setDeleteError('') }}
+                disabled={deleteLoading}
+              />
+
+              <div className="pd-modal__actions">
+                <button type="button" className="pd-btn pd-btn--ghost" onClick={closeDeleteModal} disabled={deleteLoading}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="pd-btn pd-btn--danger"
+                  disabled={deleteLoading || deleteConfirm.trim() !== username || !deletePassword}
+                >
+                  {deleteLoading ? (
+                    <><span className="pd-spinner" /> Deleting...</>
+                  ) : (
+                    'Delete My Account'
                   )}
                 </button>
               </div>
