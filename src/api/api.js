@@ -5,27 +5,19 @@ if (!API_URL) {
 
 // Lambda function URL for share create + retrieve.
 // Falls back to the backend when not set (e.g. local dev).
-const LAMBDA_URL = import.meta.env.VITE_LAMBDA_URL || API_URL;
+const API_URL = import.meta.env.VITE_API_URL || API_URL;
 
-export const baseUrl = API_URL;
 
-export const lambdaBaseUrl = LAMBDA_URL;
+
 
 export const endpoints = {
     wakeServer: `${API_URL}/wake-server`,
     visit: `${API_URL}/visit`,
-    save: `${LAMBDA_URL}/save`,
-    get: (id) => `${API_URL}/get/${id}`,
-    uploadImage: `${LAMBDA_URL}/image/upload`,
-    getImage: (id) => `${API_URL}/image/${id}`,
+    save: `${API_URL}/save`,
+    uploadImage: `${API_URL}/image/upload`,
     downloadImage: (id) => `${API_URL}/image/download/${id}`,
-    uploadPdf: `${API_URL}/pdf/upload`,
-    getPdf: (id) => `${API_URL}/pdf/${id}`,
-    previewPdf: (id) => `${API_URL}/pdf/preview/${id}`,
-    downloadPdf: (id) => `${API_URL}/pdf/download/${id}`,
-    getData: (id) => `${LAMBDA_URL}/data/${id}`,
-    uploadFile: `${LAMBDA_URL}/file/upload`,
-    getFile: (id) => `${API_URL}/file/${id}`,
+    getData: (id) => `${API_URL}/data/${id}`,
+    uploadFile: `${API_URL}/file/upload`,
     previewFile: (id) => `${API_URL}/file/preview/${id}`,
     downloadFile: (id) => `${API_URL}/file/download/${id}`,
     adminLogin: `${API_URL}/admin/login`,
@@ -58,12 +50,8 @@ export const endpoints = {
     adminUsers: `${API_URL}/admin/users`,
     adminDeleteUser: (id) => `${API_URL}/admin/users/${id}`,
     adminDeleteAllUsers: `${API_URL}/admin/users`,
-    validatePublicRoom: (code) => `${API_URL}/public-room/validate/${code}`,
-    getPublicRoomMessages: (code) => `${API_URL}/public-room/${code}/messages`,
     register: `${API_URL}/register`,
     login: `${API_URL}/login`,
-    userMap: `${API_URL}/user/map`,
-    userItems: (username) => `${API_URL}/user/${username}/items`,
     userHistory: (username) => `${API_URL}/user/${username}/history`,
     createOrder: `${API_URL}/api/create-order`,
     checkAccount: `${API_URL}/api/check-account`,
@@ -93,7 +81,5 @@ export const endpoints = {
 
 export default {
     API_URL,
-    baseUrl,
-    lambdaBaseUrl,
     endpoints,
 };
