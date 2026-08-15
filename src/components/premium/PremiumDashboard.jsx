@@ -435,6 +435,16 @@ const PremiumDashboard = () => {
   const selectedType = selectedCode ? (selectedCode.dataType || 'empty') : 'empty'
   const protectedCount = codes.filter(c => c.hasPassword).length
 
+  // Expiry awareness: days left for the selected code (0 = today, negative = expired)
+  const daysLeft = selectedCode?.expiresAt
+    ? Math.ceil((new Date(selectedCode.expiresAt) - Date.now()) / 86400000)
+    : null
+  const isExpiringSoon = daysLeft !== null && daysLeft <= 3 && daysLeft >= 0
+  const isExpiredNow = daysLeft !== null && daysLeft < 0
+  const renewUrl = selectedCode
+    ? `/buy?code=${encodeURIComponent(selectedCode.code)}&username=${encodeURIComponent(username)}`
+    : '/buy'
+
   return (
     <div className="pd-page">
       <div className="pd-shell">
@@ -482,9 +492,17 @@ const PremiumDashboard = () => {
           </div>
           <div className="pd-stat">
             <div className="pd-stat__label"><Icon name="external" size={13} /> Status</div>
-            <div className="pd-stat__value" style={{ fontSize: '18px', color: '#86efac' }}>Active</div>
+            <div className="pd-stat__value" style={{ fontSize: '18px', color: isExpiredNow ? '#f87171' : isExpiringSoon ? '#fbbf24' : '#86efac' }}>
+              {isExpiredNow ? 'Expired' : isExpiringSoon ? 'Expiring' : 'Active'}
+            </div>
             <p className="pd-stat__hint">
-              {selectedCode?.expiresAt ? `Expires ${new Date(selectedCode.expiresAt).toLocaleDateString()}` : 'Lifetime validity'}
+              {selectedCode?.expiresAt
+                ? isExpiredNow
+                  ? `Expired ${new Date(selectedCode.expiresAt).toLocaleDateString()} — renew to reactivate`
+                  : isExpiringSoon
+                    ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left — renew soon`
+                    : `Expires ${new Date(selectedCode.expiresAt).toLocaleDateString()}`
+                : 'Lifetime validity'}
             </p>
           </div>
         </section>
@@ -536,9 +554,11 @@ const PremiumDashboard = () => {
 
                     <div className="pd-code-card__meta">
                       <span>{c.isPublic === false ? 'Hidden' : 'Public'}</span>
-                      {c.hasPassword && (
+                      {c.expiresAt && new Date(c.expiresAt) < new Date() ? (
+                        <span className="pd-lock-dot" style={{ color: '#f87171' }}><Icon name="alert" size={10} /> Expired</span>
+                      ) : c.hasPassword ? (
                         <span className="pd-lock-dot"><Icon name="lock" size={10} /> Protected</span>
-                      )}
+                      ) : null}
                     </div>
                   </button>
                 )
@@ -571,6 +591,38 @@ const PremiumDashboard = () => {
                     <Icon name="external" size={14} /> Open Link
                   </a>
                 </div>
+
+                {/* ── Renewal alert (≤3 days left) ── */}
+                {(isExpiringSoon || isExpiredNow) && (
+                  <div className={`pd-renewal ${isExpiredNow ? 'pd-renewal--expired' : ''}`} role="alert">
+                    <div className="pd-renewal__icon">
+                      <Icon name="alert" size={17} />
+                    </div>
+                    <div className="pd-renewal__body">
+                      <strong>
+                        {isExpiredNow
+                          ? 'This code has expired'
+                          : daysLeft === 0
+                            ? 'Expires today'
+                            : daysLeft === 1
+                              ? 'Expires in 1 day'
+                              : `Expires in ${daysLeft} days`}
+                      </strong>
+                      <span>
+                        {isExpiredNow
+                          ? 'Renew now to reactivate it for another 30 days.'
+                          : 'Renew now to keep it active for another 30 days.'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="pd-btn pd-btn--gold"
+                      onClick={() => navigate(renewUrl)}
+                    >
+                      <Icon name="crown" size={14} /> Renew · 30 days
+                    </button>
+                  </div>
+                )}
 
                 <form onSubmit={handleUpdate} className="premium-form" style={{ gap: '26px' }}>
                   {successMessage && (

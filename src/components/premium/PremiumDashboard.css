@@ -736,6 +736,58 @@
 
 .pd-lock__row .pd-input { flex: 1 1 240px; }
 
+/* ── Renewal alert ───────────────────────────────────────── */
+.pd-renewal {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.pd-renewal--expired {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(239, 68, 68, 0.04));
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.pd-renewal__icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fbbf24;
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.pd-renewal--expired .pd-renewal__icon {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.pd-renewal__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pd-renewal__body strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pd-renewal__body span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 /* ── Loading & empty states ──────────────────────────────── */
 .pd-center {
   display: flex;
