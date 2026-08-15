@@ -27,10 +27,17 @@ import OrgAuth from './components/org/OrgAuth.jsx'
 import OrgDashboard from './components/org-preview/OrgDashboard.jsx'
 import OrgSubmitPage from './components/org/OrgSubmitPage.jsx'
 import OrgUploadPage from './components/org/OrgUploadPage.jsx'
+import { SeoManager } from './seo/useSeo.js'
 
 // Layout wrapper for routes that need the sidebar/topbar
 const LayoutRoute = ({ children }) => {
   return <AppLayout>{children}</AppLayout>
+}
+
+// Applies per-route title/meta/JSON-LD on every navigation.
+const RouteSeo = () => {
+  const location = useLocation()
+  return <SeoManager pathname={location.pathname} />
 }
 
 // Component to handle refresh redirect - only runs once on initial load
@@ -96,6 +103,7 @@ function App() {
   return (
     <BrowserRouter>
       <RefreshRedirect />
+      <RouteSeo />
       <Routes>
         {/* Landing page */}
         <Route path='/' element={<LayoutRoute><LandingPage /></LayoutRoute>} />
