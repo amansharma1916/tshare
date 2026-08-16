@@ -1,0 +1,42 @@
+# TShare
+
+> One 4-digit key. Anything inside. TShare is a free, no-registration file and message sharing platform. Share text, images, and files instantly using a memorable 4-digit code, then anyone with the code can view or download the content from any device. Optional validity controls (no limit, viewable once, or 6 hours) auto-remove expired shares. The platform also offers realtime public chat rooms, premium codes with password protection and a content dashboard, and an organization module that lets businesses collect files and messages from customers via a printed QR code.
+
+## What TShare offers
+
+- Instant text, image, and file sharing via 4-digit codes with no sign-up required.
+- Validity controls per share: no limit (default), viewable only once, or valid for 6 hours. Expired or consumed shares are removed automatically.
+- Realtime public chat rooms with 4-digit room codes — WebSocket messaging, emoji picker, typing indicators, and user presence.
+- Premium codes: exclusive custom 4 or 6 character keys, display names, password protection, and a management dashboard. Codes are valid for 30 days and renewable.
+- Organization module: businesses register an org, get a 4-character alpha code + QR, and let customers anonymously hand over text, images, and files to an org dashboard.
+- Full admin panel for managing shared content, users, public rooms, premium codes, and site stats.
+- Created by Aman Sharma. Built on React + Node.js + Express, Socket.io, MongoDB, Cloudflare R2, and Redis/Valkey.
+
+## Key Pages
+
+- [Home — tshare.in](https://tshare.in/): landing page with the quick-share flow.
+- [Share Text](https://tshare.in/share): create a text share and get a 4-digit code.
+- [Share Image](https://tshare.in/share-image): upload and share an image (up to 5 MB).
+- [Share File](https://tshare.in/share-file): upload and share files (up to 50 MB).
+- [Receive](https://tshare.in/receive): enter a code to view or download shared content.
+- [Public Rooms](https://tshare.in/public-room): join or create realtime chat rooms with a room code.
+- [Dashboard](https://tshare.in/dashboard): account area for personalizing your sharing history.
+- [Buy Premium](https://tshare.in/buy): purchase premium codes with custom keys, password protection, and a content dashboard.
+- [Premium Login](https://tshare.in/premium/login): login for premium code owners.
+- [Org Register](https://tshare.in/org/register): register an organization to collect customer content via QR.
+- [Org Login](https://tshare.in/org/login): login for organization admins.
+- [About](https://tshare.in/about): story, features, and tech stack.
+- [Contact](https://tshare.in/contact): get in touch with the TShare team.
+- [Privacy Policy](https://tshare.in/privacy-policy): how data is handled and stored.
+- [Terms of Service](https://tshare.in/terms-of-service): usage terms and validity rules.
+
+## How sharing works
+
+1. Choose what to share — text, image, or file — and optionally set a validity (1-time or 6 hours).
+2. Receive a unique 4-digit code and share it through any channel.
+3. The recipient enters the code on tshare.in and instantly sees the shared content.
+
+## Notes
+
+- Sharing works without registration; an optional username only personalizes your sharing history.
+- Image uploads are capped at 5 MB; file uploads at 50 MB.
