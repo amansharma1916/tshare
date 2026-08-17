@@ -60,6 +60,13 @@ const PremiumDashboard = () => {
   const [buyLoading, setBuyLoading] = useState(false)
   const [buyMessage, setBuyMessage] = useState('')
 
+  // Renew code modal state
+  const [showRenewModal, setShowRenewModal] = useState(false)
+  const [renewCode, setRenewCode] = useState(null)
+  const [renewPrice, setRenewPrice] = useState(299)
+  const [renewLoading, setRenewLoading] = useState(false)
+  const [renewMessage, setRenewMessage] = useState('')
+
   // File input ref for the multi-select picker
   const fileInputRef = useRef(null)
 
@@ -331,6 +338,97 @@ const PremiumDashboard = () => {
     }
   }
 
+  const openRenewModal = async (codeObj) => {
+    setRenewCode(codeObj)
+    setRenewMessage('')
+    setShowRenewModal(true)
+    try {
+      const res = await fetch(endpoints.pricingSettings)
+      const data = await res.json()
+      const pricing = data?.pricing || {}
+      const price = (codeObj.code || '').length === 6
+        ? (pricing.premiumCodePrice6Digit ?? 99)
+        : (pricing.premiumCodePrice4Digit ?? 299)
+      setRenewPrice(price)
+    } catch (err) {
+      console.error(err)
+      setRenewPrice(codeObj.code.length === 6 ? 99 : 299)
+    }
+  }
+
+  const startRenewal = async () => {
+    if (renewLoading || !renewCode) return
+    setRenewMessage('')
+    setRenewLoading(true)
+    try {
+      const orderRes = await fetch(endpoints.createOrder, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Math.round(renewPrice * 100),
+          currency: 'INR',
+          username,
+          code: renewCode.code,
+          receipt: `rcpt_${Date.now()}`
+        })
+      })
+      const orderData = await orderRes.json()
+      if (!orderRes.ok) throw new Error(orderData.message || 'Failed to create order')
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TLzqWxx7hzbAYk',
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'TShare Code Store',
+        description: `Renew premium code ${renewCode.code} for 30 days`,
+        image: '/s2.svg',
+        order_id: orderData.order_id,
+        handler: async (paymentResponse) => {
+          const verifyRes = await fetch(endpoints.verifyPayment, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders()
+            },
+            body: JSON.stringify({
+              order_id: paymentResponse.razorpay_order_id,
+              payment_id: paymentResponse.razorpay_payment_id,
+              signature: paymentResponse.razorpay_signature,
+              username,
+              code: renewCode.code,
+              amount: orderData.amount
+            })
+          })
+          const verifyData = await verifyRes.json()
+          if (verifyRes.ok) {
+            setRenewMessage('')
+            setShowRenewModal(false)
+            setSuccessMessage(`Code ${renewCode.code} renewed for 30 more days!`)
+            await loadPremiumCodes()
+          } else {
+            setRenewMessage(verifyData.message || 'Payment verification failed')
+          }
+          setRenewLoading(false)
+        },
+        prefill: { name: username, email: `${username}@tshare.in`, contact: '9999999999' },
+        notes: { code: renewCode.code, username, renewal: true },
+        theme: { color: '#d4af37' },
+        modal: { ondismiss: () => { setRenewLoading(false); setRenewMessage('Payment cancelled') } }
+      }
+      const rzp = new window.Razorpay(options)
+      rzp.on('payment.failed', function (paymentResponse) {
+        console.error('Renewal payment failed:', paymentResponse.error)
+        setRenewMessage(paymentResponse.error.description || 'Payment transaction failed')
+        setRenewLoading(false)
+      })
+      rzp.open()
+    } catch (err) {
+      console.error(err)
+      setRenewMessage(err.message || 'Could not start renewal')
+      setRenewLoading(false)
+    }
+  }
+
   // Save display name & visibility
   const handleSaveSettings = async () => {
     if (!selectedCode || savingSettings) return
@@ -562,18 +660,11 @@ const PremiumDashboard = () => {
     : null
   const isExpiringSoon = daysLeft !== null && daysLeft <= 3 && daysLeft >= 0
   const isExpiredNow = daysLeft !== null && daysLeft < 0
-  const renewUrl = selectedCode
-    ? `/buy?code=${encodeURIComponent(selectedCode.code)}&username=${encodeURIComponent(username)}`
-    : '/buy'
-
   // Days left for any code (null = lifetime validity)
   const daysLeftFor = (c) => {
     if (!c.expiresAt) return null
     return Math.ceil((new Date(c.expiresAt) - Date.now()) / 86400000)
   }
-
-  const renewUrlFor = (c) =>
-    `/buy?code=${encodeURIComponent(c.code)}&username=${encodeURIComponent(username)}`
 
   return (
     <div className="pd-page">
@@ -713,7 +804,7 @@ const PremiumDashboard = () => {
                         className="pd-code-card__renew"
                         title={isExpiredCard ? 'Repurchase code' : 'Renew code'}
                         aria-label={isExpiredCard ? `Repurchase code ${c.code}` : `Renew code ${c.code}`}
-                        onClick={(e) => { e.stopPropagation(); navigate(renewUrlFor(c)) }}
+                        onClick={(e) => { e.stopPropagation(); openRenewModal(c) }}
                       >
                         <Icon name="refresh" size={13} />
                         <span>{isExpiredCard ? 'Restore' : 'Renew'}</span>
@@ -781,7 +872,7 @@ const PremiumDashboard = () => {
                     <button
                       type="button"
                       className="pd-btn pd-btn--gold"
-                      onClick={() => navigate(renewUrl)}
+                      onClick={() => openRenewModal(selectedCode)}
                     >
                       <Icon name="refresh" size={14} /> Renew · 30 days
                     </button>
@@ -1250,6 +1341,86 @@ const PremiumDashboard = () => {
                   {buyLoading ? 'Processing...' : 'Pay ₹' + slotCount * slotPrice}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Renew Code Modal ── */}
+      {showRenewModal && renewCode && (
+        <div className="pd-modal-overlay" onClick={() => !renewLoading && setShowRenewModal(false)}>
+          <div className="pd-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="renew-code-title">
+            <div className="pd-modal__head">
+              <h2 id="renew-code-title">Renew Code {renewCode.code}</h2>
+              <button type="button" className="pd-modal__close" onClick={() => setShowRenewModal(false)} disabled={renewLoading} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="pd-renew-modal__info">
+              <div className="pd-renew-modal__row">
+                <span className="pd-field__label">Code</span>
+                <span className="pd-renew-modal__code">{renewCode.code}</span>
+              </div>
+              <div className="pd-renew-modal__row">
+                <span className="pd-field__label">Current expiry</span>
+                <span>{renewCode.expiresAt ? new Date(renewCode.expiresAt).toLocaleDateString() : 'Lifetime'}</span>
+              </div>
+              <div className="pd-renew-modal__row">
+                <span className="pd-field__label">Slots on this code</span>
+                <span>{renewCode.capacity ?? 2}</span>
+              </div>
+              <div className="pd-renew-modal__row">
+                <span className="pd-field__label">Renewal period</span>
+                <span><Icon name="clock" size={13} /> 30 days from current expiry</span>
+              </div>
+            </div>
+
+            {daysLeftFor(renewCode) !== null && daysLeftFor(renewCode) < 0 ? (
+              <div className="pd-alert pd-alert--error" role="alert">
+                <Icon name="alert" size={15} />
+                <span>
+                  <strong>This code has expired.</strong> All extra slots you purchased beyond the default 2
+                  have been discarded. Renewing now restarts with the default 2 slots and clears previous content.
+                </span>
+              </div>
+            ) : daysLeftFor(renewCode) !== null && daysLeftFor(renewCode) <= 3 ? (
+              <div className="pd-alert pd-alert--error" role="alert">
+                <Icon name="alert" size={15} />
+                <span>
+                  <strong>Expiring soon.</strong> If you don't renew before expiry, everything under this code
+                  will be discarded — including all {renewCode.capacity} purchased slots and its content.
+                </span>
+              </div>
+            ) : (
+              <div className="pd-alert pd-alert--success" role="status">
+                <Icon name="check" size={15} />
+                <span>Your {renewCode.capacity} slots and all content will be preserved when you renew.</span>
+              </div>
+            )}
+
+            {renewMessage && (
+              <div className="pd-alert pd-alert--error" role="alert">
+                <Icon name="alert" size={14} /><span>{renewMessage}</span>
+              </div>
+            )}
+
+            <div className="pd-renew-modal__pay">
+              <div>
+                <span className="pd-field__label">Renewal price</span>
+                <div className="pd-renew-modal__price">₹{renewPrice}</div>
+                <p className="pd-field__hint">Renews for another 30 days from the current expiry</p>
+              </div>
+            </div>
+
+            <div className="pd-modal__actions">
+              <button type="button" className="pd-btn pd-btn--ghost" onClick={() => setShowRenewModal(false)} disabled={renewLoading}>Cancel</button>
+              <button type="button" className="pd-btn pd-btn--gold" onClick={startRenewal} disabled={renewLoading}>
+                {renewLoading ? 'Processing...' : <>Pay ₹{renewPrice} · Renew</>}
+              </button>
             </div>
           </div>
         </div>

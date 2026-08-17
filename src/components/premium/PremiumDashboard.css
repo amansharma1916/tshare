@@ -1055,3 +1055,57 @@
 .pd-renewal--expired .pd-renewal__warn {
   color: #f87171 !important;
 }
+
+/* ── Renew code modal ────────────────────────────────────── */
+.pd-renew-modal__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--card-bg);
+  margin-bottom: 14px;
+}
+
+.pd-renew-modal__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.pd-renew-modal__row .pd-field__label {
+  margin: 0;
+}
+
+.pd-renew-modal__row > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pd-renew-modal__code {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800 !important;
+  color: #fbbf24 !important;
+  letter-spacing: 1px;
+}
+
+.pd-renew-modal__pay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 2px;
+}
+
+.pd-renew-modal__price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fbbf24;
+}
