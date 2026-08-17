@@ -80,6 +80,7 @@ export const endpoints = {
     premiumItemPreview: (code, itemId) => `${API_URL}/api/premium/item/preview/${code}/${itemId}`,
     premiumItemDownload: (code, itemId) => `${API_URL}/api/premium/item/download/${code}/${itemId}`,
     adminPremiumCodeCapacity: (code) => `${API_URL}/admin/premium-codes/${code}/capacity`,
+    adminClearCache: `${API_URL}/admin/cache/clear`,
   };
 
 export default {

@@ -722,6 +722,24 @@ const AdminPanel = () => {
         }
     };
 
+    const handleClearCache = async () => {
+        if (!window.confirm('Clear the application cache? This removes all cached premium codes, stats, and content responses. Data is re-fetched from the database on next request.')) return;
+        try {
+            const response = await fetch(endpoints.adminClearCache, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage(data.message || 'Cache cleared successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to clear cache', 'error');
+            }
+        } catch {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
     const handleAddSaleCode = async (e) => {
         e.preventDefault();
         if (!newSaleCode || !/^[a-zA-Z0-9]{4}$|^[a-zA-Z0-9]{6}$/.test(newSaleCode.trim())) {
@@ -2569,7 +2587,23 @@ const AdminPanel = () => {
                             ) : (
                                 <>
                             <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
-                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 16px 0' }}>
+                                    <h3 style={{ margin: '0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearCache}
+                                        className="action-btn edit"
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: '12px' }}
+                                        title="Clear cached premium codes, stats, and content responses"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <polyline points="23 4 23 10 17 10" />
+                                            <polyline points="1 20 1 14 7 14" />
+                                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                                        </svg>
+                                        Clear Cache
+                                    </button>
+                                </div>
                                 <form onSubmit={handleUpdatePricing} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>4-Digit Code Price (₹)</label>
