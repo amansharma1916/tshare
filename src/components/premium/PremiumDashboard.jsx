@@ -22,6 +22,8 @@ const Icon = ({ name, size = 16, ...rest }) => {
     shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
     gem: (<><path d="M6 3h12l4 6-10 12L2 9l4-6z" /><path d="M2 9h20M12 21L8 9l4-6 4 6-4 12z" /></>),
     sparkles: (<><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9L12 3z" /><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15z" /></>),
+    clock: (<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>),
+    refresh: (<><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></>),
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>
@@ -564,6 +566,15 @@ const PremiumDashboard = () => {
     ? `/buy?code=${encodeURIComponent(selectedCode.code)}&username=${encodeURIComponent(username)}`
     : '/buy'
 
+  // Days left for any code (null = lifetime validity)
+  const daysLeftFor = (c) => {
+    if (!c.expiresAt) return null
+    return Math.ceil((new Date(c.expiresAt) - Date.now()) / 86400000)
+  }
+
+  const renewUrlFor = (c) =>
+    `/buy?code=${encodeURIComponent(c.code)}&username=${encodeURIComponent(username)}`
+
   return (
     <div className="pd-page">
       <div className="pd-shell">
@@ -652,11 +663,17 @@ const PremiumDashboard = () => {
 
               {codes.map((c) => {
                 const isActive = selectedCode && selectedCode.code === c.code
+                const dLeft = daysLeftFor(c)
+                const isExpiredCard = dLeft !== null && dLeft < 0
+                const isExpiringCard = dLeft !== null && !isExpiredCard && dLeft <= 3
                 return (
-                  <button
+                  <div
                     key={c.code}
+                    role="button"
+                    tabIndex={0}
                     className={`pd-code-card ${isActive ? 'pd-code-card--active' : ''}`}
                     onClick={() => handleCodeSelect(c)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCodeSelect(c) } }}
                     aria-pressed={isActive}
                   >
                     <div className="pd-code-card__row">
@@ -676,15 +693,33 @@ const PremiumDashboard = () => {
                       {c.itemCount > 1 && <span style={{ opacity: 0.6 }}> +{c.itemCount - 1} more</span>}
                     </div>
 
-                    <div className="pd-code-card__meta">
-                      <span>{c.isPublic === false ? 'Hidden' : 'Public'}</span>
-                      {c.expiresAt && new Date(c.expiresAt) < new Date() ? (
-                        <span className="pd-lock-dot" style={{ color: '#f87171' }}><Icon name="alert" size={10} /> Expired</span>
-                      ) : c.hasPassword ? (
-                        <span className="pd-lock-dot"><Icon name="lock" size={10} /> Protected</span>
-                      ) : null}
+                    <div className="pd-code-card__footer">
+                      <div className="pd-code-card__meta">
+                        <span className={`pd-code-card__days ${isExpiredCard ? 'pd-code-card__days--expired' : isExpiringCard ? 'pd-code-card__days--warn' : ''}`}>
+                          <Icon name="clock" size={11} />
+                          {dLeft === null
+                            ? 'Lifetime'
+                            : isExpiredCard
+                              ? 'Expired'
+                              : dLeft === 0
+                                ? 'Expires today'
+                                : `${dLeft} day${dLeft === 1 ? '' : 's'} left`}
+                        </span>
+                        <span className="pd-lock-dot">{c.isPublic === false ? 'Hidden' : 'Public'}</span>
+                        {c.hasPassword && <span className="pd-lock-dot"><Icon name="lock" size={10} /> Protected</span>}
+                      </div>
+                      <button
+                        type="button"
+                        className="pd-code-card__renew"
+                        title={isExpiredCard ? 'Repurchase code' : 'Renew code'}
+                        aria-label={isExpiredCard ? `Repurchase code ${c.code}` : `Renew code ${c.code}`}
+                        onClick={(e) => { e.stopPropagation(); navigate(renewUrlFor(c)) }}
+                      >
+                        <Icon name="refresh" size={13} />
+                        <span>{isExpiredCard ? 'Restore' : 'Renew'}</span>
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 )
               })}
 
@@ -737,14 +772,31 @@ const PremiumDashboard = () => {
                           ? 'Renew now to reactivate it for another 30 days.'
                           : 'Renew now to keep it active for another 30 days.'}
                       </span>
+                      <span className="pd-renewal__warn">
+                        {isExpiredNow
+                          ? `All extra slots you purchased for this code have been discarded. Repurchasing starts over with the default 2 slots — capacity is not restored.`
+                          : `If you don't renew before expiry, everything under this code will be discarded — including every extra slot you purchased (currently ${selectedCode.capacity} slots) and all its content.`}
+                      </span>
                     </div>
                     <button
                       type="button"
                       className="pd-btn pd-btn--gold"
                       onClick={() => navigate(renewUrl)}
                     >
-                      <Icon name="crown" size={14} /> Renew · 30 days
+                      <Icon name="refresh" size={14} /> Renew · 30 days
                     </button>
+                  </div>
+                )}
+
+                {/* ── Expired slot-loss warning ── */}
+                {isExpiredNow && (
+                  <div className="pd-alert pd-alert--error" role="alert" style={{ marginTop: '12px' }}>
+                    <Icon name="alert" size={15} />
+                    <span>
+                      <strong>Extra slots are gone.</strong> This code has expired, so any additional slots you
+                      purchased beyond the default 2 have been permanently discarded. Repurchasing restores
+                      only the default 2 slots.
+                    </span>
                   </div>
                 )}
 
