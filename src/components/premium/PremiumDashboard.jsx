@@ -38,23 +38,28 @@ const PremiumDashboard = () => {
   const [codes, setCodes] = useState([])
   const [selectedCode, setSelectedCode] = useState(null)
   const [loadingCodes, setLoadingCodes] = useState(true)
-  const [loadingUpdate, setLoadingUpdate] = useState(false)
   const [savingSettings, setSavingSettings] = useState(false)
   
-  // Update state
+  // Update state — items editor (content is now an items list, not one blob)
   const [activeTab, setActiveTab] = useState('text') // 'text' | 'image' | 'file'
   const [textInput, setTextInput] = useState('')
-  const [fileInput, setFileInput] = useState(null)
-  
+  const [files, setFiles] = useState([])           // array for multi-select
+  const [addingItem, setAddingItem] = useState(false)
+  const [deletingItemId, setDeletingItemId] = useState('')
+
   // Display name & visibility settings
   const [displayNameInput, setDisplayNameInput] = useState('')
   const [isPublic, setIsPublic] = useState(true)
-  
-  // Upload UI state (for image/file uploads using dropzone)
+
+  // Buy capacity modal state
+  const [showBuyModal, setShowBuyModal] = useState(false)
+  const [slotPrice, setSlotPrice] = useState(30)
+  const [slotCount, setSlotCount] = useState(1)
+  const [buyLoading, setBuyLoading] = useState(false)
+  const [buyMessage, setBuyMessage] = useState('')
+
+  // File input ref for the multi-select picker
   const fileInputRef = useRef(null)
-  const [filePreview, setFilePreview] = useState('')
-  const [fileError, setFileError] = useState('')
-  const [isDragOver, setIsDragOver] = useState(false)
 
   // Password protection state
   const [codePassword, setCodePassword] = useState('')
@@ -114,8 +119,8 @@ const PremiumDashboard = () => {
           // Auto-select first code if none is selected
           const first = data.codes[0]
           setSelectedCode(first)
-          setActiveTab(first.dataType || 'text')
-          setTextInput(first.text || '')
+          setActiveTab('text')
+          setTextInput('')
           setDisplayNameInput(first.displayName || '')
           setIsPublic(first.isPublic !== false)
         }
@@ -132,11 +137,9 @@ const PremiumDashboard = () => {
 
   const handleCodeSelect = (codeObj) => {
     setSelectedCode(codeObj)
-    setActiveTab(codeObj.dataType || 'text')
-    setTextInput(codeObj.text || '')
-    setFileInput(null)
-    setFilePreview('')
-    setFileError('')
+    setActiveTab('text')
+    setTextInput('')
+    setFiles([])
     setDisplayNameInput(codeObj.displayName || '')
     setIsPublic(codeObj.isPublic !== false)
     // Set password state
@@ -146,17 +149,6 @@ const PremiumDashboard = () => {
     setErrorMessage('')
   }
 
-  // File preview effect — generates preview URL when fileInput changes
-  useEffect(() => {
-    if (!fileInput) {
-      setFilePreview('')
-      return
-    }
-    const objectUrl = URL.createObjectURL(fileInput)
-    setFilePreview(objectUrl)
-    return () => URL.revokeObjectURL(objectUrl)
-  }, [fileInput])
-
   const formatFileSize = (bytes) => {
     if (!bytes) return ''
     const sizes = ['B', 'KB', 'MB', 'GB']
@@ -164,110 +156,180 @@ const PremiumDashboard = () => {
     return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
   }
 
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0] || null
-    if (file) {
-      setFileInput(file)
-      setFileError('')
-    }
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      if (activeTab === 'image') {
-        if (!file.type.startsWith('image/')) {
-          setFileError('Please drop a valid image file')
-          return
-        }
-      }
-      setFileInput(file)
-      setFileError('')
-    }
-  }
-
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragOver(false)
-  }
-
-  const handleClearFile = () => {
-    setFileInput(null)
-    setFilePreview('')
-    setFileError('')
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  // Update this to also clear file when switching tabs
+  // Update this to also clear files when switching tabs
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    setFileInput(null)
-    setFilePreview('')
-    setFileError('')
+    setFiles([])
+    setErrorMessage('')
   }
 
-  const handleUpdate = async (e) => {
-    e.preventDefault()
-    if (!selectedCode) return
-
-    setErrorMessage('')
-    setSuccessMessage('')
-    setLoadingUpdate(true)
-
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('code', selectedCode.code)
-    formData.append('dataType', activeTab)
-    formData.append('displayName', displayNameInput)
-    formData.append('isPublic', isPublic)
-
-    if (activeTab === 'text') {
-      formData.append('text', textInput)
-    } else {
-      if (!fileInput) {
-        setErrorMessage('Please select a file to upload')
-        setLoadingUpdate(false)
-        return
-      }
-      formData.append('file', fileInput)
-    }
-
+  const addTextItem = async () => {
+    if (!selectedCode || addingItem) return
+    if (!textInput.trim()) { setErrorMessage('Enter some text to add'); return }
+    setErrorMessage(''); setSuccessMessage(''); setAddingItem(true)
     try {
-      const res = await fetch(endpoints.updatePremiumCode, {
+      const res = await fetch(endpoints.premiumAddItem, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders()
-        },
-        body: formData
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ code: selectedCode.code, text: textInput })
       })
-
       const data = await res.json()
       if (res.ok) {
-        setSuccessMessage('Content updated successfully!')
-        // Reload codes to update the selected code details
-        const updatedCodes = codes.map(c => c.code === selectedCode.code ? data.premiumCode : c)
-        setCodes(updatedCodes)
-        setSelectedCode(data.premiumCode)
+        setTextInput('')
+        setSuccessMessage('Text added!')
+        await loadPremiumCodes()
       } else {
-        setErrorMessage(data.message || 'Failed to update content')
+        setErrorMessage(data.message || 'Failed to add text')
       }
     } catch (err) {
       console.error(err)
-      setErrorMessage('Network error while updating content')
+      setErrorMessage('Network error adding text')
     } finally {
-      setLoadingUpdate(false)
+      setAddingItem(false)
     }
   }
 
-  // Save display name & visibility without re-uploading content
+  const handleFilesSelected = (event) => {
+    const chosen = Array.from(event.target.files || [])
+    if (chosen.length === 0) return
+    const free = (selectedCode?.capacity ?? 0) - (selectedCode?.items?.length ?? 0)
+    if (chosen.length > free) {
+      setErrorMessage(`You can add at most ${free} more item${free === 1 ? '' : 's'} (capacity ${selectedCode.capacity}). ${chosen.length - free} file${chosen.length - free === 1 ? '' : 's'} skipped.`)
+    }
+    setFiles(chosen.slice(0, Math.max(free, 0)))
+    setErrorMessage('')
+  }
+
+  const addFiles = async () => {
+    if (!selectedCode || addingItem || files.length === 0) return
+    setErrorMessage(''); setSuccessMessage(''); setAddingItem(true)
+    try {
+      let added = 0
+      for (const file of files) {
+        const itemCount = selectedCode.items?.length ?? 0
+        if (itemCount + added >= selectedCode.capacity) {
+          setErrorMessage(`Capacity reached (${selectedCode.capacity}). Some files were not uploaded.`)
+          break
+        }
+        const formData = new FormData()
+        formData.append('code', selectedCode.code)
+        formData.append('file', file)
+        const res = await fetch(endpoints.premiumAddItem, {
+          method: 'POST',
+          headers: { ...getAuthHeaders() },
+          body: formData
+        })
+        const data = await res.json()
+        if (res.ok) {
+          added += 1
+        } else {
+          setErrorMessage(data.message || 'Failed to upload a file')
+          break
+        }
+      }
+      setFiles([])
+      if (added > 0) setSuccessMessage(`Added ${added} file${added === 1 ? '' : 's'}!`)
+      await loadPremiumCodes()
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Network error uploading files')
+    } finally {
+      setAddingItem(false)
+    }
+  }
+
+  const deleteItem = async (itemId) => {
+    if (!selectedCode || deletingItemId) return
+    if (!window.confirm('Delete this item? This cannot be undone.')) return
+    setDeletingItemId(itemId)
+    setErrorMessage(''); setSuccessMessage('')
+    try {
+      const res = await fetch(endpoints.premiumDeleteItem(selectedCode.code, itemId), {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSuccessMessage('Item deleted')
+        await loadPremiumCodes()
+      } else {
+        setErrorMessage(data.message || 'Failed to delete item')
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Network error deleting item')
+    } finally {
+      setDeletingItemId('')
+    }
+  }
+
+  const openBuyModal = () => {
+    setSlotCount(1)
+    setBuyMessage('')
+    setShowBuyModal(true)
+    fetch(endpoints.pricingSettings)
+      .then(r => r.json())
+      .then(d => setSlotPrice(d?.pricing?.slotPrice ?? 30))
+      .catch(() => setSlotPrice(30))
+  }
+
+  const buyCapacity = async () => {
+    if (buyLoading || !selectedCode) return
+    setBuyMessage(''); setBuyLoading(true)
+    try {
+      const orderRes = await fetch(endpoints.premiumCapacityOrder, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ code: selectedCode.code, slots: slotCount })
+      })
+      const orderData = await orderRes.json()
+      if (!orderRes.ok) throw new Error(orderData.message || 'Failed to create order')
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TLzqWxx7hzbAYk',
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'TShare Code Store',
+        description: `Add ${slotCount} slot${slotCount === 1 ? '' : 's'} to ${selectedCode.code}`,
+        image: '/s2.svg',
+        order_id: orderData.order_id,
+        handler: async (paymentResponse) => {
+          const verifyRes = await fetch(endpoints.premiumCapacityVerify, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+            body: JSON.stringify({
+              order_id: paymentResponse.razorpay_order_id,
+              payment_id: paymentResponse.razorpay_payment_id,
+              signature: paymentResponse.razorpay_signature,
+              code: selectedCode.code,
+              slots: slotCount
+            })
+          })
+          const verifyData = await verifyRes.json()
+          if (verifyRes.ok) {
+            setBuyMessage('Slots added! Capacity is now ' + verifyData.capacity)
+            setShowBuyModal(false)
+            await loadPremiumCodes()
+          } else {
+            setBuyMessage(verifyData.message || 'Verification failed')
+          }
+        },
+        prefill: { name: username, email: `${username}@tshare.in`, contact: '9999999999' },
+        notes: { code: selectedCode.code, slots: slotCount },
+        theme: { color: '#d4af37' },
+        modal: { ondismiss: () => { setBuyLoading(false); setBuyMessage('Payment cancelled') } }
+      }
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch (err) {
+      console.error(err)
+      setBuyMessage(err.message || 'Payment error')
+    } finally {
+      setBuyLoading(false)
+    }
+  }
+
+  // Save display name & visibility
   const handleSaveSettings = async () => {
     if (!selectedCode || savingSettings) return
 
@@ -275,27 +337,18 @@ const PremiumDashboard = () => {
     setSuccessMessage('')
     setSavingSettings(true)
 
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('code', selectedCode.code)
-    formData.append('dataType', activeTab)
-    formData.append('displayName', displayNameInput)
-    formData.append('isPublic', isPublic)
-    // Only append file if user has selected one
-    if (activeTab !== 'text' && fileInput) {
-      formData.append('file', fileInput)
-    }
-    // For text, preserve current text
-    if (activeTab === 'text') {
-      formData.append('text', textInput)
-    }
     try {
       const res = await fetch(endpoints.updatePremiumCode, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           ...getAuthHeaders()
         },
-        body: formData
+        body: JSON.stringify({
+          code: selectedCode.code,
+          displayName: displayNameInput,
+          isPublic
+        })
       })
       const data = await res.json()
       if (res.ok) {
@@ -499,7 +552,6 @@ const PremiumDashboard = () => {
     )
   }
 
-  const selectedType = selectedCode ? (selectedCode.dataType || 'empty') : 'empty'
   const protectedCount = codes.filter(c => c.hasPassword).length
 
   // Expiry awareness: days left for the selected code (0 = today, negative = expired)
@@ -551,9 +603,11 @@ const PremiumDashboard = () => {
             <p className="pd-stat__hint">{protectedCount > 0 ? `${protectedCount} protected` : 'No password protection'}</p>
           </div>
           <div className="pd-stat">
-            <div className="pd-stat__label"><Icon name="sparkles" size={13} /> Active Type</div>
-            <div className="pd-stat__value" style={{ textTransform: 'capitalize', fontSize: '18px' }}>{selectedType}</div>
-            <p className="pd-stat__hint">Selected code content type</p>
+            <div className="pd-stat__label"><Icon name="gem" size={13} /> Items</div>
+            <div className="pd-stat__value" style={{ fontSize: '18px' }}>
+              {(selectedCode?.items || []).length} / {selectedCode?.capacity ?? 2}
+            </div>
+            <p className="pd-stat__hint">Slots used in selected code</p>
           </div>
           <div className="pd-stat">
             <div className="pd-stat__label"><Icon name="shield" size={13} /> Security</div>
@@ -607,19 +661,19 @@ const PremiumDashboard = () => {
                   >
                     <div className="pd-code-card__row">
                       <span className="pd-code-card__code">{c.code.toUpperCase()}</span>
-                      <span className={`pd-type-badge ${c.dataType ? `pd-type-badge--${c.dataType}` : 'pd-type-badge--empty'}`}>
-                        {c.dataType === 'text' && <Icon name="text" size={11} />}
-                        {c.dataType === 'image' && <Icon name="image" size={11} />}
-                        {c.dataType === 'file' && <Icon name="file" size={11} />}
-                        {c.dataType ? c.dataType.toUpperCase() : 'EMPTY'}
+                      <span className={`pd-type-badge ${(c.items && c.items[0]) ? `pd-type-badge--${c.items[0].type}` : 'pd-type-badge--empty'}`}>
+                        {c.items && c.items[0] && c.items[0].type === 'text' && <Icon name="text" size={11} />}
+                        {c.items && c.items[0] && c.items[0].type === 'image' && <Icon name="image" size={11} />}
+                        {c.items && c.items[0] && c.items[0].type === 'file' && <Icon name="file" size={11} />}
+                        {(c.items && c.items[0] && c.items[0].type) ? c.items[0].type.toUpperCase() : 'EMPTY'}
                       </span>
                     </div>
 
                     <div className="pd-code-card__preview">
-                      {c.dataType === 'text' && c.text && <span>{c.text.substring(0, 50)}{c.text.length > 50 ? '...' : ''}</span>}
-                      {c.dataType === 'image' && c.originalName && <span>{c.originalName}</span>}
-                      {c.dataType === 'file' && c.originalName && <span><Icon name="file" size={11} /> {c.originalName}</span>}
-                      {!c.dataType && !c.text && !c.originalName && <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No content yet</span>}
+                      {(c.items || []).length === 0 && <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No content yet</span>}
+                      {c.items && c.items[0] && c.items[0].type === 'text' && <span>{(c.items[0].text || '').substring(0, 50)}</span>}
+                      {c.items && c.items[0] && (c.items[0].type === 'image' || c.items[0].type === 'file') && c.items[0].originalName && <span><Icon name={c.items[0].type} size={11} /> {c.items[0].originalName}</span>}
+                      {c.itemCount > 1 && <span style={{ opacity: 0.6 }}> +{c.itemCount - 1} more</span>}
                     </div>
 
                     <div className="pd-code-card__meta">
@@ -694,7 +748,7 @@ const PremiumDashboard = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleUpdate} className="premium-form" style={{ gap: '26px' }}>
+                <div className="premium-form" style={{ gap: '26px' }}>
                   {successMessage && (
                     <div className="pd-alert pd-alert--success" role="status">
                       <Icon name="check" size={15} /><span>{successMessage}</span>
@@ -761,11 +815,54 @@ const PremiumDashboard = () => {
                     </div>
                   </div>
 
-                  {/* ── Content editor ── */}
+                  {/* ── Items editor ── */}
                   <div className="pd-section">
-                    <h3 className="pd-section__title"><Icon name="gem" size={14} /> Content</h3>
+                    <h3 className="pd-section__title">
+                      <Icon name="gem" size={14} /> Items
+                      <span className="pd-capacity-meter">
+                        {(selectedCode.items || []).length} / {selectedCode.capacity} slots used
+                      </span>
+                    </h3>
 
-                    <div className="pd-tabs" role="tablist" aria-label="Content type">
+                    <div className="pd-capacity-bar">
+                      <div
+                        className="pd-capacity-bar__fill"
+                        style={{ width: `${Math.min(100, ((selectedCode.items || []).length / selectedCode.capacity) * 100)}%` }}
+                      />
+                    </div>
+
+                    {(selectedCode.items || []).length === 0 ? (
+                      <p className="pd-field__hint">No items yet. Add text or files below.</p>
+                    ) : (
+                      <ul className="pd-items">
+                        {selectedCode.items.map((item) => (
+                          <li key={item.itemId} className="pd-item">
+                            <span className={`pd-type-badge pd-type-badge--${item.type}`}>
+                              {item.type === 'text' && <Icon name="text" size={11} />}
+                              {item.type === 'image' && <Icon name="image" size={11} />}
+                              {item.type === 'file' && <Icon name="file" size={11} />}
+                              {item.type.toUpperCase()}
+                            </span>
+                            <span className="pd-item__name">
+                              {item.type === 'text'
+                                ? (item.text || '').substring(0, 60)
+                                : item.originalName || item.itemId}
+                            </span>
+                            {item.size > 0 && <span className="pd-item__size">{formatFileSize(item.size)}</span>}
+                            <button
+                              type="button"
+                              className="pd-btn pd-btn--ghost pd-btn--clear"
+                              onClick={() => deleteItem(item.itemId)}
+                              disabled={deletingItemId === item.itemId}
+                            >
+                              {deletingItemId === item.itemId ? '...' : 'Delete'}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="pd-tabs" role="tablist" aria-label="Add item type" style={{ marginTop: '16px' }}>
                       {['text', 'image', 'file'].map((tab) => (
                         <button
                           key={tab}
@@ -786,120 +883,56 @@ const PremiumDashboard = () => {
                     <div style={{ marginTop: '16px' }}>
                       {activeTab === 'text' && (
                         <>
-                          <label className="pd-field__label" htmlFor="pd-shared-text">Shared Text</label>
+                          <label className="pd-field__label" htmlFor="pd-new-text">New Text Item</label>
                           <textarea
-                            id="pd-shared-text"
-                            rows="6"
+                            id="pd-new-text"
+                            rows="5"
                             className="pd-input pd-textarea"
-                            placeholder="Type text to share..."
+                            placeholder="Type text to add as a new item..."
                             value={textInput}
                             onChange={(e) => setTextInput(e.target.value)}
                           />
+                          <div className="pd-actions" style={{ marginTop: '12px' }}>
+                            <button type="button" className="pd-btn pd-btn--gold" onClick={addTextItem} disabled={addingItem || !textInput.trim()}>
+                              {addingItem ? 'Adding...' : 'Add Text'}
+                            </button>
+                          </div>
                         </>
                       )}
 
                       {(activeTab === 'image' || activeTab === 'file') && (
                         <>
-                          <label className="pd-field__label">Upload {activeTab === 'image' ? 'Image' : 'File'}</label>
-                          <div
-                            className={`dropzone ${isDragOver ? 'dropzone--active' : ''} ${filePreview ? 'dropzone--has-file' : ''}`}
-                            onDrop={handleDrop}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onClick={() => fileInputRef.current?.click()}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
-                          >
-                            <input
-                              ref={fileInputRef}
-                              type="file"
-                              accept={activeTab === 'image' ? 'image/*' : '*'}
-                              onChange={handleFileChange}
-                              className="dropzone__input"
-                              hidden
-                            />
-
-                            {filePreview ? (
-                              <div className="dropzone__preview">
-                                {activeTab === 'image' ? (
-                                  <img src={filePreview} alt="Selected preview" />
-                                ) : (
-                                  <div style={{ textAlign: 'center', padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px', color: '#d4af37' }}>
-                                      <Icon name="file" size={40} />
-                                    </div>
-                                    <div className="dropzone__file-name">{fileInput?.name}</div>
-                                  </div>
-                                )}
-                                <div className="dropzone__overlay">
-                                  <span>Click to change</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="dropzone__placeholder">
-                                <div className="dropzone__icon">
-                                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    {activeTab === 'image' ? (
-                                      <>
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                      </>
-                                    ) : (
-                                      <>
-                                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                                        <polyline points="13 2 13 9 20 9" />
-                                      </>
-                                    )}
-                                  </svg>
-                                </div>
-                                <div className="dropzone__text">
-                                  <span className="dropzone__title">{activeTab === 'image' ? 'Drop an image here' : 'Drop a file here'}</span>
-                                  <span className="dropzone__hint">or click to browse</span>
-                                </div>
-                              </div>
-                            )}
+                          <label className="pd-field__label">
+                            Upload {activeTab === 'image' ? 'Images' : 'Files'} (select multiple)
+                          </label>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept={activeTab === 'image' ? 'image/*' : '*'}
+                            onChange={handleFilesSelected}
+                            className="pd-input"
+                            style={{ padding: '10px' }}
+                          />
+                          {files.length > 0 && (
+                            <p className="pd-field__hint">{files.length} file{files.length === 1 ? '' : 's'} selected</p>
+                          )}
+                          <div className="pd-actions" style={{ marginTop: '12px' }}>
+                            <button type="button" className="pd-btn pd-btn--gold" onClick={addFiles} disabled={addingItem || files.length === 0}>
+                              {addingItem ? 'Uploading...' : 'Upload Files'}
+                            </button>
                           </div>
-
-                          {fileInput && (
-                            <div className="dropzone__file-info">
-                              <Icon name="file" size={14} />
-                              <span className="dropzone__file-name">{fileInput.name}</span>
-                              <span className="dropzone__file-size">{formatFileSize(fileInput.size)}</span>
-                            </div>
-                          )}
-
-                          {fileError && (
-                            <p className="pd-alert pd-alert--error" style={{ marginTop: '10px' }} role="alert">
-                              <Icon name="alert" size={14} /><span>{fileError}</span>
-                            </p>
-                          )}
                         </>
                       )}
                     </div>
 
-                    <div className="pd-actions" style={{ marginTop: '18px' }}>
-                      {(activeTab === 'image' || activeTab === 'file') && fileInput && (
-                        <button type="button" className="pd-btn pd-btn--ghost pd-btn--clear" onClick={handleClearFile} disabled={loadingUpdate}>
-                          Clear
-                        </button>
-                      )}
-                      {activeTab === 'text' && textInput && (
-                        <button type="button" className="pd-btn pd-btn--ghost pd-btn--clear" onClick={() => { setTextInput(''); }} disabled={loadingUpdate}>
-                          Clear
-                        </button>
-                      )}
-                      <button type="submit" className="pd-btn pd-btn--gold" disabled={loadingUpdate || (activeTab !== 'text' && !fileInput)}>
-                        {loadingUpdate ? (
-                          <><span className="pd-spinner pd-spinner--dark" /> Uploading...</>
-                        ) : (
-                          <>Update Content</>
-                        )}
+                    <div style={{ marginTop: '16px' }}>
+                      <button type="button" className="pd-btn pd-btn--purple" onClick={openBuyModal}>
+                        <Icon name="plus" size={14} /> Buy More Slots · ₹{slotPrice}/slot
                       </button>
                     </div>
                   </div>
-                </form>
+                </div>
 
                 {/* ── Password protection ── */}
                 <div className="pd-lock">
@@ -1119,6 +1152,53 @@ const PremiumDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Buy More Slots Modal ── */}
+      {showBuyModal && (
+        <div className="pd-modal-overlay" onClick={() => !buyLoading && setShowBuyModal(false)}>
+          <div className="pd-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="buy-slots-title">
+            <div className="pd-modal__head">
+              <h2 id="buy-slots-title">Buy More Slots</h2>
+              <button type="button" className="pd-modal__close" onClick={() => setShowBuyModal(false)} disabled={buyLoading} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="pd-modal__desc">
+              Add extra slots to code <strong>{selectedCode?.code}</strong> at ₹{slotPrice} per slot.
+              Current capacity: <strong>{selectedCode?.capacity}</strong>.
+            </p>
+
+            <div className="pd-modal__form">
+              {buyMessage && <div className="pd-alert pd-alert--error" role="alert"><Icon name="alert" size={14} /><span>{buyMessage}</span></div>}
+
+              <label className="pd-field__label" htmlFor="pd-slot-count">Number of slots</label>
+              <input
+                id="pd-slot-count"
+                type="number"
+                min="1"
+                max="20"
+                className="pd-input"
+                value={slotCount}
+                onChange={(e) => setSlotCount(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                disabled={buyLoading}
+              />
+
+              <p className="pd-field__hint">Total: ₹{slotCount * slotPrice}</p>
+
+              <div className="pd-modal__actions">
+                <button type="button" className="pd-btn pd-btn--ghost" onClick={() => setShowBuyModal(false)} disabled={buyLoading}>Cancel</button>
+                <button type="button" className="pd-btn pd-btn--gold" onClick={buyCapacity} disabled={buyLoading}>
+                  {buyLoading ? 'Processing...' : 'Pay ₹' + slotCount * slotPrice}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
