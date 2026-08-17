@@ -73,6 +73,13 @@ export const endpoints = {
     adminDashboard: (params) => `${API_URL}/admin/dashboard?${params}`,
     setCodePassword: `${API_URL}/api/set-code-password`,
     verifyCodePassword: `${API_URL}/api/verify-code-password`,
+    premiumAddItem: `${API_URL}/api/premium/item`,
+    premiumDeleteItem: (code, itemId) => `${API_URL}/api/premium/item/${code}/${itemId}`,
+    premiumCapacityOrder: `${API_URL}/api/premium/capacity/order`,
+    premiumCapacityVerify: `${API_URL}/api/premium/capacity/verify`,
+    premiumItemPreview: (code, itemId) => `${API_URL}/api/premium/item/preview/${code}/${itemId}`,
+    premiumItemDownload: (code, itemId) => `${API_URL}/api/premium/item/download/${code}/${itemId}`,
+    adminPremiumCodeCapacity: (code) => `${API_URL}/admin/premium-codes/${code}/capacity`,
   };
 
 export default {

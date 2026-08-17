@@ -168,7 +168,21 @@ const RecievePage = () => {
       const data = await verifyRes.json();
 
       // Process the data directly from verify response
-      if (data?.dataType === 'text') {
+      if (data?.isPremium && Array.isArray(data?.items)) {
+        setReceivedContent({
+          dataType: 'bundle',
+          id: data.id,
+          code: data.code,
+          items: data.items,
+          capacity: data.capacity,
+          itemCount: data.itemCount,
+          createdAt: data.createdAt,
+          isPremium: true,
+          displayName: data.displayName
+        });
+        setSuccessMessage(`Received ${data.items.length} item${data.items.length === 1 ? '' : 's'}`);
+        setShowContent(true);
+      } else if (data?.dataType === 'text') {
         const unescapedText = data.text
           .replace(/\\n/g, '\n')
           .replace(/\\t/g, '\t')
@@ -239,7 +253,21 @@ const RecievePage = () => {
       }
       const data = await res.json();
 
-      if (data?.dataType === 'text') {
+      if (data?.isPremium && Array.isArray(data?.items)) {
+        setReceivedContent({
+          dataType: 'bundle',
+          id: data.id,
+          code: data.code,
+          items: data.items,
+          capacity: data.capacity,
+          itemCount: data.itemCount,
+          createdAt: data.createdAt,
+          isPremium: true,
+          displayName: data.displayName
+        });
+        setSuccessMessage(`Received ${data.items.length} item${data.items.length === 1 ? '' : 's'}`);
+        setShowContent(true);
+      } else if (data?.dataType === 'text') {
         const unescapedText = data.text
           .replace(/\\n/g, '\n')
           .replace(/\\t/g, '\t')
@@ -339,8 +367,8 @@ const RecievePage = () => {
     if (receivedContent?.dataType === 'file') return 'share__header-icon share__header-icon--file';
     return 'share__header-icon';
   };
-
   const getTitle = () => {
+    if (receivedContent?.dataType === 'bundle') return 'Receive Content';
     if (receivedContent?.dataType === 'text') return 'Receive Text';
     if (receivedContent?.dataType === 'image') return 'Receive Image';
     if (receivedContent?.dataType === 'file') return 'Receive File';
@@ -349,8 +377,101 @@ const RecievePage = () => {
 
   const getDesc = () => 'Enter the 4-digit code shared with you to retrieve text, images, or files.';
 
+  const copyText = (text) => {
+    navigator.clipboard.writeText(text).catch((e) => console.error('Error copying:', e));
+  };
+
+  const downloadItem = (itemId) => {
+    if (!receivedContent?.code) return;
+    window.location.href = endpoints.premiumItemDownload(receivedContent.code, itemId);
+  };
+
+  const renderBundle = () => {
+    if (!receivedContent?.items?.length) {
+      return <p className="receive__text">This premium code has no content yet.</p>;
+    }
+    return (
+      <div className="receive__bundle">
+        <div className="receive__bundle-head">
+          <span>{receivedContent.items.length} item{receivedContent.items.length === 1 ? '' : 's'} under this code</span>
+        </div>
+        {receivedContent.items.map((item) => {
+          if (item.type === 'text') {
+            return (
+              <div key={item.itemId} className="receive__bundle-item receive__bundle-item--text">
+                <pre className="receive__text">{item.text}</pre>
+                <button className="btn btn--secondary receive__action-btn" onClick={() => copyText(item.text)}>
+                  Copy Text
+                </button>
+              </div>
+            );
+          }
+          if (item.type === 'image') {
+            return (
+              <div key={item.itemId} className="receive__bundle-item">
+                <div className="receive__image-wrapper">
+                  <motion.img
+                    src={item.url}
+                    alt={item.originalName || 'Shared image'}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </div>
+                <div className="receive__file-info">
+                  <div className="receive__file-icon receive__file-icon--image">{getTypeIcon()}</div>
+                  <div className="receive__file-details">
+                    <span className="receive__file-name">{item.originalName || 'Shared image'}</span>
+                  </div>
+                </div>
+                <button
+                  className="btn btn--secondary receive__action-btn"
+                  onClick={() => downloadItem(item.itemId)}
+                >
+                  Download
+                </button>
+              </div>
+            );
+          }
+          return (
+            <div key={item.itemId} className="receive__bundle-item">
+              <div className="receive__file-preview">
+                <iframe src={endpoints.premiumItemPreview(receivedContent.code, item.itemId)} title="File preview" />
+              </div>
+              <div className="receive__file-info">
+                <div className="receive__file-icon receive__file-icon--file">{getTypeIcon()}</div>
+                <div className="receive__file-details">
+                  <span className="receive__file-name">{item.originalName || 'Shared file'}</span>
+                  {item.size && (
+                    <span className="receive__file-size">
+                      {item.size >= 1024 * 1024
+                        ? (item.size / (1024 * 1024)).toFixed(1) + ' MB'
+                        : item.size >= 1024
+                          ? (item.size / 1024).toFixed(1) + ' KB'
+                          : item.size + ' B'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                className="btn btn--secondary receive__action-btn"
+                onClick={() => downloadItem(item.itemId)}
+              >
+                Download File
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderContent = () => {
     if (!receivedContent) return null;
+
+    if (receivedContent.dataType === 'bundle') {
+      return renderBundle();
+    }
 
     if (receivedContent.dataType === 'text') {
       return (
