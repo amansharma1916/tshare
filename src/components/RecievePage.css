@@ -1012,6 +1012,12 @@
 .receive__bundle-item--text {
   align-items: flex-start;
 }
+.receive__bundle-item .receive__action-btn {
+  position: static;
+  top: auto;
+  right: auto;
+  align-self: flex-start;
+}
 .receive__bundle-item .receive__file-preview iframe {
   width: 100%;
   min-height: 420px;
