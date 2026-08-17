@@ -762,7 +762,7 @@ const PremiumDashboard = () => {
                     key={c.code}
                     role="button"
                     tabIndex={0}
-                    className={`pd-code-card ${isActive ? 'pd-code-card--active' : ''}`}
+                    className={`pd-code-card ${isActive ? 'pd-code-card--active' : ''} ${isExpiringCard || isExpiredCard ? 'pd-code-card--expiring' : ''}`}
                     onClick={() => handleCodeSelect(c)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCodeSelect(c) } }}
                     aria-pressed={isActive}
@@ -801,7 +801,7 @@ const PremiumDashboard = () => {
                       </div>
                       <button
                         type="button"
-                        className="pd-code-card__renew"
+                        className={`pd-code-card__renew ${isExpiringCard || isExpiredCard ? 'pd-code-card__renew--danger' : ''}`}
                         title={isExpiredCard ? 'Repurchase code' : 'Renew code'}
                         aria-label={isExpiredCard ? `Repurchase code ${c.code}` : `Renew code ${c.code}`}
                         onClick={(e) => { e.stopPropagation(); openRenewModal(c) }}
