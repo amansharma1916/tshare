@@ -284,8 +284,13 @@ const AdminPanel = () => {
     // Pricing & Pre-sale Settings State
     const [price4Digit, setPrice4Digit] = useState(299);
     const [price6Digit, setPrice6Digit] = useState(99);
+    const [slotPrice, setSlotPrice] = useState(30);
     const [newSaleCode, setNewSaleCode] = useState('');
     const [newSalePrice, setNewSalePrice] = useState(30);
+
+    // Capacity editor state (premium-codes tab)
+    const [editingCapacityCode, setEditingCapacityCode] = useState(null);
+    const [capacityInput, setCapacityInput] = useState(1);
 
     // Stats Management State
     const [stats, setStats] = useState({
@@ -583,6 +588,7 @@ const AdminPanel = () => {
             if (data.success && data.settings) {
                 setPrice4Digit(data.settings.premiumCodePrice4Digit);
                 setPrice6Digit(data.settings.premiumCodePrice6Digit);
+                setSlotPrice(data.settings.slotPrice ?? 30);
             }
         } catch (err) {
             console.error('Failed to fetch pricing:', err);
@@ -701,7 +707,8 @@ const AdminPanel = () => {
                 },
                 body: JSON.stringify({
                     premiumCodePrice4Digit: Number(price4Digit),
-                    premiumCodePrice6Digit: Number(price6Digit)
+                    premiumCodePrice6Digit: Number(price6Digit),
+                    slotPrice: Number(slotPrice)
                 })
             });
             const data = await response.json();
@@ -711,6 +718,24 @@ const AdminPanel = () => {
                 showActionMessage(data.message || 'Failed to update pricing', 'error');
             }
         } catch (err) {
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleClearCache = async () => {
+        if (!window.confirm('Clear the application cache? This removes all cached premium codes, stats, and content responses. Data is re-fetched from the database on next request.')) return;
+        try {
+            const response = await fetch(endpoints.adminClearCache, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage(data.message || 'Cache cleared successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to clear cache', 'error');
+            }
+        } catch {
             showActionMessage('Failed to connect to server', 'error');
         }
     };
@@ -771,6 +796,38 @@ const AdminPanel = () => {
     const handleViewPremiumCode = (codeItem) => {
         setViewingPremiumCode(codeItem);
         setShowPremiumCodeModal(true);
+    };
+
+    const handleOpenCapacityEdit = (codeItem) => {
+        setEditingCapacityCode(codeItem.code);
+        setCapacityInput(codeItem.capacity ?? 2);
+    };
+
+    const handleUpdateCapacity = async (code) => {
+        if (!Number.isInteger(Number(capacityInput)) || Number(capacityInput) < 1 || Number(capacityInput) > 100) {
+            showActionMessage('Capacity must be an integer between 1 and 100', 'error');
+            return;
+        }
+        try {
+            const response = await fetch(endpoints.adminPremiumCodeCapacity(code), {
+                method: 'PUT',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ capacity: Number(capacityInput) })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showActionMessage(`Capacity updated to ${data.capacity} (${data.itemCount} items)`, 'success');
+                setEditingCapacityCode(null);
+                fetchPremiumCodes();
+            } else {
+                showActionMessage(data.message || 'Failed to update capacity', 'error');
+            }
+        } catch {
+            showActionMessage('Failed to connect to server', 'error');
+        }
     };
 
     const fetchTexts = async (pageNum = 1, searchTerm = '') => {
@@ -2374,6 +2431,7 @@ const AdminPanel = () => {
                                             <th>Code</th>
                                             <th>Owner</th>
                                             <th>Content Type</th>
+                                            <th>Capacity</th>
                                             <th>Price Paid</th>
                                             <th>Expires At</th>
                                             <th>Actions</th>
@@ -2385,6 +2443,27 @@ const AdminPanel = () => {
                                                 <td className="room-code">{item.code}</td>
                                                 <td>{item.isForSale ? <span className="status-badge active" style={{ background: '#7c2d12', color: '#fdba74' }}>FOR SALE</span> : item.owner}</td>
                                                 <td>{item.isForSale ? 'N/A' : (item.dataType ? item.dataType.toUpperCase() : 'EMPTY')}</td>
+                                                <td>
+                                                    {editingCapacityCode === item.code ? (
+                                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max="100"
+                                                                value={capacityInput}
+                                                                onChange={(e) => setCapacityInput(e.target.value)}
+                                                                style={{ width: '70px', padding: '4px 8px' }}
+                                                            />
+                                                            <button className="action-btn edit" onClick={() => handleUpdateCapacity(item.code)}>Save</button>
+                                                            <button className="action-btn delete" onClick={() => setEditingCapacityCode(null)}>Cancel</button>
+                                                        </div>
+                                                    ) : (
+                                                        <span>
+                                                            {item.capacity ?? 2}
+                                                            {typeof item.itemCount === 'number' && <span style={{ opacity: 0.6 }}> ({item.itemCount} items)</span>}
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td>₹{item.price || 0}</td>
                                                 <td>{formatDate(item.expiresAt)}</td>
                                                 <td className="actions">
@@ -2395,6 +2474,14 @@ const AdminPanel = () => {
                                                         whileTap={{ scale: 0.95 }}
                                                     >
                                                         View
+                                                    </motion.button>
+                                                    <motion.button
+                                                        className="action-btn edit"
+                                                        onClick={() => handleOpenCapacityEdit(item)}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        Capacity
                                                     </motion.button>
                                                     <motion.button
                                                         className="action-btn delete"
@@ -2500,7 +2587,23 @@ const AdminPanel = () => {
                             ) : (
                                 <>
                             <div className="settings-field" style={{ display: 'block', padding: '20px' }}>
-                                <h3 style={{ margin: '0 0 16px 0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 16px 0' }}>
+                                    <h3 style={{ margin: '0', color: '#f59e0b' }}>Dynamic Premium Pricing</h3>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearCache}
+                                        className="action-btn edit"
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: '12px' }}
+                                        title="Clear cached premium codes, stats, and content responses"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <polyline points="23 4 23 10 17 10" />
+                                            <polyline points="1 20 1 14 7 14" />
+                                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                                        </svg>
+                                        Clear Cache
+                                    </button>
+                                </div>
                                 <form onSubmit={handleUpdatePricing} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>4-Digit Code Price (₹)</label>
@@ -2524,6 +2627,22 @@ const AdminPanel = () => {
                                             type="number"
                                             value={price6Digit}
                                             onChange={(e) => setPrice6Digit(e.target.value)}
+                                            style={{
+                                                background: 'var(--layout-bg)',
+                                                border: '1px solid var(--border-default)',
+                                                borderRadius: '6px',
+                                                padding: '8px 12px',
+                                                color: 'var(--text-secondary)',
+                                                width: '140px'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Extra Slot Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={slotPrice}
+                                            onChange={(e) => setSlotPrice(e.target.value)}
                                             style={{
                                                 background: 'var(--layout-bg)',
                                                 border: '1px solid var(--border-default)',

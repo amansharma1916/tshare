@@ -60,6 +60,38 @@ const IconEyeOff = ({ size = 18 }) => (
   </svg>
 )
 
+const IconCalendar = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+)
+
+const IconLayers = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+)
+
+const IconLock = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0110 0v4" />
+  </svg>
+)
+
+const IconRefresh = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10" />
+    <polyline points="1 20 1 14 7 14" />
+    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+  </svg>
+)
+
 /* ── Stepper timeline ── */
 const STEPS = [
   { id: 0, label: 'Choose Code', sub: 'Select or enter your premium code' },
@@ -120,7 +152,7 @@ const BuyPremium = () => {
   const [passwordInput, setPasswordInput] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const [pricingSettings, setPricingSettings] = useState({ premiumCodePrice4Digit: 299, premiumCodePrice6Digit: 99 })
+  const [pricingSettings, setPricingSettings] = useState({ premiumCodePrice4Digit: 299, premiumCodePrice6Digit: 99, slotPrice: 30 })
   const [forSaleCodes, setForSaleCodes] = useState([])
   const [amount, setAmount] = useState('299')
   const [loading, setLoading] = useState(false)
@@ -546,7 +578,9 @@ const BuyPremium = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Claim Your Premium Identity
+            Own a Premium Code,
+            <br />
+            Share More Under One Name
           </motion.h1>
 
           <motion.p
@@ -554,7 +588,9 @@ const BuyPremium = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.18 }}
           >
-            Unlock custom shortcodes, personalized display branding, and permanent cloud sharing. Choose a curated code or secure your own custom name.
+            A premium code is your personal 4 or 6-character address, active for 30 days and
+            renewable anytime. It holds <strong>2 content slots</strong> — text, images, or files,
+            mixed however you like — with password protection and a golden badge for your recipients.
           </motion.p>
 
           <motion.div
@@ -564,18 +600,67 @@ const BuyPremium = () => {
             transition={{ duration: 0.5, delay: 0.28 }}
           >
             <div className="bp-hero__feature">
-              <span className="bp-hero__feature-icon"><IconShield size={16} /></span>
-              Exclusive Ownership
+              <span className="bp-hero__feature-icon"><IconCalendar size={16} /></span>
+              30-Day Validity
             </div>
             <div className="bp-hero__feature">
-              <span className="bp-hero__feature-icon"><IconSparkle size={16} /></span>
-              Gold Branding
+              <span className="bp-hero__feature-icon"><IconLayers size={16} /></span>
+              2 Content Slots Included
             </div>
             <div className="bp-hero__feature">
-              <span className="bp-hero__feature-icon"><IconLightning size={16} /></span>
-              Premium Panel
+              <span className="bp-hero__feature-icon"><IconLock size={16} /></span>
+              Password Protected
+            </div>
+            <div className="bp-hero__feature">
+              <span className="bp-hero__feature-icon"><IconRefresh size={16} /></span>
+              Renew Anytime
             </div>
           </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ════════════════════════════════════════════════════════════
+          WHAT'S INCLUDED — accurate premium code benefits
+       ════════════════════════════════════════════════════════════ */}
+      <motion.section
+        className="bp-benefits"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.34 }}
+      >
+        <div className="bp-benefits__grid">
+          <div className="bp-benefits__card">
+            <span className="bp-benefits__icon"><IconCrown size={20} /></span>
+            <h3 className="bp-benefits__title">Your Own Code</h3>
+            <p className="bp-benefits__text">
+              A short 4 or 6-character code that only you can use. Active for 30 days from
+              purchase and renewable before or after it expires.
+            </p>
+          </div>
+          <div className="bp-benefits__card">
+            <span className="bp-benefits__icon"><IconLayers size={20} /></span>
+            <h3 className="bp-benefits__title">2 Content Slots</h3>
+            <p className="bp-benefits__text">
+              Every code includes 2 slots. Add text, images, or files in any combination —
+              all under the same code, all in one place.
+            </p>
+          </div>
+          <div className="bp-benefits__card">
+            <span className="bp-benefits__icon"><IconSparkle size={20} /></span>
+            <h3 className="bp-benefits__title">Extra Slots · ₹{pricingSettings.slotPrice}</h3>
+            <p className="bp-benefits__text">
+              Need more room? Add extra slots anytime from your premium dashboard at
+              ₹{pricingSettings.slotPrice} per slot. Capacity never goes to waste.
+            </p>
+          </div>
+          <div className="bp-benefits__card">
+            <span className="bp-benefits__icon"><IconShield size={20} /></span>
+            <h3 className="bp-benefits__title">Protected &amp; Branded</h3>
+            <p className="bp-benefits__text">
+              Lock your content behind a password and set a public display name. Recipients
+              see your golden premium badge on every receive.
+            </p>
+          </div>
         </div>
       </motion.section>
 
@@ -613,6 +698,13 @@ const BuyPremium = () => {
                     {isChecking ? 'Checking availability…' : codeMessage || 'Enter a code to check availability'}
                   </div>
                   <div className="bp-vault__price-tag">₹{amount}</div>
+                  <div className="bp-vault__perks">
+                    <span><IconCalendar size={13} /> 30 days</span>
+                    <span className="bp-vault__perks-dot" />
+                    <span><IconLayers size={13} /> 2 slots</span>
+                    <span className="bp-vault__perks-dot" />
+                    <span><IconLock size={13} /> Protectable</span>
+                  </div>
                 </>
               ) : (
                 <>
@@ -620,6 +712,11 @@ const BuyPremium = () => {
                     Your premium code will appear here
                   </div>
                   <div className="bp-vault__price-tag">From ₹{amount}</div>
+                  <div className="bp-vault__perks">
+                    <span><IconCalendar size={13} /> 30-day validity</span>
+                    <span className="bp-vault__perks-dot" />
+                    <span><IconLayers size={13} /> 2 slots included</span>
+                  </div>
                 </>
               )}
             </div>
@@ -664,6 +761,11 @@ const BuyPremium = () => {
               <div className="bp-checkout__header">
                 <h2 className="bp-checkout__title">Secure Your Code</h2>
                 <p className="bp-checkout__subtitle">Configure your code and create account credentials to activate it instantly.</p>
+                <div className="bp-includes">
+                  <span className="bp-includes__item"><IconCheck size={13} /> 30-day validity</span>
+                  <span className="bp-includes__item"><IconCheck size={13} /> 2 content slots</span>
+                  <span className="bp-includes__item"><IconCheck size={13} /> Password protection</span>
+                </div>
               </div>
 
               <form onSubmit={handleBuyNow} className="bp-form">
@@ -676,14 +778,16 @@ const BuyPremium = () => {
                       className={`bp-seg-button ${codeLength === 4 ? 'bp-seg-button--active' : ''}`}
                       onClick={() => { setCodeLength(4); setCode('') }}
                     >
-                      4-Digit Code
+                      <span>4-Digit Code</span>
+                      <span className="bp-seg-button__price">₹{pricingSettings.premiumCodePrice4Digit}</span>
                     </button>
                     <button
                       type="button"
                       className={`bp-seg-button ${codeLength === 6 ? 'bp-seg-button--active' : ''}`}
                       onClick={() => { setCodeLength(6); setCode('') }}
                     >
-                      6-Digit Code
+                      <span>6-Digit Code</span>
+                      <span className="bp-seg-button__price">₹{pricingSettings.premiumCodePrice6Digit}</span>
                     </button>
                   </div>
                 </div>
@@ -757,6 +861,11 @@ const BuyPremium = () => {
                     <span className="bp-label" style={{ color: 'var(--text-muted)' }}>Order Summary</span>
                     <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
                       Code: <span className="bp-code-pill">{code || '—'}</span>
+                    </div>
+                    <div className="bp-review__terms">
+                      <span><IconCalendar size={12} /> Valid 30 days</span>
+                      <span><IconLayers size={12} /> 2 slots included</span>
+                      <span><IconRefresh size={12} /> Renewable</span>
                     </div>
                   </div>
                   <div className="bp-price-pill">₹{amount}</div>

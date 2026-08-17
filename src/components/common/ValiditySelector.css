@@ -18,9 +18,12 @@
   font-family: var(--font-mono);
 }
 
-.editor-bar .validity__trigger .validity__label,
-.editor-bar .validity__trigger .validity__chevron {
+.editor-bar .validity__trigger .validity__label {
   display: none;
+}
+
+.editor-bar .validity__trigger .validity__chevron {
+  display: inline-block;
 }
 
 .editor-bar .validity__trigger--active {

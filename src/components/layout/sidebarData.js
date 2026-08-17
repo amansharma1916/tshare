@@ -26,12 +26,6 @@ const sidebarSections = [
       { label: 'Public Rooms', icon: 'users', path: '/public-room' },
     ],
   },
-  {
-    label: 'Management',
-    items: [
-      { label: 'Admin Panel', icon: 'shield', path: '/admin/panel' },
-    ],
-  },
   // {
   //   label: 'Organization',
   //   items: [
@@ -39,20 +33,6 @@ const sidebarSections = [
   //     { label: 'Register as Org', icon: 'user', path: '/org/register' },
   //   ],
   // },
-  {
-    label: 'Admin',
-    items: [
-      { label: 'Analytics', icon: 'layout-dashboard', path: '/admin/panel?tab=dashboard' },
-      { label: 'Texts', icon: 'message-square', path: '/admin/panel?tab=texts' },
-      { label: 'Images', icon: 'image', path: '/admin/panel?tab=images' },
-      { label: 'Files', icon: 'file', path: '/admin/panel?tab=files' },
-      { label: 'Public Rooms', icon: 'users', path: '/admin/panel?tab=public-rooms' },
-      { label: 'Users', icon: 'user', path: '/admin/panel?tab=users' },
-      { label: 'Premium Codes', icon: 'credit-card', path: '/admin/panel?tab=premium-codes' },
-      { label: 'Premium Users', icon: 'user-check', path: '/admin/panel?tab=premium-users' },
-      { label: 'Settings', icon: 'settings', path: '/admin/panel?tab=settings' },
-    ],
-  },
   {
     label: 'More',
     items: [
