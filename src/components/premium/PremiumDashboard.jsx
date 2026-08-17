@@ -24,6 +24,7 @@ const Icon = ({ name, size = 16, ...rest }) => {
     sparkles: (<><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9L12 3z" /><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15z" /></>),
     clock: (<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>),
     refresh: (<><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></>),
+    close: (<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>),
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>
@@ -48,6 +49,7 @@ const PremiumDashboard = () => {
   const [files, setFiles] = useState([])           // array for multi-select
   const [addingItem, setAddingItem] = useState(false)
   const [deletingItemId, setDeletingItemId] = useState('')
+  const [isDragOver, setIsDragOver] = useState(false)
 
   // Display name & visibility settings
   const [displayNameInput, setDisplayNameInput] = useState('')
@@ -64,6 +66,7 @@ const PremiumDashboard = () => {
   const [showRenewModal, setShowRenewModal] = useState(false)
   const [renewCode, setRenewCode] = useState(null)
   const [renewPrice, setRenewPrice] = useState(299)
+  const [renewPriceLoading, setRenewPriceLoading] = useState(false)
   const [renewLoading, setRenewLoading] = useState(false)
   const [renewMessage, setRenewMessage] = useState('')
 
@@ -199,7 +202,11 @@ const PremiumDashboard = () => {
   }
 
   const handleFilesSelected = (event) => {
-    const chosen = Array.from(event.target.files || [])
+    queueFiles(Array.from(event.target.files || []))
+    event.target.value = ''
+  }
+
+  const queueFiles = (chosen) => {
     if (chosen.length === 0) return
     const free = (selectedCode?.capacity ?? 0) - (selectedCode?.items?.length ?? 0)
     if (chosen.length > free) {
@@ -207,6 +214,32 @@ const PremiumDashboard = () => {
     }
     setFiles(chosen.slice(0, Math.max(free, 0)))
     setErrorMessage('')
+  }
+
+  const handleFilesDrop = (e) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    queueFiles(Array.from(e.dataTransfer.files || []))
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragOver(false)
+  }
+
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const clearFiles = () => {
+    setFiles([])
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const addFiles = async () => {
@@ -341,6 +374,7 @@ const PremiumDashboard = () => {
   const openRenewModal = async (codeObj) => {
     setRenewCode(codeObj)
     setRenewMessage('')
+    setRenewPriceLoading(true)
     setShowRenewModal(true)
     try {
       const res = await fetch(endpoints.pricingSettings)
@@ -353,6 +387,8 @@ const PremiumDashboard = () => {
     } catch (err) {
       console.error(err)
       setRenewPrice(codeObj.code.length === 6 ? 99 : 299)
+    } finally {
+      setRenewPriceLoading(false)
     }
   }
 
@@ -1046,25 +1082,73 @@ const PremiumDashboard = () => {
                       {(activeTab === 'image' || activeTab === 'file') && (
                         <>
                           <label className="pd-field__label">
-                            Upload {activeTab === 'image' ? 'Images' : 'Files'} (select multiple)
+                            Upload {activeTab === 'image' ? 'Images' : 'Files'} (multiple supported)
                           </label>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            accept={activeTab === 'image' ? 'image/*' : '*'}
-                            onChange={handleFilesSelected}
-                            className="pd-input"
-                            style={{ padding: '10px' }}
-                          />
-                          {files.length > 0 && (
-                            <p className="pd-field__hint">{files.length} file{files.length === 1 ? '' : 's'} selected</p>
-                          )}
-                          <div className="pd-actions" style={{ marginTop: '12px' }}>
-                            <button type="button" className="pd-btn pd-btn--gold" onClick={addFiles} disabled={addingItem || files.length === 0}>
-                              {addingItem ? 'Uploading...' : 'Upload Files'}
-                            </button>
+                          <div
+                            className={`dropzone ${isDragOver ? 'dropzone--active' : ''}`}
+                            onDrop={handleFilesDrop}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onClick={() => fileInputRef.current?.click()}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                          >
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              multiple
+                              accept={activeTab === 'image' ? 'image/*' : '*'}
+                              onChange={handleFilesSelected}
+                              className="dropzone__input"
+                            />
+
+                            <div className="dropzone__placeholder">
+                              <div className="dropzone__icon">
+                                {activeTab === 'image' ? (
+                                  <Icon name="image" size={28} />
+                                ) : (
+                                  <Icon name="file" size={28} />
+                                )}
+                              </div>
+                              <div className="dropzone__text">
+                                <span className="dropzone__title">
+                                  {isDragOver ? 'Drop to add' : `Drop ${activeTab === 'image' ? 'images' : 'files'} here`}
+                                </span>
+                                <span className="dropzone__hint">or click to browse — you can select multiple</span>
+                              </div>
+                            </div>
                           </div>
+
+                          {files.length > 0 && (
+                            <div className="pd-file-queue">
+                              {files.map((file, i) => (
+                                <div key={`${file.name}-${i}`} className="pd-file-queue__item">
+                                  <span className={`pd-type-badge ${file.type.startsWith('image/') ? 'pd-type-badge--image' : 'pd-type-badge--file'}`}>
+                                    {file.type.startsWith('image/') ? <Icon name="image" size={11} /> : <Icon name="file" size={11} />}
+                                  </span>
+                                  <span className="pd-file-queue__name">{file.name}</span>
+                                  <span className="pd-file-queue__size">{formatFileSize(file.size)}</span>
+                                  <button
+                                    type="button"
+                                    className="pd-btn pd-btn--ghost pd-btn--clear"
+                                    onClick={() => removeFile(i)}
+                                    aria-label={`Remove ${file.name}`}
+                                  >
+                                    <Icon name="close" size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                              <div className="pd-actions" style={{ marginTop: '12px' }}>
+                                <button type="button" className="pd-btn pd-btn--ghost pd-btn--clear" onClick={clearFiles} disabled={addingItem}>
+                                  Clear All
+                                </button>
+                                <button type="button" className="pd-btn pd-btn--gold" onClick={addFiles} disabled={addingItem || files.length === 0}>
+                                  {addingItem ? 'Uploading...' : 'Upload Files'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -1411,15 +1495,19 @@ const PremiumDashboard = () => {
             <div className="pd-renew-modal__pay">
               <div>
                 <span className="pd-field__label">Renewal price</span>
-                <div className="pd-renew-modal__price">₹{renewPrice}</div>
+                {renewPriceLoading ? (
+                  <div className="pd-renew-modal__price-skeleton" aria-label="Loading renewal price" />
+                ) : (
+                  <div className="pd-renew-modal__price">₹{renewPrice}</div>
+                )}
                 <p className="pd-field__hint">Renews for another 30 days from the current expiry</p>
               </div>
             </div>
 
             <div className="pd-modal__actions">
               <button type="button" className="pd-btn pd-btn--ghost" onClick={() => setShowRenewModal(false)} disabled={renewLoading}>Cancel</button>
-              <button type="button" className="pd-btn pd-btn--gold" onClick={startRenewal} disabled={renewLoading}>
-                {renewLoading ? 'Processing...' : <>Pay ₹{renewPrice} · Renew</>}
+              <button type="button" className="pd-btn pd-btn--gold" onClick={startRenewal} disabled={renewLoading || renewPriceLoading}>
+                {renewPriceLoading ? 'Loading price...' : renewLoading ? 'Processing...' : <>Pay ₹{renewPrice} · Renew</>}
               </button>
             </div>
           </div>
