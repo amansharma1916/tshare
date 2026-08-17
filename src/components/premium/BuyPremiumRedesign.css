@@ -411,6 +411,140 @@
   color: var(--text-muted);
 }
 
+/* ── What's included benefits band ── */
+.bp-benefits {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.bp-benefits__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.bp-benefits__card {
+  position: relative;
+  padding: 22px 20px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 200ms ease-out;
+}
+
+.bp-benefits__card:hover {
+  border-color: var(--color-premium-border);
+  background: rgba(212, 175, 55, 0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.bp-benefits__icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-premium-subtle);
+  color: var(--color-premium-light);
+  border: 1px solid var(--color-premium-border);
+  margin-bottom: 14px;
+}
+
+.bp-benefits__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bp-benefits__text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-tertiary);
+}
+
+/* ── Vault perks line under price tag ── */
+.bp-vault__perks {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.bp-vault__perks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bp-vault__perks svg {
+  color: var(--color-premium);
+}
+
+.bp-vault__perks-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-premium);
+  opacity: 0.6;
+}
+
+/* ── Checkout includes mini-list ── */
+.bp-includes {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bp-includes__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-premium-light);
+  background: var(--color-premium-subtle);
+  border: 1px solid var(--color-premium-border);
+  border-radius: 9999px;
+}
+
+.bp-includes__item svg {
+  color: var(--color-premium);
+}
+
+/* ── Order review terms line ── */
+.bp-review__terms {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.bp-review__terms span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bp-review__terms svg {
+  color: var(--color-premium);
+}
+
 /* ── Checkout Panel (right) ── */
 .bp-checkout {
   position: sticky;
@@ -498,7 +632,7 @@
 
 .bp-seg-button {
   flex: 1;
-  padding: 10px 6px;
+  padding: 9px 6px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
@@ -506,6 +640,23 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   transition: all 180ms ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.bp-seg-button__price {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: color 180ms ease-out;
+}
+
+.bp-seg-button--active .bp-seg-button__price {
+  color: var(--color-premium);
 }
 
 .bp-seg-button:hover {
@@ -916,6 +1067,10 @@
   .bp-hero__features {
     gap: 20px;
   }
+
+  .bp-benefits__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
@@ -982,6 +1137,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .bp-benefits__grid {
+    grid-template-columns: 1fr;
   }
 
   .bp-pay {
