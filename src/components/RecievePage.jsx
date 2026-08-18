@@ -28,6 +28,7 @@ const RecievePage = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  const [protectedCode, setProtectedCode] = useState('');
   // The password the visitor verified against a protected code. The preview /
   // download endpoints check the password per request (?password=), so we keep
   // it until a new code is entered.
