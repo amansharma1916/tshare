@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion';
 import { orgEndpoints } from '../../api/orgEndpoints';
 import { getOrgAuth, orgAuthHeaders } from '../org/orgAuth.js';
+import useOrgPrint from './useOrgPrint';
+import OrgPrintQueue from './OrgPrintQueue';
 import '../org/OrgDashboard.css';
 import './OrgDashboardPreview.css';
 
@@ -96,6 +98,14 @@ const Icon = ({ name, size = 18 }) => {
           <rect x="14" y="14" width="7" height="7" rx="1" />
         </svg>
       );
+    case 'printer':
+      return (
+        <svg {...common}>
+          <path d="M6 9V2h12v7" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" rx="1" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -112,77 +122,48 @@ const StatCard = ({ label, value, icon, delay }) => (
 );
 
 // ── File preview helpers ──────────────────────────────────
-// Classifies a file into a preview category based on its extension & MIME type.
-// 'image'   → render with <img>
-// 'pdf'     → render with <iframe> (browsers have a built-in PDF viewer)
-// 'text'    → render with <iframe> (browser renders text/plain inline)
-// 'document'→ render with Google Docs Viewer (Office / OpenDocument)
-// 'other'   → fallback: icon + download button only
-const FILE_IMAGE_RE = /\.(jpe?g|png|gif|bmp|webp|avif|svg|ico|tiff?|heic?)$/i;
-const FILE_TEXT_RE = /\.(txt|md|csv|json|js|jsx|ts|tsx|py|java|c|cpp|cc|cxx|h|hpp|rb|php|go|rs|swift|kt|kts|scala|lua|pl|pm|sh|bash|zsh|fish|html?|css|scss|sass|less|xml|yaml|yml|toml|ini|cfg|conf|sql|graphql|gql|proto|makefile|dockerfile|env|gitignore|log)$/i;
-const FILE_DOC_RE = /\.(doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|rtf)$/i;
-
-const getFilePreviewType = (originalName, mimeType) => {
-  const name = (originalName || '').toLowerCase();
-  const mime = (mimeType || '').toLowerCase();
-
-  if (mime.startsWith('image/') || FILE_IMAGE_RE.test(name)) return 'image';
-  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
-  if (mime.startsWith('text/') || FILE_TEXT_RE.test(name)) return 'text';
-  if (
-    mime.includes('word') || mime.includes('excel') || mime.includes('powerpoint') ||
-    mime.includes('spreadsheet') || mime.includes('presentation') ||
-    mime.includes('opendocument') || mime === 'application/rtf' ||
-    FILE_DOC_RE.test(name)
-  ) return 'document';
-
-  return 'other';
-};
-
 // Renders an inline preview for a file item in the org dashboard preview pane.
-// Uses the backend proxy endpoint (like RecievePage does) which sets
-// Content-Disposition: inline so the browser renders PDFs instead of downloading them.
-const renderFilePreview = (file) => {
-  if (!file.id) {
+// Files live behind the org-JWT-protected proxy (see orgPreviewRoute.js), so a
+// plain <iframe src> gets a 401 — we fetch with the auth header and hand the
+// preview a blob URL instead. The backend proxy sets Content-Disposition: inline
+// so browsers render PDFs natively instead of downloading them.
+const FilePreview = ({ file, token }) => {
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setUrl('');
+    if (!file?.id) return undefined;
+    fetch(orgEndpoints.previewData(file.id), { headers: orgAuthHeaders(token) })
+      .then((res) => (res.ok ? res.blob() : Promise.reject(new Error('Preview failed'))))
+      .then((blob) => { if (!cancelled) setUrl(URL.createObjectURL(blob)); })
+      .catch(() => { if (!cancelled) setUrl(''); });
+    return () => { cancelled = true; };
+  }, [file?.id, token]);
+
+  if (!file?.id) {
     return <span className="org-dash__file-icon"><Icon name="file" size={48} /></span>;
   }
+  return <iframe src={url || ''} title="Preview" className="org-dash__preview-iframe" />;
+};
 
-  const type = getFilePreviewType(file.originalName, file.mimeType);
+// Authenticated thumbnail (preview ?raw=1) for the submissions list.
+const AuthThumb = ({ file, token }) => {
+  const [url, setUrl] = useState('');
 
-  switch (type) {
-    case 'image':
-      // Images live in a private R2 bucket, so load via the backend proxy. The
-      // proxy renders JPEG/PNG as a PDF and other formats as the raw image.
-      return <iframe src={orgEndpoints.previewData(file.id)} title="Image Preview" className="org-dash__preview-iframe" />;
+  useEffect(() => {
+    let cancelled = false;
+    setUrl('');
+    if (!file?.id) return undefined;
+    fetch(orgEndpoints.previewDataRaw(file.id), { headers: orgAuthHeaders(token) })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => { if (!cancelled && blob) setUrl(URL.createObjectURL(blob)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [file?.id, token]);
 
-    case 'pdf':
-    case 'text':
-      // Use backend proxy for PDFs and text files so Content-Disposition: inline
-      // is set correctly (browsers render these natively instead of downloading).
-      return (
-        <iframe
-          src={orgEndpoints.previewData(file.id)}
-          title={type === 'pdf' ? 'PDF Preview' : 'Text Preview'}
-          className="org-dash__preview-iframe"
-        />
-      );
-
-    case 'document':
-      // Convert office docs (doc/docx/ppt/pptx/xls/xlsx/odt/ods/odp/rtf) to PDF
-      // server-side (LibreOffice) and render via the browser's native PDF viewer —
-      // the same UX as the image-to-PDF preview.
-      return (
-        <iframe
-          src={file?.id ? orgEndpoints.previewDataPdf(file.id) : (file?.url || '')}
-          title="Document Preview"
-          className="org-dash__preview-iframe"
-        />
-      );
-
-    default:
-      // Unsupported binary types — show icon only; download button is separate.
-      return <span className="org-dash__file-icon"><Icon name="file" size={48} /></span>;
-  }
+  if (!url) return null;
+  return <img src={url} alt="" className="org-dash__thumb" />;
 };
 
 const OrgDashboard = () => {
@@ -207,6 +188,8 @@ const OrgDashboard = () => {
   const searchDebounceRef = useRef(null);
   const searchQueryRef = useRef(searchQuery);
   useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
+  // Blob URL handed to the "Open in new tab" window (kept so it can be revoked).
+  const openBlobUrlRef = useRef(null);
 
   const cursorRef = useRef(cursor);
   useEffect(() => { cursorRef.current = cursor; }, [cursor]);
@@ -218,6 +201,18 @@ const OrgDashboard = () => {
   // Preview conversion status for the selected item ('pending' / 'ready' / ...).
   const [previewStatus, setPreviewStatus] = useState('na');
   const previewPollRef = useRef(null);
+
+  // Auto Print: toggle state + live print queue (see useOrgPrint).
+  const [autoPrintEnabled, setAutoPrintEnabled] = useState(false);
+  const {
+    queue: printQueue,
+    loading: printLoading,
+    socketOnline: printSocketOnline,
+    toggleAutoPrint,
+    moveJob: movePrintJob,
+    cancelJob: cancelPrintJob,
+    retryJob: retryPrintJob,
+  } = useOrgPrint(token);
 
   const load = useCallback(async (loadMore = false, isSearch = false) => {
     if (loadMore) {
@@ -277,7 +272,10 @@ const OrgDashboard = () => {
       }
 
       const qrData = await qrRes.json();
-      if (qrData.success) setQr(qrData);
+      if (qrData.success) {
+        setQr(qrData);
+        setAutoPrintEnabled(Boolean(qrData.autoPrint && qrData.autoPrint.enabled));
+      }
     } catch (err) {
       setError(err.message || 'Failed to load dashboard');
     } finally {
@@ -337,9 +335,32 @@ const OrgDashboard = () => {
     load();
   };
 
+  const handleAutoPrintToggle = async () => {
+    const next = !autoPrintEnabled;
+    setAutoPrintEnabled(next); // optimistic
+    const result = await toggleAutoPrint(next);
+    if (!result.success) setAutoPrintEnabled(!next);
+  };
 
-
-
+  // Open the submission in a new tab. The preview proxy is org-JWT protected,
+  // so a plain link 401s — fetch with the auth header, then open a blob URL.
+  const handleOpenInNewTab = async () => {
+    if (!selectedItem?.id) return;
+    setError('');
+    try {
+      const res = await fetch(orgEndpoints.previewData(selectedItem.id), {
+        headers: { ...orgAuthHeaders(token) },
+      });
+      if (!res.ok) throw new Error('Open failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (openBlobUrlRef.current) URL.revokeObjectURL(openBlobUrlRef.current);
+      openBlobUrlRef.current = url;
+      window.open(url, '_blank', 'noopener');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const handleDownloadFile = async () => {
     if (!selectedItem?.id) return;
@@ -499,6 +520,16 @@ const OrgDashboard = () => {
         </div>
         <div className="org-dash__topbar-actions">
           <button
+            className={`org-dash__autoprint ${autoPrintEnabled ? 'org-dash__autoprint--on' : ''}`}
+            onClick={handleAutoPrintToggle}
+            type="button"
+            aria-pressed={autoPrintEnabled}
+            title={autoPrintEnabled ? 'Auto Print is ON — new files print automatically' : 'Auto Print is OFF'}
+          >
+            <Icon name="printer" size={17} />
+            Auto Print {autoPrintEnabled ? 'ON' : 'OFF'}
+          </button>
+          <button
             className="org-dash__qr-trigger"
             onClick={() => setShowQrModal(true)}
             type="button"
@@ -533,6 +564,17 @@ const OrgDashboard = () => {
         <StatCard label="Images" value={stats.image} icon="image" delay={0.16} />
         <StatCard label="Files" value={stats.file} icon="file" delay={0.2} />
       </motion.div>
+
+      {/* Print queue */}
+      <OrgPrintQueue
+        queue={printQueue.queue}
+        history={printQueue.history}
+        socketOnline={printSocketOnline}
+        loading={printLoading}
+        onMove={movePrintJob}
+        onCancel={cancelPrintJob}
+        onRetry={retryPrintJob}
+      />
 
       {/* Split: Left column + Right preview */}
       <motion.div className="org-dash__split" {...fadeUp(0.1)}>
@@ -614,7 +656,7 @@ const OrgDashboard = () => {
 
                       <div className="org-dash__item-primary" title={preview(item)}>
                         {item.dataType === 'image' && item.id && item.pdfStatus !== 'ready' ? (
-                          <img src={orgEndpoints.previewDataRaw(item.id)} alt="" className="org-dash__thumb" />
+                          <AuthThumb file={item} token={token} />
                         ) : item.dataType === 'file' || (item.dataType === 'image' && item.pdfStatus === 'ready') ? (
                           <span className="org-dash__file-icon"><Icon name="file" size={18} /></span>
                         ) : (
@@ -664,9 +706,9 @@ const OrgDashboard = () => {
                 </span>
                 <div className="org-dash__preview-actions">
                   {(selectedItem.dataType === 'image' || selectedItem.dataType === 'file') && selectedItem.id && (
-                    <a className="org-btn org-btn--ghost" href={orgEndpoints.previewData(selectedItem.id)} target="_blank" rel="noreferrer">
+                    <button className="org-btn org-btn--ghost" onClick={handleOpenInNewTab} type="button">
                       <Icon name="external" size={14} /> Open
-                    </a>
+                    </button>
                   )}
                   <button
                     className="org-btn org-btn--danger"
@@ -694,7 +736,7 @@ const OrgDashboard = () => {
                           <span className="org-dash__spinner" />
                           <p>Converting to PDF…</p>
                         </div>
-                      ) : renderFilePreview(selectedItem)}
+                      ) : <FilePreview file={selectedItem} token={token} />}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'Image'}</div>
@@ -718,7 +760,7 @@ const OrgDashboard = () => {
                           <span className="org-dash__spinner" />
                           <p>Converting to PDF…</p>
                         </div>
-                      ) : renderFilePreview(selectedItem)}
+                      ) : <FilePreview file={selectedItem} token={token} />}
                     </div>
                     <div className="org-dash__file-meta-row">
                       <div className="org-dash__file-name">{selectedItem.originalName || 'File'}</div>
