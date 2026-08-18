@@ -17,6 +17,11 @@ export const orgEndpoints = {
   submitText: (code) => `${baseUrl}/org/submit/${code}`,
   uploadFile: (code) => `${baseUrl}/org/upload/${code}`,
   searchDashboard: `${baseUrl}/org/dashboard/search`,
+  autoPrint: `${baseUrl}/org/auto-print`,
+  printQueue: `${baseUrl}/org/print/queue`,
+  printMove: (id) => `${baseUrl}/org/print/queue/${id}/move`,
+  printCancel: (id) => `${baseUrl}/org/print/queue/${id}/cancel`,
+  printRetry: (id) => `${baseUrl}/org/print/queue/${id}/retry`,
 };
 
 export default { orgEndpoints };

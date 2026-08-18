@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
 import { orgEndpoints } from '../../api/orgEndpoints';
+import { orgAuthHeaders } from '../org/orgAuth.js';
 import { openPrintWindow } from './printHelpers';
 
 // Renders a .docx file directly in the browser with `docx-preview`.
@@ -12,7 +13,7 @@ import { openPrintWindow } from './printHelpers';
 // dev and production, and the rendered content is printable.
 //
 // A small toolbar (like the browser's PDF toolbar) provides Print and Download.
-const DocxPreview = ({ file }) => {
+const DocxPreview = ({ file, token }) => {
   const bodyRef = useRef(null);
   const styleRef = useRef(null);
   const blobRef = useRef(null);
@@ -29,7 +30,8 @@ const DocxPreview = ({ file }) => {
       setStatus('loading');
       try {
         if (!src) throw new Error('No source for document');
-        const res = await fetch(src);
+        // The proxy is org-JWT protected — pass the org token when available.
+        const res = await fetch(src, { headers: token ? orgAuthHeaders(token) : undefined });
         if (!res.ok) throw new Error('Failed to load document');
         const blob = await res.blob();
         if (cancelled) return;
@@ -51,7 +53,7 @@ const DocxPreview = ({ file }) => {
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, [src, token]);
 
   // Print the client-rendered docx (reuses the shared print window; no download).
   const handlePrint = () => {
