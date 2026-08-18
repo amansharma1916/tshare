@@ -25,10 +25,13 @@ const RecievePage = () => {
 
   // Password protection state
   const [passwordRequired, setPasswordRequired] = useState(false);
-  const [protectedCode, setProtectedCode] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  // The password the visitor verified against a protected code. The preview /
+  // download endpoints check the password per request (?password=), so we keep
+  // it until a new code is entered.
+  const verifiedPasswordRef = useRef('');
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
@@ -205,6 +208,8 @@ const RecievePage = () => {
       setProtectedCode('');
       setPasswordInput('');
       setPasswordError('');
+      // Remember the verified password so item downloads/previews can pass it.
+      verifiedPasswordRef.current = passwordInput;
     } catch (err) {
       setPasswordError(err.message || 'Failed to verify password');
     } finally {
@@ -222,6 +227,8 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedContent(null);
+    // New code — drop any previously verified password.
+    verifiedPasswordRef.current = '';
 
     try {
       const url = endpoints.getData(code) + (username ? '?username=' + encodeURIComponent(username) : '');
@@ -381,9 +388,17 @@ const RecievePage = () => {
     navigator.clipboard.writeText(text).catch((e) => console.error('Error copying:', e));
   };
 
+  // Password-protected premium codes check the password per request (?password=).
+  // Append the verified password (if any) to per-item URLs.
+  const withCodePassword = (url) => {
+    const pw = verifiedPasswordRef.current;
+    if (!pw) return url;
+    return `${url}${url.includes('?') ? '&' : '?'}password=${encodeURIComponent(pw)}`;
+  };
+
   const downloadItem = (itemId) => {
     if (!receivedContent?.code) return;
-    window.location.href = endpoints.premiumItemDownload(receivedContent.code, itemId);
+    window.location.href = withCodePassword(endpoints.premiumItemDownload(receivedContent.code, itemId));
   };
 
   const renderBundle = () => {
@@ -436,7 +451,7 @@ const RecievePage = () => {
           return (
             <div key={item.itemId} className="receive__bundle-item">
               <div className="receive__file-preview">
-                <iframe src={endpoints.premiumItemPreview(receivedContent.code, item.itemId)} title="File preview" />
+                <iframe src={withCodePassword(endpoints.premiumItemPreview(receivedContent.code, item.itemId))} title="File preview" />
               </div>
               <div className="receive__file-info">
                 <div className="receive__file-icon receive__file-icon--file">{getTypeIcon()}</div>
