@@ -213,7 +213,7 @@ const FileSharePage = () => {
               File · Instant &amp; free · No account
             </span>
             <h1 className="share__title">
-              Lock any file behind a <span className="share__title-grad">4-digit key</span>
+              Lock any file behind a <span className="share__title-grad">4-character key</span>
             </h1>
             <p className="share__desc">
               Upload a document, PDF, code, or archive. We store it and hand you a short code —
@@ -239,7 +239,7 @@ const FileSharePage = () => {
             <span className="share__step-line" aria-hidden="true" />
             <div className="share__step">
               <span className="share__step-num">3</span>
-              <span className="share__step-txt"><strong>Share</strong> the 4-digit key</span>
+              <span className="share__step-txt"><strong>Share</strong> the 4-character key</span>
             </div>
             <span className="share__step-line" aria-hidden="true" />
             {/* <div className="share__step">

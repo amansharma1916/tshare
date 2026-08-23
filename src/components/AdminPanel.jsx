@@ -1059,23 +1059,25 @@ const AdminPanel = () => {
         if (!editingCode) return;
         setCodeError('');
 
-        if (!newCode || isNaN(newCode) || newCode.length !== 4 || parseInt(newCode) < 1000 || parseInt(newCode) > 9999) {
-            setCodeError('Code must be a 4-digit number between 1000 and 9999');
+        if (!newCode || newCode.length !== 4 || !/^[a-zA-Z0-9]{4}$/.test(newCode)) {
+            setCodeError('Code must be exactly 4 alphanumeric characters');
             return;
         }
+
+        const codeValue = newCode.toUpperCase();
 
         try {
             const response = await fetch(endpoints.adminUpdateCode(editingCode.id), {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ newCode: parseInt(newCode) }),
+                body: JSON.stringify({ newCode: codeValue }),
             });
 
             const data = await response.json();
 
             if (data.success) {
                 setTexts(texts.map(text =>
-                    text.id === editingCode.id ? { ...text, id: parseInt(newCode) } : text
+                    text.id === editingCode.id ? { ...text, id: codeValue } : text
                 ));
                 setShowCodeModal(false);
                 setEditingCode(null);
@@ -1121,13 +1123,13 @@ const AdminPanel = () => {
         if (!newCode || newCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckCode(newCode), {
+            const response = await fetch(endpoints.adminCheckCode(newCode.toUpperCase()), {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
-                if (!data.isAvailable && parseInt(newCode) !== editingCode.id) {
+                if (!data.isAvailable && newCode.toUpperCase() !== editingCode.id) {
                     setCodeError('This code is already in use. Please choose a different code.');
                 } else {
                     setCodeError('');
@@ -1215,23 +1217,25 @@ const AdminPanel = () => {
         if (!editingImage) return;
         setImageCodeError('');
 
-        if (!newImageCode || isNaN(newImageCode) || newImageCode.length !== 4 || parseInt(newImageCode) < 1000 || parseInt(newImageCode) > 9999) {
-            setImageCodeError('Code must be a 4-digit number between 1000 and 9999');
+        if (!newImageCode || newImageCode.length !== 4 || !/^[a-zA-Z0-9]{4}$/.test(newImageCode)) {
+            setImageCodeError('Code must be exactly 4 alphanumeric characters');
             return;
         }
+
+        const codeValue = newImageCode.toUpperCase();
 
         try {
             const response = await fetch(endpoints.adminUpdateImageCode(editingImage.id), {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ newCode: parseInt(newImageCode) }),
+                body: JSON.stringify({ newCode: codeValue }),
             });
 
             const data = await response.json();
 
             if (data.success) {
                 setImages(images.map(image =>
-                    image.id === editingImage.id ? { ...image, id: parseInt(newImageCode) } : image
+                    image.id === editingImage.id ? { ...image, id: codeValue } : image
                 ));
                 setShowImageCodeModal(false);
                 setEditingImage(null);
@@ -1250,13 +1254,13 @@ const AdminPanel = () => {
         if (!newImageCode || newImageCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckImageCode(newImageCode), {
+            const response = await fetch(endpoints.adminCheckImageCode(newImageCode.toUpperCase()), {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
-                if (!data.isAvailable && parseInt(newImageCode) !== editingImage.id) {
+                if (!data.isAvailable && newImageCode.toUpperCase() !== editingImage.id) {
                     setImageCodeError('This code is already in use. Please choose a different code.');
                 } else {
                     setImageCodeError('');
@@ -1642,23 +1646,25 @@ const AdminPanel = () => {
         if (!editingFile) return;
         setFileCodeError('');
 
-        if (!newFileCode || isNaN(newFileCode) || newFileCode.length !== 4 || parseInt(newFileCode) < 1000 || parseInt(newFileCode) > 9999) {
-            setFileCodeError('Code must be a 4-digit number between 1000 and 9999');
+        if (!newFileCode || newFileCode.length !== 4 || !/^[a-zA-Z0-9]{4}$/.test(newFileCode)) {
+            setFileCodeError('Code must be exactly 4 alphanumeric characters');
             return;
         }
+
+        const codeValue = newFileCode.toUpperCase();
 
         try {
             const response = await fetch(endpoints.adminUpdateFileCode(editingFile.id), {
                 method: 'PUT',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ newCode: parseInt(newFileCode) }),
+                body: JSON.stringify({ newCode: codeValue }),
             });
 
             const data = await response.json();
 
             if (data.success) {
                 setFiles(files.map(file =>
-                    file.id === editingFile.id ? { ...file, id: parseInt(newFileCode) } : file
+                    file.id === editingFile.id ? { ...file, id: codeValue } : file
                 ));
                 setShowFileCodeModal(false);
                 setEditingFile(null);
@@ -1677,13 +1683,13 @@ const AdminPanel = () => {
         if (!newFileCode || newFileCode.length !== 4) return;
 
         try {
-            const response = await fetch(endpoints.adminCheckFileCode(newFileCode), {
+            const response = await fetch(endpoints.adminCheckFileCode(newFileCode.toUpperCase()), {
                 headers: getAuthHeaders(),
             });
             const data = await response.json();
 
             if (data.success) {
-                if (!data.isAvailable && parseInt(newFileCode) !== editingFile.id) {
+                if (!data.isAvailable && newFileCode.toUpperCase() !== editingFile.id) {
                     setFileCodeError('This code is already in use. Please choose a different code.');
                 } else {
                     setFileCodeError('');
@@ -3216,7 +3222,7 @@ const AdminPanel = () => {
                         >
                             <h2>Create Public Room</h2>
                             <div className="room-modal-info">
-                                A random 4-digit code will be generated automatically.
+                                A random 4-character code will be generated automatically.
                                 If no name is provided, a default name will be used.
                             </div>
                             <form onSubmit={handleCreatePublicRoom}>

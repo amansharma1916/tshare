@@ -132,7 +132,7 @@ const RecievePage = () => {
   const handleReceive = () => {
     const code = getCode();
     if (code.length !== segmentCount) {
-      setError(`Please enter all ${segmentCount} digits`);
+      setError(`Please enter all ${segmentCount} characters`);
       return;
     }
 
@@ -383,7 +383,7 @@ const RecievePage = () => {
     return 'Receive Content';
   };
 
-  const getDesc = () => 'Enter the 4-digit code shared with you to retrieve text, images, or files.';
+  const getDesc = () => 'Enter the 4-character code shared with you to retrieve text, images, or files.';
 
   const copyText = (text) => {
     navigator.clipboard.writeText(text).catch((e) => console.error('Error copying:', e));
@@ -731,14 +731,14 @@ const RecievePage = () => {
               onClick={() => handleToggleMode(4)}
               className={`toggle-btn ${segmentCount === 4 ? 'toggle-btn--active' : ''}`}
             >
-              4 Digits Mode
+              4 Characters Mode
             </button>
             <button
               type="button"
               onClick={() => handleToggleMode(6)}
               className={`toggle-btn ${segmentCount === 6 ? 'toggle-btn--active' : ''}`}
             >
-              6 Digits Mode
+              6 Characters Mode
             </button>
           </div>
 
