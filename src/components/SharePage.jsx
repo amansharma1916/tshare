@@ -17,7 +17,7 @@ const SharePage = () => {
   const [copied, setCopied] = useState(false);
   const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
-  const [validity, setValidity] = useState('none');
+  const [validity, setValidity] = useState('6h');
   const [showCode, setShowCode] = useState(false);
   const [shareError, setShareError] = useState('');
   const textareaRef = useRef(null);
@@ -97,7 +97,7 @@ const SharePage = () => {
   const handleShareAnother = () => {
     setShowCode(false);
     setCode('');
-    setValidity('none');
+    setValidity('6h');
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 

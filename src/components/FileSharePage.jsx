@@ -18,7 +18,7 @@ const FileSharePage = () => {
   const [fileError, setFileError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [validity, setValidity] = useState('none');
+  const [validity, setValidity] = useState('6h');
   const fileInputRef = useRef(null);
 
   const getFileIcon = (file) => {
@@ -153,7 +153,7 @@ const FileSharePage = () => {
     setFileCode('');
     setFile(null);
     setFilePreview('');
-    setValidity('none');
+    setValidity('6h');
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 

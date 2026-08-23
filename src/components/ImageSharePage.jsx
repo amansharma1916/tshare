@@ -18,7 +18,7 @@ const ImageSharePage = () => {
   const [imageError, setImageError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [validity, setValidity] = useState('none');
+  const [validity, setValidity] = useState('6h');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ const ImageSharePage = () => {
     setImageCode('');
     setImageFile(null);
     setImagePreview('');
-    setValidity('none');
+    setValidity('6h');
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
