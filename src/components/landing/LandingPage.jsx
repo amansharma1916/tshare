@@ -263,7 +263,7 @@ const LandingPage = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.08, ease }}
             >
-              One 4-digit key.
+              One 4-character key.
               <br />
               <span className="landing__hero-gradient">Anything inside.</span>
             </motion.h1>

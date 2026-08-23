@@ -7,8 +7,8 @@ const About = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "About TShare - One 4-digit key. Anything inside.",
-    "description": "Learn about TShare, the sharing platform built on one idea: one 4-digit key, anything inside. Share text, images, and files instantly using 4-digit codes.",
+    "name": "About TShare - One 4-character key. Anything inside.",
+    "description": "Learn about TShare, the sharing platform built on one idea: one 4-character key, anything inside. Share text, images, and files instantly using 4-character codes.",
     "mainEntity": {
       "@type": "Person",
       "name": "Aman Sharma",
@@ -31,13 +31,13 @@ const About = () => {
           </div>
           <span className="page__badge">
             <span className="page__badge-dot" />
-            About · One 4-digit key · Anything inside
+            About · One 4-character key · Anything inside
           </span>
           <h1 className="page__title">
             About <span className="page__title-gradient">TShare</span>
           </h1>
           <p className="page__subtitle">
-            One 4-digit key. Anything inside. Sharing without registration, without friction.
+            One 4-character key. Anything inside. Sharing without registration, without friction.
           </p>
         </div>
         <div className="page__content">
@@ -45,7 +45,7 @@ const About = () => {
             <h2>About the Owner</h2>
             <p>
               TShare was created by <strong>Aman Sharma</strong>, a full-stack developer who believes sharing
-              should be instant. No accounts, no setup, no friction — just a 4-digit key that opens anything.
+              should be instant. No accounts, no setup, no friction — just a 4-character key that opens anything.
               With that idea, Aman built TShare to make sharing text, images and files as easy as sending a message.
             </p>
             <p>
@@ -57,7 +57,7 @@ const About = () => {
           <section className="page__section">
             <h2>Our Mission</h2>
             <p>
-              One 4-digit key. Anything inside. That is the whole idea behind TShare — every piece of content,
+              One 4-character key. Anything inside. That is the whole idea behind TShare — every piece of content,
               from a password to a document, can be locked behind a short key that works on any device,
               with no registration required.
             </p>
@@ -66,7 +66,7 @@ const About = () => {
           <section className="page__section">
             <h2>What We Offer</h2>
             <p>
-              TShare lets you share text, images, and files instantly using a 4-digit code.
+              TShare lets you share text, images, and files instantly using a 4-character code.
               No sign-up, no accounts to manage, no complicated interfaces — generate a code,
               share it with your recipient, and they can access your content immediately.
             </p>
@@ -78,13 +78,13 @@ const About = () => {
               Here's everything you can do with TShare today:
             </p>
             <ul>
-              <li><strong>Instant Text Sharing:</strong> Share text content instantly with a unique 4-digit code — notes, links, passwords, anything.</li>
+              <li><strong>Instant Text Sharing:</strong> Share text content instantly with a unique 4-character code — notes, links, passwords, anything.</li>
 
               <li><strong>Image Sharing:</strong> Upload and share images (up to 5 MB). Recipients view them immediately with the share code.</li>
 
               <li><strong>File Sharing:</strong> Share common file formats up to 50 MB — PDFs, documents, spreadsheets, code files and more.</li>
 
-              <li><strong>4-Digit Code System:</strong> Simple, memorable 4-digit codes. No long URLs to remember or retype.</li>
+              <li><strong>4-character Code System:</strong> Simple, memorable 4-character codes. No long URLs to remember or retype.</li>
 
               <li><strong>Validity Controls:</strong> Choose how long a share lives — No limit (default), viewable only once (1-time), or valid for 6 hours. Expired or consumed shares are removed from our servers automatically.</li>
 
@@ -130,7 +130,7 @@ const About = () => {
               <div className="step">
                 <div className="step__number">2</div>
                 <h3>Share</h3>
-                <p>Get a unique 4-digit code and share it anywhere — any messaging platform works.</p>
+                <p>Get a unique 4-character code and share it anywhere — any messaging platform works.</p>
               </div>
               <div className="step">
                 <div className="step__number">3</div>

@@ -18,7 +18,7 @@ const ImageSharePage = () => {
   const [imageError, setImageError] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [validity, setValidity] = useState('none');
+  const [validity, setValidity] = useState('6h');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ const ImageSharePage = () => {
     setImageCode('');
     setImageFile(null);
     setImagePreview('');
-    setValidity('none');
+    setValidity('6h');
     setTimeout(() => fileInputRef.current?.click(), 100);
   };
 
@@ -189,7 +189,7 @@ const ImageSharePage = () => {
               Image · Instant &amp; free · No account
             </span>
             <h1 className="share__title">
-              Lock an image behind a <span className="share__title-grad">4-digit key</span>
+              Lock an image behind a <span className="share__title-grad">4-character key</span>
             </h1>
             <p className="share__desc">
               Drop a photo or screenshot. We store it and hand you a short code — anyone who
@@ -215,7 +215,7 @@ const ImageSharePage = () => {
             <span className="share__step-line" aria-hidden="true" />
             <div className="share__step">
               <span className="share__step-num">3</span>
-              <span className="share__step-txt"><strong>Share</strong> the 4-digit key</span>
+              <span className="share__step-txt"><strong>Share</strong> the 4-character key</span>
             </div>
             <span className="share__step-line" aria-hidden="true" />
             {/* <div className="share__step">

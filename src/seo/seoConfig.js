@@ -1,8 +1,8 @@
 // Per-route SEO configuration.
 //
-// SLOGAN: "One 4-digit key. Anything inside." — the core TShare idea:
+// SLOGAN: "One 4-character key. Anything inside." — the core TShare idea:
 // any content locked behind a short key, openable anywhere.
-export const SLOGAN = 'One 4-digit key. Anything inside.'
+export const SLOGAN = 'One 4-character key. Anything inside.'
 export const BRAND = 'TShare'
 export const SITE_URL = 'https://tshare.in'
 export const SITE_IMAGE = 'https://tshare.in/s2.svg'

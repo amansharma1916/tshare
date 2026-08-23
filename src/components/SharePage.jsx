@@ -17,7 +17,7 @@ const SharePage = () => {
   const [copied, setCopied] = useState(false);
   const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
-  const [validity, setValidity] = useState('none');
+  const [validity, setValidity] = useState('6h');
   const [showCode, setShowCode] = useState(false);
   const [shareError, setShareError] = useState('');
   const textareaRef = useRef(null);
@@ -97,7 +97,7 @@ const SharePage = () => {
   const handleShareAnother = () => {
     setShowCode(false);
     setCode('');
-    setValidity('none');
+    setValidity('6h');
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
@@ -162,7 +162,7 @@ const SharePage = () => {
               Text · Instant &amp; free · No account
             </span>
             <h1 className="share__title">
-              Drop text behind a <span className="share__title-grad">4-digit key</span>
+              Drop text behind a <span className="share__title-grad">4-character key</span>
             </h1>
             <p className="share__desc">
               Paste or type anything — a note, a link, a password. We lock it behind a short
@@ -188,7 +188,7 @@ const SharePage = () => {
             <span className="share__step-line" aria-hidden="true" />
             <div className="share__step">
               <span className="share__step-num">3</span>
-              <span className="share__step-txt"><strong>Share</strong> the 4-digit key</span>
+              <span className="share__step-txt"><strong>Share</strong> the 4-character key</span>
             </div>
             <span className="share__step-line" aria-hidden="true" />
             {/* <div className="share__step">

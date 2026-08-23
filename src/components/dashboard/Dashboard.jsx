@@ -156,7 +156,7 @@ const Dashboard = () => {
             Share Anything. <span style={{ color: 'var(--theme-primary-light)' }}>In Seconds.</span>
           </h1>
           <p style={{ fontSize: '15px', color: 'var(--text-muted)', marginBottom: '32px', lineHeight: 1.6 }}>
-            No sign-up. No accounts. Just a 4-digit code. Share text, images, and files instantly.
+            No sign-up. No accounts. Just a 4-character code. Share text, images, and files instantly.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
             <button

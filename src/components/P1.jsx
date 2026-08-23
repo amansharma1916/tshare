@@ -96,7 +96,7 @@ const P1 = () => {
             <span className="home__title-accent">In Seconds.</span>
           </h1>
           <p className="home__subtitle">
-            No sign-up. No accounts. Just a 4-digit code.
+            No sign-up. No accounts. Just a 4-character code.
           </p>
         </motion.div>
 
