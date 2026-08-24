@@ -6,6 +6,7 @@ import { endpoints } from '../api/api';
 import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
+import QrScanner from './common/QrScanner';
 
 const RecievePage = () => {
   const navigate = useNavigate();
@@ -33,10 +34,49 @@ const RecievePage = () => {
   // download endpoints check the password per request (?password=), so we keep
   // it until a new code is entered.
   const verifiedPasswordRef = useRef('');
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     segmentRefs.current[0]?.focus();
   }, [segmentCount]);
+
+  const handleQrScan = (code) => {
+    const clean = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (!clean) return;
+    const len = clean.length <= 4 ? 4 : 6;
+    // Pad or slice to exact len
+    let finalCode = clean;
+    if (clean.length === 5) finalCode = clean.slice(0, 4); // fallback
+    if (finalCode.length < len) finalCode = finalCode.padEnd(len, '');
+    // Update UI
+    setSegmentCount(len);
+    const newSegs = Array(len).fill('');
+    for (let i = 0; i < finalCode.length && i < len; i++) newSegs[i] = finalCode[i];
+    setSegments(newSegs);
+    setError('');
+    setSuccessMessage('');
+    // Auto-trigger receive if we have full code
+    const username = localStorage.getItem('tshare_username') || '';
+    setTimeout(() => {
+      if (finalCode.length === len) {
+        receiveData(finalCode, username);
+      }
+    }, 150);
+  };
+
+  // Support ?code=XXXX in URL (from QR that encodes https://tshare.in/receive?code=XXXX)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('code');
+      if (q) {
+        const clean = q.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+        if (clean.length >= 4) handleQrScan(clean);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getCode = () => segments.join('');
 
@@ -775,6 +815,19 @@ const RecievePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
+            <button
+              type="button"
+              className="receive__scan-btn"
+              onClick={() => setShowScanner(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h3v3h-3z M17 17h4v4h-4z M14 21h3 M21 14h-4" />
+              </svg>
+              Scan QR to receive
+            </button>
             <div className="segmented-input" onPaste={handlePaste}>
               {segments.map((digit, i) => (
                 <input
@@ -865,6 +918,13 @@ const RecievePage = () => {
               )}
             </AnimatePresence>
           </motion.div>
+
+          {showScanner && (
+            <QrScanner
+              onScan={handleQrScan}
+              onClose={() => setShowScanner(false)}
+            />
+          )}
 
           <AnimatePresence mode="wait">
             {loading && !receivedContent ? (
