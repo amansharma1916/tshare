@@ -6,6 +6,7 @@ import { endpoints } from '../api/api';
 import UsernameMapper from './auth/UsernameMapper';
 import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
+import QrModal from './common/QrModal';
 
 const ImageSharePage = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const ImageSharePage = () => {
   const [showCode, setShowCode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [validity, setValidity] = useState('6h');
+  const [showQr, setShowQr] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -240,49 +242,65 @@ const ImageSharePage = () => {
                   </svg>
                   Image Code Generated
                 </div>
-                <button
-                  className="code-reveal__value"
-                  onClick={copyImageCode}
-                  title="Click to copy"
-                >
-                  <motion.span
-                    className="code-reveal__digits"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
+                <div className="code-reveal__code-row">
+                  <button
+                    className="code-reveal__value"
+                    onClick={copyImageCode}
+                    title="Click to copy"
                   >
-                    {imageCode.split('').map((digit, i) => (
-                      <motion.span
-                        key={i}
-                        className="code-reveal__digit"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.3 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                      >
-                        {digit}
-                      </motion.span>
-                    ))}
-                  </motion.span>
-                  <span className="code-reveal__copy-icon">
-                    {imageCopied ? (
-                      <motion.svg
-                        width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </motion.svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                    )}
-                  </span>
-                </button>
+                    <motion.span
+                      className="code-reveal__digits"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      {imageCode.split('').map((digit, i) => (
+                        <motion.span
+                          key={i}
+                          className="code-reveal__digit"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.3 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          {digit}
+                        </motion.span>
+                      ))}
+                    </motion.span>
+                    <span className="code-reveal__copy-icon">
+                      {imageCopied ? (
+                        <motion.svg
+                          width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </motion.svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                        </svg>
+                      )}
+                    </span>
+                  </button>
+                  <button
+                    className="code-reveal__qr-btn"
+                    onClick={() => setShowQr(true)}
+                    title="View QR code"
+                    aria-label="View QR code"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <path d="M14 14h3v3h-3z M17 17h4v4h-4z M14 21h3 M21 14h-4" />
+                    </svg>
+                  </button>
+                </div>
                 <p className="code-reveal__hint">
-                  {imageCopied ? 'Copied to clipboard!' : 'Click the code to copy it'}
+                  {imageCopied ? 'Copied to clipboard!' : 'Click the code to copy • Tap QR to share'}
                 </p>
+                {showQr && <QrModal code={imageCode} onClose={() => setShowQr(false)} />}
                 <div className="code-reveal__meta">
                   <span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
