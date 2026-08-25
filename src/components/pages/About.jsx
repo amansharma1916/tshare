@@ -155,6 +155,12 @@ const About = () => {
               Socket.io for real-time chat, MongoDB for data, Cloudflare R2 for file storage,
               Redis/Valkey for caching, and Razorpay for premium payments.
             </p>
+            <b>Mobile App</b>
+            <p>
+              Tshare Android app is built using Flutter, providing a seamless mobile experience for sharing on the go.
+              
+            </p>
+            <b> Developer - Saroj Jha</b>
           </section>
 
           <section className="page__section">
