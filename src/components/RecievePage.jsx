@@ -23,6 +23,9 @@ const RecievePage = () => {
   // Unified receive state — holds whatever type the API returns
   const [receivedContent, setReceivedContent] = useState(null); // { dataType, id, text/image/file, createdAt }
   const [showContent, setShowContent] = useState(false);
+  // Preview visibility — prevents automatic download via iframe on receive
+  const [showFilePreview, setShowFilePreview] = useState(false);
+  const [premiumPreviewVisible, setPremiumPreviewVisible] = useState({});
 
   // Password protection state
   const [passwordRequired, setPasswordRequired] = useState(false);
@@ -88,6 +91,8 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedContent(null);
+    setShowFilePreview(false);
+    setPremiumPreviewVisible({});
   };
 
   const handleSegmentChange = useCallback((index, value) => {
@@ -101,6 +106,8 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedContent(null);
+    setShowFilePreview(false);
+    setPremiumPreviewVisible({});
 
     if (index < segmentCount - 1) {
       setActiveSegment(index + 1);
@@ -167,6 +174,8 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setCopied(false);
+    setShowFilePreview(false);
+    setPremiumPreviewVisible({});
   };
 
   const handleReceive = () => {
@@ -249,6 +258,8 @@ const RecievePage = () => {
       setProtectedCode('');
       setPasswordInput('');
       setPasswordError('');
+      setShowFilePreview(false);
+      setPremiumPreviewVisible({});
       // Remember the verified password so item downloads/previews can pass it.
       verifiedPasswordRef.current = passwordInput;
     } catch (err) {
@@ -268,6 +279,8 @@ const RecievePage = () => {
     setSuccessMessage('');
     setShowContent(false);
     setReceivedContent(null);
+    setShowFilePreview(false);
+    setPremiumPreviewVisible({});
     // New code — drop any previously verified password.
     verifiedPasswordRef.current = '';
 
@@ -442,6 +455,10 @@ const RecievePage = () => {
     window.location.href = withCodePassword(endpoints.premiumItemDownload(receivedContent.code, itemId));
   };
 
+  const togglePremiumPreview = (itemId) => {
+    setPremiumPreviewVisible((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
   const renderBundle = () => {
     if (!receivedContent?.items?.length) {
       return <p className="receive__text">This premium code has no content yet.</p>;
@@ -489,11 +506,24 @@ const RecievePage = () => {
               </div>
             );
           }
+          const isPremiumPreviewOpen = !!premiumPreviewVisible[item.itemId];
           return (
             <div key={item.itemId} className="receive__bundle-item">
-              <div className="receive__file-preview">
-                <iframe src={withCodePassword(endpoints.premiumItemPreview(receivedContent.code, item.itemId))} title="File preview" />
-              </div>
+              {isPremiumPreviewOpen ? (
+                <div className="receive__file-preview">
+                  <iframe src={withCodePassword(endpoints.premiumItemPreview(receivedContent.code, item.itemId))} title="File preview" />
+                </div>
+              ) : (
+                <div className="receive__file-preview receive__file-preview--placeholder">
+                  <div className="receive__preview-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <span>Preview not loaded — click Preview to view</span>
+                  </div>
+                </div>
+              )}
               <div className="receive__file-info">
                 <div className="receive__file-icon receive__file-icon--file">{getTypeIcon()}</div>
                 <div className="receive__file-details">
@@ -509,12 +539,20 @@ const RecievePage = () => {
                   )}
                 </div>
               </div>
-              <button
-                className="btn btn--secondary receive__action-btn"
-                onClick={() => downloadItem(item.itemId)}
-              >
-                Download File
-              </button>
+              <div className="receive__file-actions">
+                <button
+                  className="btn btn--secondary receive__action-btn"
+                  onClick={() => togglePremiumPreview(item.itemId)}
+                >
+                  {isPremiumPreviewOpen ? 'Hide Preview' : 'Preview'}
+                </button>
+                <button
+                  className="btn btn--secondary receive__action-btn"
+                  onClick={() => downloadItem(item.itemId)}
+                >
+                  Download File
+                </button>
+              </div>
             </div>
           );
         })}
@@ -592,12 +630,24 @@ const RecievePage = () => {
     if (receivedContent.dataType === 'file') {
       return (
         <div className="receive__file-content">
-          <div className="receive__file-preview">
-            <iframe
-              src={endpoints.previewFile(receivedContent.id)}
-              title="File preview"
-            />
-          </div>
+          {showFilePreview ? (
+            <div className="receive__file-preview">
+              <iframe
+                src={endpoints.previewFile(receivedContent.id)}
+                title="File preview"
+              />
+            </div>
+          ) : (
+            <div className="receive__file-preview receive__file-preview--placeholder">
+              <div className="receive__preview-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>Preview not loaded — click Preview to view</span>
+              </div>
+            </div>
+          )}
           <div className="receive__file-info">
             <div className="receive__file-icon receive__file-icon--file">
               {getTypeIcon()}
@@ -615,14 +665,23 @@ const RecievePage = () => {
               )}
             </div>
           </div>
-          <button className="btn btn--secondary receive__action-btn" onClick={downloadCurrent}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Download File
-          </button>
+          <div className="receive__file-actions">
+            <button className="btn btn--secondary receive__action-btn" onClick={() => setShowFilePreview((v) => !v)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              {showFilePreview ? 'Hide Preview' : 'Preview'}
+            </button>
+            <button className="btn btn--secondary receive__action-btn" onClick={downloadCurrent}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download File
+            </button>
+          </div>
         </div>
       );
     }
