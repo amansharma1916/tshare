@@ -12,6 +12,7 @@ import PrivacyPolicy from './components/pages/PrivacyPage.jsx'
 import TermsOfService from './components/pages/TermsOfService.jsx'
 import About from './components/pages/About.jsx'
 import Contact from './components/pages/Contact.jsx'
+import AccountDeletion from './components/pages/AccountDeletion.jsx'
 import Login from './components/auth/Login.jsx'
 import AuthOptions from './components/auth/AuthOptions.jsx'
 import Register from './components/auth/Register.jsx'
@@ -131,6 +132,7 @@ function App() {
         <Route path='/terms-of-service' element={<LayoutRoute><TermsOfService /></LayoutRoute>} />
         <Route path='/about' element={<LayoutRoute><About /></LayoutRoute>} />
         <Route path='/contact' element={<LayoutRoute><Contact /></LayoutRoute>} />
+        <Route path='/account-delete' element={<LayoutRoute><AccountDeletion /></LayoutRoute>} />
 
         {/* Org module: unified auth page (same AppLayout as other pages) */}
         <Route path='/org/register' element={<LayoutRoute><OrgAuth /></LayoutRoute>} />

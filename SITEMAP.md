@@ -1,6 +1,6 @@
 # TShare Frontend Sitemap
 
-Last updated: 8 May 2026
+Last updated: 28 Aug 2026
 
 ## 1. Route-Level Sitemap
 
@@ -23,6 +23,7 @@ Last updated: 8 May 2026
 - `/terms-of-service` - Terms of Service (`TermsOfService`)
 - `/about` - About Page (`About`)
 - `/contact` - Contact Page (`Contact`)
+- `/account-delete` - Account Deletion Request (`AccountDeletion`) [public; Play Store account-deletion compliance]
 
 ## 2. Detailed Page Structure
 

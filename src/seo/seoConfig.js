@@ -152,6 +152,12 @@ export const seoConfig = [
     canonical: '/terms-of-service',
   },
   {
+    path: '/account-delete',
+    title: `Delete Your Account | ${BRAND}`,
+    description: 'Request permanent deletion of your TShare account, history, premium codes and associated data. Reviewed by our team within 5 business days.',
+    canonical: '/account-delete',
+  },
+  {
     path: '/org/register',
     title: `Organization Registration | ${BRAND} — ${SLOGAN}`,
     description: 'Register your organization on TShare to receive files and messages from customers through a public code and QR.',

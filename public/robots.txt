@@ -4,6 +4,12 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /premium/dashboard
 Disallow: /org/dashboard
+# Public POST-only endpoint (account deletion requests) — no crawl value.
+Disallow: /account-delete-request
+
+# Account deletion page (/account-delete) is intentionally crawlable:
+# it documents our data-deletion policy (Google Play account deletion
+# requirement) and must stay publicly discoverable.
 
 # Allow AI crawlers and bots for better indexing
 User-agent: GPTBot

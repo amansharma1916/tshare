@@ -16,6 +16,7 @@ const ADMIN_TABS = [
     { key: 'images', label: 'Images', icon: 'image' },
     { key: 'files', label: 'Files', icon: 'file' },
     { key: 'public-rooms', label: 'Rooms', icon: 'rooms' },
+    { key: 'deletion-requests', label: 'Deletion Requests', icon: 'trash' },
     { key: 'users', label: 'Users', icon: 'users' },
     { key: 'premium-codes', label: 'Premium Codes', icon: 'codes' },
     { key: 'premium-users', label: 'Premium Users', icon: 'premium' },
@@ -83,6 +84,16 @@ const AdminTabIcon = ({ name }) => {
                 <svg {...props}>
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
+                </svg>
+            );
+        case 'trash':
+            return (
+                <svg {...props}>
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
+                    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
                 </svg>
             );
         default:
@@ -260,6 +271,10 @@ const AdminPanel = () => {
     const [images, setImages] = useState([]);
     const [publicRooms, setPublicRooms] = useState([]);
     const [users, setUsers] = useState([]);
+    const [deletionRequests, setDeletionRequests] = useState([]);
+    const [deletionRequestsLoading, setDeletionRequestsLoading] = useState(true);
+    const [deletionRequestsError, setDeletionRequestsError] = useState('');
+    const [deletionRequestsFilter, setDeletionRequestsFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [imagesLoading, setImagesLoading] = useState(true);
     const [publicRoomsLoading, setPublicRoomsLoading] = useState(true);
@@ -395,7 +410,7 @@ const AdminPanel = () => {
         // Read tab from query params
         const params = new URLSearchParams(location.search);
         const tab = params.get('tab');
-        if (tab && ['dashboard', 'texts', 'images', 'files', 'public-rooms', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
+        if (tab && ['dashboard', 'texts', 'images', 'files', 'public-rooms', 'deletion-requests', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
             setActiveTab(tab);
         }
     }, [location.search]);
@@ -456,6 +471,13 @@ const AdminPanel = () => {
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'deletion-requests') {
+            fetchDeletionRequests();
+        }
+    }, [activeTab, deletionRequestsFilter]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
         if (activeTab === 'users') {
             fetchUsers(usersPage);
         }
@@ -502,6 +524,9 @@ const AdminPanel = () => {
             case 'public-rooms':
                 fetchPublicRooms(publicRoomsPage);
                 break;
+            case 'deletion-requests':
+                fetchDeletionRequests();
+                break;
             case 'users':
                 fetchUsers(usersPage);
                 break;
@@ -542,6 +567,36 @@ const AdminPanel = () => {
             return null;
         } finally {
             setUsersLoading(false);
+        }
+    };
+
+    const fetchDeletionRequests = async () => {
+        setDeletionRequestsLoading(true);
+        setDeletionRequestsError('');
+
+        try {
+            const params = new URLSearchParams();
+            if (deletionRequestsFilter && deletionRequestsFilter !== 'all') {
+                params.append('status', deletionRequestsFilter);
+            }
+            const query = params.toString() ? `?${params}` : '';
+            const response = await fetch(`${endpoints.adminDeletionRequests}${query}`, {
+                headers: getAuthHeaders(),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setDeletionRequests(data.requests || []);
+            } else {
+                setDeletionRequestsError('Failed to fetch deletion requests');
+            }
+            return data;
+        } catch (error) {
+            console.error('Error:', error);
+            setDeletionRequestsError('Failed to connect to server. Please try again.');
+            return null;
+        } finally {
+            setDeletionRequestsLoading(false);
         }
     };
 
@@ -1429,6 +1484,58 @@ const AdminPanel = () => {
     };
 
     // ─── User Handlers ───
+
+    // Approve a deletion request: permanently deletes the account + data.
+    const handleProcessDeletionRequest = async (req) => {
+        if (!window.confirm(`Permanently delete account "${req.username}" and all associated data? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(endpoints.adminProcessDeletionRequest(req._id), {
+                method: 'POST',
+                headers: getAuthHeaders(),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showActionMessage(`Account "${req.username}" deleted successfully`, 'success');
+                await fetchDeletionRequests();
+            } else {
+                showActionMessage(data.message || 'Failed to process deletion request', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    // Reject a deletion request (cancels it; account stays intact).
+    const handleRejectDeletionRequest = async (req) => {
+        const note = window.prompt(`Rejecting deletion request for "${req.username}".\nAdd an optional note for the record (or leave empty):`, '');
+        if (note === null) return; // user cancelled prompt
+
+        try {
+            const response = await fetch(endpoints.adminRejectDeletionRequest(req._id), {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ note }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showActionMessage('Deletion request rejected', 'success');
+                await fetchDeletionRequests();
+            } else {
+                showActionMessage(data.message || 'Failed to reject deletion request', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
 
     const handleDeleteUser = async (id) => {
         if (!window.confirm('Are you sure you want to delete this user? This will also delete all their mapped items.')) {
@@ -2350,6 +2457,92 @@ const AdminPanel = () => {
                     </div>
                 )}
 
+{activeTab === 'deletion-requests' && (
+                    <div>
+                        <div className="tab-header">
+                            <h1>Account Deletion Requests</h1>
+                            <select
+                                className="deletion-filter"
+                                value={deletionRequestsFilter}
+                                onChange={(e) => setDeletionRequestsFilter(e.target.value)}
+                            >
+                                <option value="all">All statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+
+                        {deletionRequestsError && <div className="error-message">{deletionRequestsError}</div>}
+
+                        {deletionRequestsLoading ? (
+                            <div className="loading">Loading deletion requests...</div>
+                        ) : deletionRequests.length === 0 ? (
+                            <div className="no-data">No deletion requests found</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Status</th>
+                                            <th>Email</th>
+                                            <th>Reason</th>
+                                            <th>Requested At</th>
+                                            <th>Processed At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {deletionRequests.map((req) => (
+                                            <tr key={req._id}>
+                                                <td>
+                                                    {req.username}
+                                                    {!req.accountExists && req.status === 'pending' && (
+                                                        <span className="deletion-hint"> (account no longer exists)</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className={`status-badge ${req.status}`}>
+                                                        {req.status}
+                                                    </span>
+                                                </td>
+                                                <td>{req.email || '—'}</td>
+                                                <td className="deletion-reason">{req.reason || '—'}</td>
+                                                <td>{formatDate(req.requestedAt)}</td>
+                                                <td>{req.processedAt ? formatDate(req.processedAt) : '—'}</td>
+                                                <td className="actions">
+                                                    {req.status === 'pending' ? (
+                                                        <>
+                                                            <motion.button
+                                                                className="action-btn edit"
+                                                                onClick={() => handleProcessDeletionRequest(req)}
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                            >
+                                                                Process
+                                                            </motion.button>
+                                                            <motion.button
+                                                                className="action-btn deactivate"
+                                                                onClick={() => handleRejectDeletionRequest(req)}
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                            >
+                                                                Reject
+                                                            </motion.button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="deletion-note">{req.adminNote || '—'}</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {activeTab === 'users' && (
                     <div>
                         <div className="tab-header">

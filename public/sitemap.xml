@@ -5,7 +5,7 @@
   <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://tshare.in/</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -13,21 +13,21 @@
   <!-- Share Pages - High Priority -->
   <url>
     <loc>https://tshare.in/share</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/share-image</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/share-file</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -35,7 +35,7 @@
   <!-- Receive Page - High Priority -->
   <url>
     <loc>https://tshare.in/receive</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -43,7 +43,7 @@
   <!-- Public Chat Rooms - High Priority -->
   <url>
     <loc>https://tshare.in/public-room</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -51,21 +51,21 @@
   <!-- Auth Pages - Medium Priority -->
   <url>
     <loc>https://tshare.in/auth</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/login</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/register</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -73,7 +73,7 @@
   <!-- Dashboard - Medium Priority -->
   <url>
     <loc>https://tshare.in/dashboard</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -81,14 +81,14 @@
   <!-- Premium Pages - Medium Priority -->
   <url>
     <loc>https://tshare.in/buy</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/premium/login</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -96,14 +96,14 @@
   <!-- Organization Pages - Medium Priority -->
   <url>
     <loc>https://tshare.in/org/register</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/org/login</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -111,29 +111,36 @@
   <!-- Information Pages - Medium Priority -->
   <url>
     <loc>https://tshare.in/about</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/contact</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
-  <!-- Legal Pages - Lower Priority -->
+  <!-- Legal / Compliance Pages - Lower Priority -->
   <url>
     <loc>https://tshare.in/privacy-policy</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://tshare.in/terms-of-service</loc>
-    <lastmod>2026-08-15</lastmod>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://tshare.in/account-delete</loc>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
