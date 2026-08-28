@@ -1,0 +1,88 @@
+/* ============================================================
+   Account Deletion page — form + status styles
+   Extends pages.css (page shell, header, sections).
+   ============================================================ */
+
+.ad-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.ad-form__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.ad-form__req {
+  color: var(--theme-danger-text);
+}
+
+.ad-form__input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--layout-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ad-form__input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 18%, transparent);
+}
+
+.ad-form__textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: inherit;
+}
+
+.ad-form__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.ad-form__check input {
+  margin-top: 3px;
+  accent-color: var(--theme-danger-bg);
+  flex-shrink: 0;
+}
+
+.ad-form__submit {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.ad-form__error {
+  background: color-mix(in srgb, var(--theme-danger-bg) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-danger-bg) 40%, transparent);
+  color: var(--theme-danger-text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.ad-form__success {
+  background: color-mix(in srgb, var(--theme-success-bg) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-success-bg) 45%, transparent);
+  color: var(--theme-success-text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}

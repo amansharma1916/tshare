@@ -29,6 +29,7 @@
 - [Contact](https://tshare.in/contact): get in touch with the TShare team.
 - [Privacy Policy](https://tshare.in/privacy-policy): how data is handled and stored.
 - [Terms of Service](https://tshare.in/terms-of-service): usage terms and validity rules.
+- [Account Deletion](https://tshare.in/account-delete): request permanent deletion of your account, history, premium codes and associated files; reviewed by the team within about 5 business days.
 
 ## How sharing works
 
@@ -40,3 +41,4 @@
 
 - Sharing works without registration; an optional username only personalizes your sharing history.
 - Image uploads are capped at 5 MB; file uploads at 50 MB.
+- Account deletion (Google Play compliance): users can request permanent account deletion at /account-delete. Deletion removes the account, its share/receive history, owned premium codes and their stored files, and payment records tied to the account (except where retention is legally required, e.g. accounting/tax). Anonymously shared public content and content already received by others is not removed — it is governed by its own expiry settings. Deletion requests are reviewed by an admin before the account is purged.

@@ -40,6 +40,7 @@ const sidebarSections = [
       { label: 'Contact', icon: 'mail', path: '/contact' },
       { label: 'Privacy Policy', icon: 'file-text', path: '/privacy-policy' },
       { label: 'Terms of Service', icon: 'file-text', path: '/terms-of-service' },
+      { label: 'Delete Account', icon: 'trash', path: '/account-delete' },
     ],
   },
 ];

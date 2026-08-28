@@ -970,3 +970,45 @@
     width: 100%;
   }
 }
+/* ── Account Deletion Requests ── */
+.deletion-filter {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong, #333);
+  background: var(--layout-bg, #111);
+  color: var(--text-primary, #eee);
+  font-size: 0.8rem;
+}
+
+.status-badge.pending {
+  background: #78350f;
+  color: #fcd34d;
+}
+
+.status-badge.completed {
+  background: #14532d;
+  color: #86efac;
+}
+
+.status-badge.rejected {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.deletion-reason {
+  max-width: 240px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.deletion-hint {
+  font-size: 0.7rem;
+  color: #fca5a5;
+  font-style: italic;
+}
+
+.deletion-note {
+  font-size: 0.75rem;
+  color: var(--text-muted, #aaa);
+  font-style: italic;
+}

@@ -467,6 +467,7 @@ const LandingPage = ({
           <Link to="/contact">Contact</Link>
           <Link to="/privacy-policy">Privacy</Link>
           <Link to="/terms-of-service">Terms</Link>
+          <Link to="/account-delete">Delete Account</Link>
           <Link to="/org/register">For Businesses</Link>
           <Link to="/admin/panel">Admin</Link>
         </div>
