@@ -145,7 +145,18 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="page__section">
-            <h2>9. Contact Us</h2>
+            <h2>9. Advertising</h2>
+            <p>
+              We display third-party advertisements (including native ads served by Adsterra) on some pages
+              to keep the service free. These ads are delivered by an external ad network and may use cookies
+              or similar technologies to measure performance and, where permitted, to show more relevant ads.
+              We do not sell your personal data to advertisers. You can opt out of interest-based advertising
+              through your browser settings or industry opt-out tools such as youradchoices.com.
+            </p>
+          </section>
+
+          <section className="page__section">
+            <h2>10. Contact Us</h2>
             <p>
               If you have any questions about this Privacy Policy, please contact us through our Contact page
               or email us at founder.tshare.in@gmail.com.

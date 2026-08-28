@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
+import NativeAdBanner from "../ads/NativeAdBanner.jsx";
+import AdsterraBanner300 from "../ads/AdsterraBanner300.jsx";
 import './LandingPage.css'
 
 /* ---------------------------------- helpers ---------------------------------- */
@@ -445,6 +447,8 @@ const LandingPage = ({
           </div>
         </motion.div>
 
+      <AdsterraBanner300 />
+
         <motion.div className="landing__cta" {...fadeUp(0.1)}>
           <div className="landing__cta-card">
             <h2>It takes about 3 seconds.</h2>
@@ -460,6 +464,8 @@ const LandingPage = ({
           </div>
         </motion.div>
       </section>
+
+      <NativeAdBanner />
 
       <footer className="landing__footer">
         <div className="landing__footer-links">

@@ -53,9 +53,31 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8086430958189450"
      crossorigin="anonymous"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Adsterra Popunder — global click-trigger, loaded once (not per route).
+         Skipped on /admin so popunders never open in our own panel. -->
+    <script>
+      (function () {
+        if (window.location.pathname.indexOf('/admin') === 0) return;
+        var s = document.createElement('script');
+        s.src = 'https://pl31067656.profitableratecpmnetwork.com/df/b8/f4/dfb8f4af9acbcf8810416df9e55c67a9.js';
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Adsterra Social Bar — global overlay, loaded once (not per route).
+         Skipped on /admin so the overlay never obstructs our own panel. -->
+    <script>
+      (function () {
+        if (window.location.pathname.indexOf('/admin') === 0) return;
+        var s = document.createElement('script');
+        s.src = 'https://pl31067655.profitableratecpmnetwork.com/6d/39/df/6d39df56cde86a9f20cb452e90af6ab6.js';
+        document.body.appendChild(s);
+      })();
+    </script>
   </body>
 </html>

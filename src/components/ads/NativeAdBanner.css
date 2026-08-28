@@ -1,0 +1,45 @@
+/* ============================================================
+   Adsterra Native Banner (4:1) — bottom-of-page placement.
+   The widget renders its own responsive grid; we only control
+   spacing, centering and a reserve height to limit layout shift.
+   ============================================================ */
+
+.native-ad {
+  width: 100%;
+  max-width: 1040px;
+  margin: 28px auto 8px;
+  padding: 0 16px;
+  /* Reserve space so the page doesn't jump when the async widget fills in. */
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.native-ad__label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8b8b96);
+  opacity: 0.75;
+  text-align: center;
+  user-select: none;
+}
+
+.native-ad__container {
+  width: 100%;
+  min-height: 190px;
+}
+
+/* Mobile: widget stacks to 1 column naturally; keep spacing tighter. */
+@media (max-width: 640px) {
+  .native-ad {
+    margin: 20px auto 4px;
+    padding: 0 12px;
+    min-height: 320px;
+  }
+
+  .native-ad__container {
+    min-height: 300px;
+  }
+}

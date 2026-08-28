@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './RecievePage.css';
 import { endpoints } from '../api/api';
+import NativeAdBanner from "./ads/NativeAdBanner.jsx";
+import AdsterraBanner300 from "./ads/AdsterraBanner300.jsx";
 import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
@@ -985,6 +987,8 @@ const RecievePage = () => {
             />
           )}
 
+      <AdsterraBanner300 />
+
           <AnimatePresence mode="wait">
             {loading && !receivedContent ? (
               <motion.div
@@ -1009,6 +1013,8 @@ const RecievePage = () => {
               </motion.div>
             ) : null}
           </AnimatePresence>
+      <NativeAdBanner />
+
         </div>
       </main>
     </div>

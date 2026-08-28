@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SharePage.css';
 import { endpoints, baseUrl } from '../api/api';
+import NativeAdBanner from "./ads/NativeAdBanner.jsx";
+import AdsterraBanner300 from "./ads/AdsterraBanner300.jsx";
 import io from 'socket.io-client';
 import UsernameMapper from './auth/UsernameMapper';
 import ValiditySelector from './common/ValiditySelector';
@@ -394,6 +396,8 @@ const SharePage = () => {
             )}
           </AnimatePresence>
 
+      <AdsterraBanner300 />
+
           <motion.div
             className="share__media-tabs"
             initial={{ opacity: 0 }}
@@ -425,6 +429,8 @@ const SharePage = () => {
               </button>
             </div>
           </motion.div>
+      <NativeAdBanner />
+
         </div>
       </main>
     </div>

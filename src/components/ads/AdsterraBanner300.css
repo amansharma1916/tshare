@@ -1,0 +1,40 @@
+/* ============================================================
+   Adsterra 300x250 (1x1) banner — middle-of-page placement.
+   Fixed-size iframe wrapping /ads/banner-300x250.html.
+   ============================================================ */
+
+.adsterra-300 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 24px auto;
+  width: 300px;
+  max-width: 100%;
+}
+
+.adsterra-300__label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8b8b96);
+  opacity: 0.75;
+  user-select: none;
+}
+
+.adsterra-300__frame {
+  display: block;
+  width: 300px;
+  height: 250px;
+  border: 0;
+  background: transparent;
+}
+
+/* Very narrow phones: scale the fixed 300px slot to fit. */
+@media (max-width: 340px) {
+  .adsterra-300 {
+    transform: scale(0.86);
+    transform-origin: top center;
+    margin-bottom: 10px; /* compensate the scaled-down height */
+  }
+}
