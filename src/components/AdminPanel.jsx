@@ -29,6 +29,13 @@ const ADMIN_TABS = [
     { key: 'settings', label: 'Settings', icon: 'settings' },
 ];
 
+const AMITY_TYPE_FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'image', label: 'Images' },
+    { key: 'video', label: 'Videos' },
+    { key: 'other', label: 'Other' },
+];
+
 const AdminTabIcon = ({ name }) => {
     const props = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
     switch (name) {
@@ -1986,6 +1993,21 @@ const AdminPanel = () => {
         amityCurrentPage * pageSize
     );
 
+    const amityCounts = amityItems.reduce(
+        (counts, item) => {
+            counts.all += 1;
+            if (item.source === 'image') {
+                counts.image += 1;
+            } else if (isVideoName(item.originalName)) {
+                counts.video += 1;
+            } else {
+                counts.other += 1;
+            }
+            return counts;
+        },
+        { all: 0, image: 0, video: 0, other: 0 }
+    );
+
     const handleLogout = () => {
         sessionStorage.removeItem('adminAuthenticated');
         sessionStorage.removeItem('adminToken');
@@ -2574,19 +2596,17 @@ const AdminPanel = () => {
                         </div>
 
                         <div className="amity-filters">
-                            {[
-                                { key: 'all', label: 'All' },
-                                { key: 'image', label: 'Images' },
-                                { key: 'video', label: 'Videos' },
-                                { key: 'other', label: 'Other' },
-                            ].map((filterOption) => (
+                            <span className="amity-filters-label">Type</span>
+                            {AMITY_TYPE_FILTERS.map((filterOption) => (
                                 <button
                                     key={filterOption.key}
                                     type="button"
                                     className={`amity-filter-btn ${amityTypeFilter === filterOption.key ? 'amity-filter-btn--active' : ''}`}
                                     onClick={() => handleAmityTypeFilter(filterOption.key)}
+                                    aria-pressed={amityTypeFilter === filterOption.key}
                                 >
                                     {filterOption.label}
+                                    <span className="amity-filter-count">{amityCounts[filterOption.key]}</span>
                                 </button>
                             ))}
                         </div>
