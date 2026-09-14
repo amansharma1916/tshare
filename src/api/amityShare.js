@@ -7,8 +7,8 @@
 
 export const AMITY_MARKER = 'amity_share_';
 
-// Mirrors the backend limits (5MB for /image/upload, 50MB for /file/upload).
-export const AMITY_MAX_IMAGE_MB = 5;
+// Mirrors the backend limits (10MB for /image/upload, 50MB for /file/upload).
+export const AMITY_MAX_IMAGE_MB = 10;
 export const AMITY_MAX_FILE_MB = 50;
 
 // The one type the upload whitelist accepts for anything it does not know about

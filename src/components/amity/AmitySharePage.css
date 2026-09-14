@@ -11,6 +11,15 @@
   border: 1px solid rgba(236, 72, 153, 0.25);
 }
 
+/* Nextec logo: fill the full width/height of the icon box without cropping */
+.share__header-icon--amity .share__header-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: inherit;
+}
+
 /* ==================== Selected files ==================== */
 .amity-list {
   margin-top: var(--space-6);

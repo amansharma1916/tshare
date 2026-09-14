@@ -216,21 +216,18 @@ const AmitySharePage = () => {
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="share__header-icon share__header-icon--amity">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="6" width="14" height="12" rx="2" ry="2" />
-                <path d="M16 11l6-3v8l-6-3z" />
-              </svg>
+              <img src="/nextec.jpeg" alt="Nextec" className="share__header-icon-img" />
             </div>
             <span className="share__badge">
               <span className="share__badge-dot" />
-              Amity · Photos &amp; videos · No account
+              Amity · Photos &amp; videos
             </span>
             <h1 className="share__title">
               Send your <span className="share__title-grad">photos &amp; videos</span> to the Amity team
             </h1>
             <p className="share__desc">
               Pick any images or videos below and hit upload. Your files go straight to the Amity
-              team — no code, no sign-up, and you can add as many as you like.
+              team.
             </p>
           </motion.div>
 
