@@ -2595,7 +2595,7 @@ const AdminPanel = () => {
                             )}
                         </div>
 
-                        <div className="amity-filters">
+                        {/* <div className="amity-filters">
                             <span className="amity-filters-label">Type</span>
                             {AMITY_TYPE_FILTERS.map((filterOption) => (
                                 <button
@@ -2609,7 +2609,7 @@ const AdminPanel = () => {
                                     <span className="amity-filter-count">{amityCounts[filterOption.key]}</span>
                                 </button>
                             ))}
-                        </div>
+                        </div> */}
 
                         {amityError && <div className="error-message">{amityError}</div>}
 
