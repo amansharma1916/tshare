@@ -215,9 +215,7 @@ const AmitySharePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="share__header-icon share__header-icon--amity">
-              <img src="/nextec.jpeg" alt="Nextec" className="share__header-icon-img" />
-            </div>
+            <img src="/nextec.jpeg" alt="Nextec" className="amity-logo" />
             <span className="share__badge">
               <span className="share__badge-dot" />
               Amity · Photos &amp; videos
