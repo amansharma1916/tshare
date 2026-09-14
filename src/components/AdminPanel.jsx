@@ -10,7 +10,6 @@ import {
     AMITY_MARKER,
     isVideoName,
     stripAmityMarker,
-    videoMimeForName,
 } from '../api/amityShare';
 
 const PAGE_SIZE = 10;
@@ -275,38 +274,11 @@ const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange,
     );
 };
 
-// Amity uploads sent through /file/upload are stored as
-// `application/octet-stream` (that is what lets videos pass the existing upload
-// whitelist), so the stored object cannot be played inline as-is. Fetching the
-// preview endpoint and re-typing the blob makes video playback work with no
-// backend change.
+// Videos are intentionally NOT previewed inline in the admin panel — only a
+// static chip is shown. The admin can still Open/Download the original via the
+// row actions.
 const AmityThumb = ({ item }) => {
     const isVideo = item.source === 'file' && isVideoName(item.originalName);
-    const [videoSrc, setVideoSrc] = useState('');
-    const [failed, setFailed] = useState(false);
-
-    useEffect(() => {
-        if (!isVideo) return undefined;
-
-        let cancelled = false;
-        let objectUrl = '';
-
-        fetch(endpoints.previewFile(item.id))
-            .then((response) => (response.ok ? response.blob() : Promise.reject(new Error('preview failed'))))
-            .then((blob) => {
-                if (cancelled) return;
-                objectUrl = URL.createObjectURL(new Blob([blob], { type: videoMimeForName(item.originalName) }));
-                setVideoSrc(objectUrl);
-            })
-            .catch(() => {
-                if (!cancelled) setFailed(true);
-            });
-
-        return () => {
-            cancelled = true;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [isVideo, item.id, item.originalName]);
 
     if (item.source === 'image') {
         return (
@@ -316,15 +288,7 @@ const AmityThumb = ({ item }) => {
         );
     }
 
-    if (!isVideo) return <div className="amity-file-chip">FILE</div>;
-    if (failed) return <div className="amity-file-chip">VIDEO</div>;
-    if (!videoSrc) return <div className="amity-file-chip">LOADING…</div>;
-
-    return (
-        <div className="amity-video-thumb">
-            <video src={videoSrc} controls preload="metadata" />
-        </div>
-    );
+    return <div className="amity-file-chip">{isVideo ? 'VIDEO' : 'FILE'}</div>;
 };
 
 const AdminPanel = () => {
