@@ -15,18 +15,22 @@ import {
 const PAGE_SIZE = 10;
 
 // Admin panel internal navigation tabs
+// const ADMIN_TABS = [
+    //{ key: 'dashboard', label: 'Analytics', icon: 'analytics' },
+    //{ key: 'texts', label: 'Texts', icon: 'text' },
+    //{ key: 'images', label: 'Images', icon: 'image' },
+    //{ key: 'files', label: 'Files', icon: 'file' },
+    //{ key: 'amity-shares', label: 'Amity Shares', icon: 'amity' },
+    //{ key: 'public-rooms', label: 'Rooms', icon: 'rooms' },
+    //{ key: 'deletion-requests', label: 'Deletion Requests', icon: 'trash' },
+    //{ key: 'users', label: 'Users', icon: 'users' },
+    //{ key: 'premium-codes', label: 'Premium Codes', icon: 'codes' },
+    //{ key: 'premium-users', label: 'Premium Users', icon: 'premium' },
+    //{ key: 'settings', label: 'Settings', icon: 'settings' },
+// ];
+
 const ADMIN_TABS = [
-    { key: 'dashboard', label: 'Analytics', icon: 'analytics' },
-    { key: 'texts', label: 'Texts', icon: 'text' },
-    { key: 'images', label: 'Images', icon: 'image' },
-    { key: 'files', label: 'Files', icon: 'file' },
-    { key: 'amity-shares', label: 'Amity Shares', icon: 'amity' },
-    { key: 'public-rooms', label: 'Rooms', icon: 'rooms' },
-    { key: 'deletion-requests', label: 'Deletion Requests', icon: 'trash' },
-    { key: 'users', label: 'Users', icon: 'users' },
-    { key: 'premium-codes', label: 'Premium Codes', icon: 'codes' },
-    { key: 'premium-users', label: 'Premium Users', icon: 'premium' },
-    { key: 'settings', label: 'Settings', icon: 'settings' },
+    { key: 'amity-shares', label: 'Amity Shares', icon: 'amity' }
 ];
 
 const AMITY_TYPE_FILTERS = [
