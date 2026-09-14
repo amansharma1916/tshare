@@ -870,6 +870,99 @@
   padding: 0.75rem 1rem;
   border-radius: 6px;
   background: #1c1c1f;
+/* ── Amity Shares Tab ── */
+.amity-tab-note {
+  font-size: 0.8rem;
+  color: #71717a;
+}
+
+.amity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.amity-filter-btn {
+  border: 1px solid #27272a;
+  background: #18181b;
+  color: #a1a1aa;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.amity-filter-btn:hover {
+  border-color: #3f3f46;
+  color: #e4e4e7;
+}
+
+.amity-filter-btn--active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
+}
+
+.amity-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.amity-type-badge--image {
+  background: #14532d;
+  color: #86efac;
+}
+
+.amity-type-badge--video {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+
+.amity-type-badge--other {
+  background: #3f3f46;
+  color: #e4e4e7;
+}
+
+.amity-file-chip {
+  width: 60px;
+  height: 45px;
+  border-radius: 6px;
+  background: #1c1c1f;
+  border: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #71717a;
+}
+
+.amity-video-thumb {
+  width: 96px;
+  height: 54px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid #27272a;
+}
+
+.amity-video-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
   color: #e4e4e7;
   border: 1px solid #27272a;
   font-size: 0.9rem;

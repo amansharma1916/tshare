@@ -6,6 +6,12 @@ import AdminDashboard from './AdminDashboard';
 import bannerText from './bannerText';
 import { endpoints } from '../api/api';
 import { Skeleton } from './common/Skeleton';
+import {
+    AMITY_MARKER,
+    isVideoName,
+    stripAmityMarker,
+    videoMimeForName,
+} from '../api/amityShare';
 
 const PAGE_SIZE = 10;
 
@@ -15,6 +21,7 @@ const ADMIN_TABS = [
     { key: 'texts', label: 'Texts', icon: 'text' },
     { key: 'images', label: 'Images', icon: 'image' },
     { key: 'files', label: 'Files', icon: 'file' },
+    { key: 'amity-shares', label: 'Amity Shares', icon: 'amity' },
     { key: 'public-rooms', label: 'Rooms', icon: 'rooms' },
     { key: 'deletion-requests', label: 'Deletion Requests', icon: 'trash' },
     { key: 'users', label: 'Users', icon: 'users' },
@@ -52,6 +59,13 @@ const AdminTabIcon = ({ name }) => {
                 <svg {...props}>
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
+                </svg>
+            );
+        case 'amity':
+            return (
+                <svg {...props}>
+                    <rect x="2" y="6" width="14" height="12" rx="2" ry="2" />
+                    <path d="M16 11l6-3v8l-6-3z" />
                 </svg>
             );
         case 'rooms':
@@ -112,6 +126,14 @@ const truncateText = (text, maxWords = 50) => {
     const words = text.split(/\s+/);
     if (words.length <= maxWords) return text;
     return words.slice(0, maxWords).join(' ') + '...';
+};
+
+// Compact byte formatter for the Amity table (KB for small, MB/GB above).
+const formatBytes = (bytes) => {
+    if (!bytes) return 'N/A';
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
 };
 
 // Renders clamped text with a "View More" button that only appears when the
@@ -253,6 +275,58 @@ const PaginationControls = ({ currentPage, totalPages, totalItems, onPageChange,
     );
 };
 
+// Amity uploads sent through /file/upload are stored as
+// `application/octet-stream` (that is what lets videos pass the existing upload
+// whitelist), so the stored object cannot be played inline as-is. Fetching the
+// preview endpoint and re-typing the blob makes video playback work with no
+// backend change.
+const AmityThumb = ({ item }) => {
+    const isVideo = item.source === 'file' && isVideoName(item.originalName);
+    const [videoSrc, setVideoSrc] = useState('');
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        if (!isVideo) return undefined;
+
+        let cancelled = false;
+        let objectUrl = '';
+
+        fetch(endpoints.previewFile(item.id))
+            .then((response) => (response.ok ? response.blob() : Promise.reject(new Error('preview failed'))))
+            .then((blob) => {
+                if (cancelled) return;
+                objectUrl = URL.createObjectURL(new Blob([blob], { type: videoMimeForName(item.originalName) }));
+                setVideoSrc(objectUrl);
+            })
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+
+        return () => {
+            cancelled = true;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [isVideo, item.id, item.originalName]);
+
+    if (item.source === 'image') {
+        return (
+            <div className="image-thumb">
+                <img src={item.url} alt={stripAmityMarker(item.originalName)} />
+            </div>
+        );
+    }
+
+    if (!isVideo) return <div className="amity-file-chip">FILE</div>;
+    if (failed) return <div className="amity-file-chip">VIDEO</div>;
+    if (!videoSrc) return <div className="amity-file-chip">LOADING…</div>;
+
+    return (
+        <div className="amity-video-thumb">
+            <video src={videoSrc} controls preload="metadata" />
+        </div>
+    );
+};
+
 const AdminPanel = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -286,6 +360,14 @@ const AdminPanel = () => {
     const [files, setFiles] = useState([]);
     const [filesLoading, setFilesLoading] = useState(true);
     const [filesError, setFilesError] = useState('');
+
+    // ─── Amity Shares State (uploads from the public /amity/share page) ───
+    const [amityItems, setAmityItems] = useState([]);
+    const [amityLoading, setAmityLoading] = useState(true);
+    const [amityError, setAmityError] = useState('');
+    const [amityPage, setAmityPage] = useState(1);
+    const [amityTypeFilter, setAmityTypeFilter] = useState('all');
+    const [amityQuery, setAmityQuery] = useState('');
 
     // ─── Premium State ───
     const [premiumCodes, setPremiumCodes] = useState([]);
@@ -410,7 +492,7 @@ const AdminPanel = () => {
         // Read tab from query params
         const params = new URLSearchParams(location.search);
         const tab = params.get('tab');
-        if (tab && ['dashboard', 'texts', 'images', 'files', 'public-rooms', 'deletion-requests', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
+        if (tab && ['dashboard', 'texts', 'images', 'files', 'amity-shares', 'public-rooms', 'deletion-requests', 'users', 'premium-codes', 'premium-users', 'settings'].includes(tab)) {
             setActiveTab(tab);
         }
     }, [location.search]);
@@ -461,6 +543,13 @@ const AdminPanel = () => {
             fetchFiles(filesPage, filesSearchTerm);
         }
     }, [activeTab, filesPage, filesSearchTerm, pageSize]);
+
+    useEffect(() => {
+        if (!sessionStorage.getItem('adminAuthenticated')) return;
+        if (activeTab === 'amity-shares') {
+            fetchAmityShares();
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         if (!sessionStorage.getItem('adminAuthenticated')) return;
@@ -520,6 +609,9 @@ const AdminPanel = () => {
                 break;
             case 'files':
                 fetchFiles(filesPage, filesSearchTerm);
+                break;
+            case 'amity-shares':
+                fetchAmityShares();
                 break;
             case 'public-rooms':
                 fetchPublicRooms(publicRoomsPage);
@@ -969,6 +1061,45 @@ const AdminPanel = () => {
             return null;
         } finally {
             setFilesLoading(false);
+        }
+    };
+
+    // Amity Shares — every upload from the public /amity/share page carries an
+    // `amity_share_` marker in its file name. Both list endpoints already
+    // support a case-insensitive regex `search` on originalName, so these can be
+    // collected without any backend change; the two sets are merged and
+    // paginated client-side.
+    const fetchAmityShares = async () => {
+        setAmityLoading(true);
+        setAmityError('');
+
+        try {
+            const params = new URLSearchParams({ page: 1, limit: 1000, search: AMITY_MARKER });
+            const [imagesResponse, filesResponse] = await Promise.all([
+                fetch(`${endpoints.adminImages}?${params}`, { headers: getAuthHeaders() }),
+                fetch(`${endpoints.adminFiles}?${params}`, { headers: getAuthHeaders() }),
+            ]);
+            const [imagesData, filesData] = await Promise.all([
+                imagesResponse.json(),
+                filesResponse.json(),
+            ]);
+
+            const merged = [
+                ...(imagesData.success ? (imagesData.images || []) : []).map((item) => ({ ...item, source: 'image' })),
+                ...(filesData.success ? (filesData.files || []) : []).map((item) => ({ ...item, source: 'file' })),
+            ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setAmityItems(merged);
+            if (!imagesData.success && !filesData.success) {
+                setAmityError('Failed to fetch Amity shares');
+            }
+            return merged;
+        } catch (error) {
+            console.error('Error:', error);
+            setAmityError('Failed to connect to server. Please try again.');
+            return [];
+        } finally {
+            setAmityLoading(false);
         }
     };
 
@@ -1863,6 +1994,34 @@ const AdminPanel = () => {
         }, 3000);
     };
 
+    // Derived Amity list: type + text filtering run client-side because the
+    // server search term is already spent on the `amity_share_` marker.
+    const amityFiltered = amityItems.filter((item) => {
+        const video = item.source === 'file' && isVideoName(item.originalName);
+        const matchesType =
+            amityTypeFilter === 'all'
+            || (amityTypeFilter === 'image' && item.source === 'image')
+            || (amityTypeFilter === 'video' && video)
+            || (amityTypeFilter === 'other' && item.source === 'file' && !video);
+
+        if (!matchesType) return false;
+
+        const query = amityQuery.trim().toLowerCase();
+        if (!query) return true;
+
+        return (
+            stripAmityMarker(item.originalName || '').toLowerCase().includes(query)
+            || String(item.id).toLowerCase().includes(query)
+        );
+    });
+
+    const amityTotalPages = Math.max(1, Math.ceil(amityFiltered.length / pageSize));
+    const amityCurrentPage = Math.min(amityPage, amityTotalPages);
+    const amityPageItems = amityFiltered.slice(
+        (amityCurrentPage - 1) * pageSize,
+        amityCurrentPage * pageSize
+    );
+
     const handleLogout = () => {
         sessionStorage.removeItem('adminAuthenticated');
         sessionStorage.removeItem('adminToken');
@@ -1880,6 +2039,7 @@ const AdminPanel = () => {
         setTextsPage(1);
         setImagesPage(1);
         setFilesPage(1);
+        setAmityPage(1);
         setPublicRoomsPage(1);
         setUsersPage(1);
     };
@@ -1900,6 +2060,51 @@ const AdminPanel = () => {
         const totalPages = filesPagination?.pages || 1;
         const clampedPage = Math.max(1, Math.min(newPage, totalPages));
         setFilesPage(clampedPage);
+    };
+
+    // ─── Amity Shares Handlers ───
+
+    const handleDeleteAmityShare = async (item) => {
+        const label = stripAmityMarker(item.originalName);
+        if (!window.confirm(`Are you sure you want to delete "${label}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                item.source === 'image' ? endpoints.adminDeleteImage(item.id) : endpoints.adminDeleteFile(item.id),
+                {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(),
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                setAmityItems(prev => prev.filter(entry => !(entry.id === item.id && entry.source === item.source)));
+                showActionMessage('Amity share deleted successfully', 'success');
+            } else {
+                showActionMessage(data.message || 'Failed to delete share', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showActionMessage('Failed to connect to server', 'error');
+        }
+    };
+
+    const handleAmityPageChange = (newPage) => {
+        setAmityPage(Math.max(1, newPage));
+    };
+
+    const handleAmityTypeFilter = (value) => {
+        setAmityTypeFilter(value);
+        setAmityPage(1);
+    };
+
+    const clearAmityQuery = () => {
+        setAmityQuery('');
+        setAmityPage(1);
     };
 
     const handlePublicRoomsPageChange = (newPage) => {
@@ -2369,6 +2574,139 @@ const AdminPanel = () => {
                                 totalPages={filesPagination.pages}
                                 totalItems={filesPagination.total}
                                 onPageChange={handleFilesPageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'amity-shares' && (
+                    <div>
+                        <div className="tab-header">
+                            <h1>Amity Shares</h1>
+                            <div className="tab-header-actions">
+                                <span className="amity-tab-note">Media uploaded from the public /amity/share page</span>
+                            </div>
+                        </div>
+
+                        <div className="search-bar">
+                            <input
+                                type="text"
+                                placeholder="Search by name or code..."
+                                value={amityQuery}
+                                onChange={(e) => { setAmityQuery(e.target.value); setAmityPage(1); }}
+                                className="search-input"
+                            />
+                            {amityQuery && (
+                                <button
+                                    className="search-clear"
+                                    onClick={clearAmityQuery}
+                                    title="Clear search"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="amity-filters">
+                            {[
+                                { key: 'all', label: 'All' },
+                                { key: 'image', label: 'Images' },
+                                { key: 'video', label: 'Videos' },
+                                { key: 'other', label: 'Other' },
+                            ].map((filterOption) => (
+                                <button
+                                    key={filterOption.key}
+                                    type="button"
+                                    className={`amity-filter-btn ${amityTypeFilter === filterOption.key ? 'amity-filter-btn--active' : ''}`}
+                                    onClick={() => handleAmityTypeFilter(filterOption.key)}
+                                >
+                                    {filterOption.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {amityError && <div className="error-message">{amityError}</div>}
+
+                        {amityLoading ? (
+                            <div className="loading">Loading Amity shares...</div>
+                        ) : amityItems.length === 0 ? (
+                            <div className="no-data">No Amity shares yet</div>
+                        ) : amityFiltered.length === 0 ? (
+                            <div className="no-data">No Amity shares match your filters</div>
+                        ) : (
+                            <div className="texts-table-container">
+                                <table className="texts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Preview</th>
+                                            <th>File</th>
+                                            <th>Type</th>
+                                            <th>Size</th>
+                                            <th>Uploaded At</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {amityPageItems.map((item) => {
+                                            const video = item.source === 'file' && isVideoName(item.originalName);
+                                            return (
+<tr key={`${item.source}-${item.id}`}>
+                                                    <td className="room-code">{item.id}</td>
+                                                    <td>
+                                                        <AmityThumb item={item} />
+                                                    </td>
+                                                    <td title={item.originalName}>{stripAmityMarker(item.originalName)}</td>
+                                                    <td>
+                                                        <span className={`amity-type-badge ${video ? 'amity-type-badge--video' : item.source === 'image' ? 'amity-type-badge--image' : 'amity-type-badge--other'}`}>
+                                                            {video ? 'Video' : item.source === 'image' ? 'Image' : 'File'}
+                                                        </span>
+                                                    </td>
+                                                    <td>{formatBytes(item.size)}</td>
+                                                    <td>{formatDate(item.createdAt)}</td>
+                                                    <td className="actions">
+                                                        <motion.button
+                                                            className="action-btn edit"
+                                                            onClick={() => window.open(item.source === 'image' ? item.url : endpoints.previewFile(item.id), '_blank')}
+                                                            whileHover={{ scale: 1.05 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            title={video ? 'Open preview' : 'Open original'}
+                                                        >
+                                                            Open
+                                                        </motion.button>
+                                                        <motion.button
+                                                            className="action-btn regenerate-code"
+                                                            onClick={() => window.open(item.source === 'image' ? endpoints.downloadImage(item.id) : endpoints.downloadFile(item.id), '_blank')}
+                                                            whileHover={{ scale: 1.05 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                        >
+                                                            Download
+                                                        </motion.button>
+                                                        <motion.button
+                                                            className="action-btn delete"
+                                                            onClick={() => handleDeleteAmityShare(item)}
+                                                            whileHover={{ scale: 1.05 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                        >
+                                                            Delete
+                                                        </motion.button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {amityItems.length > 0 && (
+                            <PaginationControls
+                                currentPage={amityCurrentPage}
+                                totalPages={amityTotalPages}
+                                totalItems={amityFiltered.length}
+                                onPageChange={handleAmityPageChange}
                                 pageSize={pageSize}
                                 onPageSizeChange={handlePageSizeChange}
                             />
