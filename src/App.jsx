@@ -28,6 +28,7 @@ import OrgAuth from './components/org/OrgAuth.jsx'
 import OrgDashboard from './components/org-preview/OrgDashboard.jsx'
 import OrgSubmitPage from './components/org/OrgSubmitPage.jsx'
 import OrgUploadPage from './components/org/OrgUploadPage.jsx'
+import AmitySharePage from './components/amity/AmitySharePage.jsx'
 import { SeoManager } from './seo/useSeo.js'
 
 // Layout wrapper for routes that need the sidebar/topbar
@@ -50,7 +51,12 @@ const RefreshRedirect = () => {
     const navigationEntries = performance.getEntriesByType('navigation')
     const isRefresh = navigationEntries.length > 0 && navigationEntries[0].type === 'reload'
 
-    if (isRefresh && window.location.pathname !== '/' && !window.location.pathname.startsWith('/org/')) {
+    // Routes meant to be opened from a shared link (org submissions, Amity
+    // uploads) are kept alive on refresh — everything else returns home.
+    const isStandaloneRoute =
+      window.location.pathname.startsWith('/org/') || window.location.pathname.startsWith('/amity/')
+
+    if (isRefresh && window.location.pathname !== '/' && !isStandaloneRoute) {
       navigate('/', { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,6 +129,10 @@ function App() {
         <Route path='/share' element={<LayoutRoute><SharePage /></LayoutRoute>} />
         <Route path='/share-image' element={<LayoutRoute><ImageSharePage /></LayoutRoute>} />
         <Route path='/share-file' element={<LayoutRoute><FileSharePage /></LayoutRoute>} />
+
+        {/* Amity module: public photo/video drop for the Amity team. Uploads are
+            reviewed from the admin panel's "Amity Shares" tab. */}
+        <Route path='/amity/share' element={<LayoutRoute><AmitySharePage /></LayoutRoute>} />
 
         {/* Single unified receive page — auto-detects content type from API */}
         <Route path='/receive' element={<LayoutRoute><RecievePage /></LayoutRoute>} />

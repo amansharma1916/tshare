@@ -66,6 +66,14 @@ export const seoConfig = [
     canonical: '/share-file',
   },
   {
+    // Internal funnel — reachable by link/QR only, so keep it out of search.
+    path: '/amity/share',
+    title: `Amity Share | ${BRAND}`,
+    description: 'Send photos and videos to the Amity team — no account needed.',
+    canonical: '/amity/share',
+    noindex: true,
+  },
+  {
     path: '/receive',
     title: `Receive & Open Any Share | ${BRAND} — ${SLOGAN}`,
     description: baseDesc(
