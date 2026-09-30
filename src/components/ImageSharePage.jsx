@@ -7,6 +7,7 @@ import UsernameMapper from './auth/UsernameMapper';
 import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import QrModal from './common/QrModal';
+import SharePageAds from './common/SharePageAds';
 
 const ImageSharePage = () => {
   const navigate = useNavigate();
@@ -172,6 +173,8 @@ const ImageSharePage = () => {
       )}
 
     <main className="share">
+      <div className="share__layout">
+      <SharePageAds side="left" />
         <div className="share__container">
           <motion.div
             className="share__header"
@@ -483,6 +486,8 @@ const ImageSharePage = () => {
               </button>
             </div>
           </motion.div>
+        </div>
+        <SharePageAds side="right" />
         </div>
       </main>
     </div>

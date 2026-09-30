@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import './LandingPage.css'
+import EventPosterModal from '../common/EventPosterModal.jsx'
 
 /* ---------------------------------- helpers ---------------------------------- */
 
@@ -229,6 +230,7 @@ const LandingPage = ({
 
   return (
     <div className="landing">
+      <EventPosterModal />
       {/* ============ SLIDE 1 — HERO ============ */}
       <section className="landing__hero">
         <div className="landing__grid" aria-hidden="true" />

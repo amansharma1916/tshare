@@ -1,0 +1,66 @@
+.share-page-ad {
+  position: sticky;
+  top: 5rem;
+  width: clamp(160px, 17vw, 240px);
+  aspect-ratio: 469 / 1149;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.share-page-ad--left {
+  grid-area: left-ad;
+  transform: translateX(clamp(-18px, -1.25vw, -10px));
+}
+
+.share-page-ad--right {
+  grid-area: right-ad;
+  transform: translateX(clamp(10px, 1.25vw, 18px));
+}
+
+/* Accessible "Advertisement" label — visually hidden, announced by screen readers */
+.share-page-ad__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.share-page-ad__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.share-page-ad__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+}
+
+/* Below this width there isn't enough horizontal space for side ads —
+   hide them and keep the Share Text editor full-width & fully usable. */
+@media (max-width: 800px) {
+  .share-page-ad {
+    display: none;
+  }
+
+  /* These pages render the ads inside .share__layout; switch the
+     3-column ad|editor|ad grid to a single full-width column. */
+  .share__layout {
+    display: block;
+    width: 100%;
+  }
+}
