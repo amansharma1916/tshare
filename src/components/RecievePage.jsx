@@ -7,6 +7,7 @@ import UsernameMapper from './auth/UsernameMapper';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 import QrScanner from './common/QrScanner';
+import SharePageAds from './common/SharePageAds';
 
 const RecievePage = () => {
   const navigate = useNavigate();
@@ -715,6 +716,8 @@ const RecievePage = () => {
       )}
 
       <main className="receive">
+        <div className="share__layout receive__layout">
+        <SharePageAds side="left" />
         <div className="receive__container">
           {receivedContent?.isPremium && !passwordRequired && !passwordRequired && (
             <motion.div
@@ -1009,6 +1012,8 @@ const RecievePage = () => {
               </motion.div>
             ) : null}
           </AnimatePresence>
+        </div>
+        <SharePageAds side="right" />
         </div>
       </main>
     </div>

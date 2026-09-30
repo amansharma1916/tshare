@@ -9,6 +9,7 @@ import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 import QrModal from './common/QrModal';
+import SharePageAds from './common/SharePageAds';
 
 const SharePage = () => {
   const navigate = useNavigate();
@@ -147,7 +148,10 @@ const SharePage = () => {
       )}
 
     <main className="share">
-        <div className="share__container">
+        <div className="share__layout">
+          <SharePageAds side="left" />
+
+          <div className="share__container">
           <motion.div
             className="share__header"
             initial={{ opacity: 0, y: 20 }}
@@ -425,6 +429,10 @@ const SharePage = () => {
               </button>
             </div>
           </motion.div>
+          </div>
+
+          <SharePageAds side="right" />
+
         </div>
       </main>
     </div>

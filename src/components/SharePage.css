@@ -78,6 +78,18 @@
   padding: 3rem 1.5rem 2.5rem;
 }
 
+.share__layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-areas: 'left-ad editor right-ad';
+  grid-template-columns: clamp(170px, 19vw, 260px) minmax(0, 640px) clamp(170px, 19vw, 260px);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 2.5vw, 3rem);
+  width: 100%;
+}
+
 .share::before {
   content: '';
   position: absolute;
@@ -93,11 +105,16 @@
 
 .share__container {
   position: relative;
+  grid-area: editor;
   width: 100%;
   max-width: 640px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.share__layout > .receive__container {
+  grid-area: editor;
 }
 
 /* Header */
@@ -733,6 +750,13 @@
 
   .code-reveal__value {
     gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .share__layout {
+    display: block;
+    width: 100%;
   }
 }
 
