@@ -8,6 +8,7 @@ import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import QrModal from './common/QrModal';
 import SharePageAds from './common/SharePageAds';
+import MobileBanner from './common/MobileBanner';
 
 const FileSharePage = () => {
   const navigate = useNavigate();
@@ -207,6 +208,12 @@ const FileSharePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
+            {/* ============================================================
+                MOBILE VIEW — InkHub Dragon Tattoo banner (affiliate link).
+                Replaces the header icon below ONLY on mobile (max-width: 800px);
+                the original header icon stays visible on desktop.
+                ============================================================ */}
+            <MobileBanner />
             <div className="share__header-icon share__header-icon--file">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
