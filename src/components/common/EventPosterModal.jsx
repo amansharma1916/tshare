@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './EventPosterModal.css'
 
-const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJHmaatch'
+const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJH'
 const POSTER_IMAGE = '/events/inkhub-tattoos-promo.jpg'
 
 function EventPosterModal() {
