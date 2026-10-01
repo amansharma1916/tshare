@@ -488,6 +488,8 @@ const RecievePage = () => {
                   <motion.img
                     src={item.url}
                     alt={item.originalName || 'Shared image'}
+                    loading="lazy"
+                    decoding="async"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -604,6 +606,7 @@ const RecievePage = () => {
             <motion.img
               src={receivedContent.url}
               alt={receivedContent.originalName || 'Shared image'}
+              decoding="async"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
