@@ -1,6 +1,6 @@
 import './SharePageAds.css'
 
-const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJHmaatch'
+const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJH'
 
 const adContent = {
   left: {
