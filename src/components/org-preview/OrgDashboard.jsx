@@ -163,7 +163,7 @@ const AuthThumb = ({ file, token }) => {
   }, [file?.id, token]);
 
   if (!url) return null;
-  return <img src={url} alt="" className="org-dash__thumb" />;
+  return <img src={url} alt="" className="org-dash__thumb" loading="lazy" decoding="async" />;
 };
 
 const OrgDashboard = () => {

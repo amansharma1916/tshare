@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './EventPosterModal.css'
 
 const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJH'
-const POSTER_IMAGE = '/events/inkhub-tattoos-promo.jpg'
+const POSTER_IMAGE = '/events/inkhub-tattoos-promo.webp'
 
 function EventPosterModal() {
   const [isOpen, setIsOpen] = useState(true)
@@ -58,6 +58,9 @@ function EventPosterModal() {
             src={POSTER_IMAGE}
             alt="InkHub Tattoos: Buy one, get two free semi-permanent tattoos"
             className="event-poster-image"
+            width="920"
+            height="920"
+            decoding="async"
           />
         </a>
 

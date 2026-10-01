@@ -8,7 +8,7 @@ import './MobileBanner.css'
    affiliate link in a new tab.
    ============================================================ */
 const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJH'
-const BANNER_IMAGE = '/events/inkhub-dragon-tattoo-banner.png'
+const BANNER_IMAGE = '/events/inkhub-dragon-tattoo-banner.webp'
 
 function MobileBanner() {
   return (
@@ -19,9 +19,15 @@ function MobileBanner() {
       rel="noopener noreferrer"
       aria-label="Shop InkHub Tattoos — Dragon Tattoo banner"
     >
+      {/* Lazy: on desktop the banner is display:none, so the browser skips the
+          download entirely; on mobile it is in the viewport and loads at once. */}
       <img
         src={BANNER_IMAGE}
         alt="InkHub Tattoos Dragon Tattoo banner"
+        width="800"
+        height="268"
+        loading="lazy"
+        decoding="async"
       />
     </a>
   )

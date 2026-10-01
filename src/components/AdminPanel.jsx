@@ -294,7 +294,7 @@ const AmityThumb = ({ item }) => {
     if (item.source === 'image') {
         return (
             <div className="image-thumb">
-                <img src={item.url} alt={stripAmityMarker(item.originalName)} />
+                <img src={item.url} alt={stripAmityMarker(item.originalName)} loading="lazy" decoding="async" />
             </div>
         );
     }
@@ -2375,7 +2375,7 @@ const AdminPanel = () => {
                                                 <td className="room-code">{image.id}</td>
                                                 <td>
                                                     <div className="image-thumb">
-                                                        <img src={image.url} alt={image.originalName} />
+                                                        <img src={image.url} alt={image.originalName} loading="lazy" decoding="async" />
                                                     </div>
                                                 </td>
                                                 <td>{image.originalName}</td>

@@ -367,7 +367,7 @@ const OrgDashboard = () => {
 
                       <div className="org-dash__item-primary" title={preview(item)}>
                         {item.dataType === 'image' && item.url ? (
-                          <img src={item.url} alt="" className="org-dash__thumb" />
+                          <img src={item.url} alt="" className="org-dash__thumb" loading="lazy" decoding="async" />
                         ) : item.dataType === 'file' ? (
                           <span className="org-dash__file-icon"><Icon name="file" size={18} /></span>
                         ) : (
@@ -452,7 +452,7 @@ const OrgDashboard = () => {
                   </div>
                 )}
                 {selectedItem.dataType === 'image' && selectedItem.url && (
-                  <img src={selectedItem.url} alt="Preview" className="org-dash__preview-img" />
+                  <img src={selectedItem.url} alt="Preview" className="org-dash__preview-img" decoding="async" />
                 )}
                 {selectedItem.dataType === 'file' && (
                   <div className="org-dash__preview-file">

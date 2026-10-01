@@ -5,13 +5,17 @@ const AFFILIATE_URL = 'https://influencers.inkhubtattoos.in/r/AMANSHARMAPJH'
 const adContent = {
   left: {
     className: 'share-page-ad--left',
-    image: '/events/inkhub-tattoos-left-ad.jpg',
+    image: '/events/inkhub-tattoos-left-ad.webp',
     alt: 'InkHub Tattoos offer',
+    width: 469,
+    height: 1149,
   },
   right: {
     className: 'share-page-ad--right',
-    image: '/events/inkhub-tattoos-right-ad.jpg',
+    image: '/events/inkhub-tattoos-right-ad.webp',
     alt: 'InkHub Tattoos new arrivals',
+    width: 471,
+    height: 1149,
   },
 }
 
@@ -30,7 +34,15 @@ function SharePageAds({ side }) {
         rel="noopener noreferrer"
         aria-label="Shop InkHub Tattoos"
       >
-        <img src={ad.image} alt={ad.alt} className="share-page-ad__image" />
+        <img
+          src={ad.image}
+          alt={ad.alt}
+          className="share-page-ad__image"
+          width={ad.width}
+          height={ad.height}
+          loading="lazy"
+          decoding="async"
+        />
       </a>
     </aside>
   )
