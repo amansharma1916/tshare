@@ -8,6 +8,7 @@ import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 import QrScanner from './common/QrScanner';
 import SharePageAds from './common/SharePageAds';
+import MobileBanner from './common/MobileBanner';
 
 const RecievePage = () => {
   const navigate = useNavigate();
@@ -738,6 +739,12 @@ const RecievePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
+            {/* ============================================================
+                MOBILE VIEW — InkHub Dragon Tattoo banner (affiliate link).
+                Replaces the header icon below ONLY on mobile (max-width: 800px);
+                the original header icon stays visible on desktop.
+                ============================================================ */}
+            <MobileBanner />
             <div className={getTypeIconClass()}>
               {getTypeIcon()}
             </div>
