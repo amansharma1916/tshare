@@ -29,6 +29,7 @@ import OrgDashboard from './components/org-preview/OrgDashboard.jsx'
 import OrgSubmitPage from './components/org/OrgSubmitPage.jsx'
 import OrgUploadPage from './components/org/OrgUploadPage.jsx'
 import AmitySharePage from './components/amity/AmitySharePage.jsx'
+import PlayStorePopup from './components/common/PlayStorePopup.jsx'
 import { SeoManager } from './seo/useSeo.js'
 
 // Layout wrapper for routes that need the sidebar/topbar
@@ -111,6 +112,8 @@ function App() {
     <BrowserRouter>
       <RefreshRedirect />
       <RouteSeo />
+      {/* Play Store promo — fixed top-right, shows once per session on every page */}
+      <PlayStorePopup />
       <Routes>
         {/* Landing page */}
         <Route path='/' element={<LayoutRoute><LandingPage /></LayoutRoute>} />

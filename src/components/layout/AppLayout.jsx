@@ -327,6 +327,26 @@ const AppLayout = ({ children }) => {
             </div>
           ))}
               
+              {/* Install App — opens the Play Store listing */}
+              <div className="mobile-section">
+                <div className="mobile-section-label">Get TShare</div>
+                <a
+                  className="mobile-sidebar-item"
+                  href="https://play.google.com/store/apps/details?id=in.tshare.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 512 512" aria-hidden="true">
+                    <path fill="#4285F4" d="M99.6 32.6c-6.4 3.3-10.6 9.8-10.6 18.9v409c0 9.1 4.2 15.6 10.6 18.9L314 256 99.6 32.6z" />
+                    <path fill="#34A853" d="M373.4 215.2 99.6 32.6 314 256l59.4-40.8z" />
+                    <path fill="#FBBC04" d="M99.6 479.4 373.4 296.8 314 256 99.6 479.4z" />
+                    <path fill="#EA4335" d="M373.4 296.8l72.9-49.9c17.5-12 17.5-41.8 0-53.8l-72.9-49.9L314 256l59.4 40.8z" />
+                  </svg>
+                  <span>Install App</span>
+                </a>
+              </div>
+
               {/* Logout Section */}
               {username && (
                 <div className="mobile-section" style={{ marginTop: 'auto', borderTop: '1px solid var(--sidebar-border)', paddingTop: '16px' }}>
