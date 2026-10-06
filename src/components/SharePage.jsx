@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SharePage.css';
-import { endpoints, baseUrl } from '../api/api';
-import io from 'socket.io-client';
+import { endpoints } from '../api/api';
 import UsernameMapper from './auth/UsernameMapper';
 import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
@@ -19,21 +18,12 @@ const SharePage = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [socket, setSocket] = useState(null);
   const [text, setText] = useState('');
   const [validity, setValidity] = useState('6h');
   const [showCode, setShowCode] = useState(false);
   const [shareError, setShareError] = useState('');
   const [showQr, setShowQr] = useState(false);
   const textareaRef = useRef(null);
-
-  useEffect(() => {
-    const newSocket = io(baseUrl);
-    setSocket(newSocket);
-    return () => {
-      if (newSocket) newSocket.disconnect();
-    };
-  }, []);
 
   const charCount = text.length;
   const maxChars = 50000;
@@ -73,12 +63,6 @@ const SharePage = () => {
         setCode(newCode)
         setText('')
         setShowCode(true)
-        if (socket) {
-          socket.emit('text-update', {
-            textId: data.id,
-            text: textToSave
-          });
-        }
       })
       .catch(error => {
         console.error('Error:', error);
