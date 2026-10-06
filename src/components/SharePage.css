@@ -695,9 +695,7 @@
 }
 
 
-/* Header icon stays visible on desktop. On mobile view (max-width: 800px,
-   same breakpoint as the side ads / MobileBanner) it is replaced by the
-   clickable InkHub Dragon Tattoo banner. */
+/* Header icon hidden on mobile to save space. */
 @media (max-width: 800px) {
   .share__header-icon {
     display: none;

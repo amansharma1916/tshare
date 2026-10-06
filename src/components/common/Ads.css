@@ -1,0 +1,90 @@
+/* Adsterra slots — isolated, additive-only. Never touches existing UI. */
+
+.adslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 16px auto;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.adslot__label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin-bottom: 6px;
+  user-select: none;
+}
+
+.adslot__body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.adslot__body iframe {
+  max-width: 100%;
+  border: 0;
+}
+
+.adslot__body--native {
+  width: 100%;
+  display: block;
+}
+
+/* Side rails — sit in existing .share__layout grid gaps (left-ad / right-ad) */
+.adslot--side {
+  margin: 0;
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  justify-self: center;
+  min-height: 300px;
+}
+
+.adslot--left {
+  grid-area: left-ad;
+}
+
+.adslot--right {
+  grid-area: right-ad;
+}
+
+/* Hide side rails where grid collapses — prevents horizontal scroll */
+@media (max-width: 1100px) {
+  .adslot--side {
+    display: none;
+  }
+}
+
+/* Leaderboard — centered, reserves space to avoid CLS */
+.adslot--leaderboard {
+  width: 100%;
+  min-height: 60px;
+}
+
+@media (min-width: 781px) {
+  .adslot--leaderboard {
+    min-height: 90px;
+  }
+}
+
+/* In-content 300x250 */
+.adslot--box {
+  min-height: 250px;
+}
+
+/* Native — full-width in-flow */
+.adslot--native {
+  width: 100%;
+}
+
+/* Landing page dividers */
+.adslot--landing {
+  margin: 28px auto;
+}
