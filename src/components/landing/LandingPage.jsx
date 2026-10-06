@@ -232,6 +232,7 @@ const LandingPage = ({
 
   return (
     <div className="landing">
+      <LeaderboardAd className="adslot--landing adslot--landing-top" />
       {/* ============ SLIDE 1 — HERO ============ */}
       <section className="landing__hero">
         <div className="landing__grid" aria-hidden="true" />

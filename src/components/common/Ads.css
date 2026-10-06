@@ -87,4 +87,12 @@
 /* Landing page dividers */
 .adslot--landing {
   margin: 28px auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.adslot--landing-top {
+  margin: 12px auto 4px;
+  position: relative;
+  z-index: 2;
 }
