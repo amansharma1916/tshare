@@ -9,8 +9,9 @@ import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 import QrModal from './common/QrModal';
-import SharePageAds from './common/SharePageAds';
-import MobileBanner from './common/MobileBanner';
+import AdBanner from './common/AdBanner';
+import LeaderboardAd from './common/LeaderboardAd';
+import NativeAd from './common/NativeAd';
 
 const SharePage = () => {
   const navigate = useNavigate();
@@ -150,21 +151,16 @@ const SharePage = () => {
 
     <main className="share">
         <div className="share__layout">
-          <SharePageAds side="left" />
+          <AdBanner adKey="84d12786f7b4f85eff6a267b94c3e2f2" width={160} height={600} className="adslot--side adslot--left" />
 
           <div className="share__container">
+          <LeaderboardAd />
           <motion.div
             className="share__header"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* ============================================================
-                MOBILE VIEW — InkHub Dragon Tattoo banner (affiliate link).
-                Replaces the header icon below ONLY on mobile (max-width: 800px);
-                the original header icon stays visible on desktop.
-                ============================================================ */}
-            <MobileBanner />
             <div className="share__header-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -436,9 +432,11 @@ const SharePage = () => {
               </button>
             </div>
           </motion.div>
+          <AdBanner adKey="3097714ccb88c103f293cb81ec932f5f" width={300} height={250} className="adslot--box" />
+          <NativeAd />
           </div>
 
-          <SharePageAds side="right" />
+          <AdBanner adKey="85009ac40a87898023678248322fcf6b" width={160} height={300} className="adslot--side adslot--right" />
 
         </div>
       </main>
