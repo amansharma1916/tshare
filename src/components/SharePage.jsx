@@ -8,9 +8,6 @@ import ValiditySelector from './common/ValiditySelector';
 import { useLayout } from './layout/LayoutContext';
 import { Skeleton } from './common/Skeleton';
 import QrModal from './common/QrModal';
-import AdBanner from './common/AdBanner';
-import LeaderboardAd from './common/LeaderboardAd';
-import NativeAd from './common/NativeAd';
 
 const SharePage = () => {
   const navigate = useNavigate();
@@ -135,10 +132,7 @@ const SharePage = () => {
 
     <main className="share">
         <div className="share__layout">
-          <AdBanner adKey="84d12786f7b4f85eff6a267b94c3e2f2" width={160} height={600} className="adslot--side adslot--left" />
-
           <div className="share__container">
-          <LeaderboardAd />
           <motion.div
             className="share__header"
             initial={{ opacity: 0, y: 20 }}
@@ -416,11 +410,7 @@ const SharePage = () => {
               </button>
             </div>
           </motion.div>
-          <AdBanner adKey="3097714ccb88c103f293cb81ec932f5f" width={300} height={250} className="adslot--box" />
-          <NativeAd />
           </div>
-
-          <AdBanner adKey="85009ac40a87898023678248322fcf6b" width={160} height={300} className="adslot--side adslot--right" />
 
         </div>
       </main>

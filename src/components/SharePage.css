@@ -82,8 +82,8 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-areas: 'left-ad editor right-ad';
-  grid-template-columns: clamp(170px, 19vw, 260px) minmax(0, 640px) clamp(170px, 19vw, 260px);
+  grid-template-areas: 'editor';
+  grid-template-columns: minmax(0, 640px);
   align-items: center;
   justify-content: center;
   gap: clamp(20px, 2.5vw, 3rem);

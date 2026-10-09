@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
 import './LandingPage.css'
-import AdBanner from '../common/AdBanner.jsx'
-import LeaderboardAd from '../common/LeaderboardAd.jsx'
-import NativeAd from '../common/NativeAd.jsx'
 
 /* ---------------------------------- helpers ---------------------------------- */
 
@@ -232,7 +229,6 @@ const LandingPage = ({
 
   return (
     <div className="landing">
-      <LeaderboardAd className="adslot--landing adslot--landing-top" />
       {/* ============ SLIDE 1 — HERO ============ */}
       <section className="landing__hero">
         <div className="landing__grid" aria-hidden="true" />
@@ -374,8 +370,6 @@ const LandingPage = ({
         </motion.div>
       </section>
 
-      <LeaderboardAd className="adslot--landing" />
-
       {/* ============ SLIDE 2 — SHOWCASE ============ */}
       <section className="landing__show">
         <motion.div className="landing__show-head" {...fadeUp(0)}>
@@ -465,9 +459,6 @@ const LandingPage = ({
           </div>
         </motion.div>
       </section>
-
-      <NativeAd className="adslot--landing" />
-      <AdBanner adKey="3097714ccb88c103f293cb81ec932f5f" width={300} height={250} className="adslot--box adslot--landing" />
 
       <footer className="landing__footer">
         <div className="landing__footer-links">
